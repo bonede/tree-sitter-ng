@@ -1,0 +1,114 @@
+
+
+import org.treesitter.build.Utils
+
+plugins {
+    id 'java'
+}
+
+group = 'org.treesitter'
+version = libVersion
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation project(":tree-sitter-core")
+}
+
+test {
+    useJUnitPlatform()
+}
+def libName = "tree-sitter-sfapex"
+tasks.register('downloadSource') {
+    group = "build setup"
+    description = "Download parser source"
+    def zipUrl = "https://github.com/aheber/tree-sitter-sfapex/archive/refs/tags/${libVersion}.zip"
+    def downloadDir = Utils.libDownloadDir(project, libName)
+    def zip = Utils.libZipFile(project, libName, libVersion)
+    def parserCFile = Utils.libParserCFile(project, libName, libVersion)
+    inputs.files(layout.projectDirectory.file("gradle.properties"))
+    outputs.files(parserCFile)
+    doLast {
+        download.run {
+            src zipUrl
+            dest zip
+            overwrite false
+        }
+        copy {
+            from zipTree(zip)
+            into downloadDir
+        }
+    }
+
+}
+class BuildConfig{
+    RegularFile jniFile
+    Directory libSrcDir
+    String libShortName
+
+    BuildConfig(RegularFile jniFile, Directory libSrcDir, String libShortName){
+        this.jniFile = jniFile
+        this.libSrcDir = libSrcDir
+        this.libShortName = libShortName
+    }
+}
+tasks.register("buildNative") {
+    group = "build"
+    description = "Build parser native modules"
+    dependsOn "downloadSource", rootProject.bootstrap
+    def jniSrcDir = Utils.jniSrcDir(project)
+    def outDir = Utils.jniOutDir(project)
+    def buildConfigs = [
+            new BuildConfig(Utils.jniCFile(project, "org_treesitter_TreeSitterApex.c"), Utils.libSrcDir(project, libName, libVersion, "apex/src"), "apex"),
+            new BuildConfig(Utils.jniCFile(project, "org_treesitter_TreeSitterSoql.c"), Utils.libSrcDir(project, libName, libVersion, "soql/src"), "soql"),
+            new BuildConfig(Utils.jniCFile(project, "org_treesitter_TreeSitterSosl.c"), Utils.libSrcDir(project, libName, libVersion, "sosl/src"), "sosl")
+    ]
+
+
+    def jniInclude = Utils.jniIncludeDir(project)
+
+    def targets = Utils.treeSitterTargets(project)
+    def outputFiles = targets.collect()
+            { t -> Utils.jniOutFile(project, t, libName)}
+    def srcFiles = buildConfigs.collect() {config -> config.jniFile}
+    outputs.files(outputFiles)
+    def inputFiles = srcFiles + [rootProject.layout.projectDirectory.file("gradle.properties")]
+    inputs.files(inputFiles)
+    doLast{
+        mkdir(outDir)
+        targets.each {target ->
+            def jniMdInclude = Utils.jniMdInclude(project, target)
+            buildConfigs.each {config -> {
+                def jniCFile = config.jniFile
+                def libSrcDir = config.libSrcDir
+                def name = config.libShortName
+                def libFiles = project.fileTree(libSrcDir) {
+                    include(Utils.libFiles())
+                }.toList()
+                def jniOutFile = Utils.jniOutFile(project, target, "tree-sitter-$name")
+                def cmd = [
+                        rootProject.downloadZig.zigExe, "c++",
+                        "-g",
+                        "-shared",
+                        "-target", target,
+                        "-I", libSrcDir,
+                        "-I", jniInclude,
+                        "-I", jniMdInclude,
+                        "-o", jniOutFile,
+                        jniCFile,
+                ]
+                cmd.addAll(libFiles)
+                exec{
+                    workingDir jniSrcDir
+                    commandLine(cmd)
+                }
+            }}
+
+        }
+        Utils.removeWindowsDebugFiles(project)
+    }
+}

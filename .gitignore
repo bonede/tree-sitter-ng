@@ -3,12 +3,13 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-.ida
-### IntelliJ IDEA ###
 .idea
+### IntelliJ IDEA ###
+
 *.iws
 *.iml
 *.ipr
+tools/
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
@@ -37,3 +38,7 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+**/*.lib
+**/*.log
+**/*.pdb

@@ -1,5 +1,11 @@
 rootProject.name = 'tree-sitter-ng'
 include 'tree-sitter'
 include 'tree-sitter-json'
-include 'tree-sitter-utils'
-
+include 'tree-sitter-core'
+include 'tree-sitter-demo'
+include 'tree-sitter-c'
+include 'tree-sitter-ada'
+include 'tree-sitter-agda'
+include 'tree-sitter-bash'
+include 'tree-sitter-apex'
+include 'tree-sitter-beancount'

@@ -1,0 +1,86 @@
+import org.treesitter.build.Utils
+
+plugins {
+    id 'java'
+}
+
+group = 'org.treesitter'
+version = libVersion
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation project(":tree-sitter-core")
+}
+
+test {
+    useJUnitPlatform()
+}
+def libName = "tree-sitter-ada"
+tasks.register('downloadSource') {
+    group = "build setup"
+    description = "Download parser source"
+    def zipUrl = "https://codeload.github.com/briot/tree-sitter-ada/zip/refs/heads/master"
+    def downloadDir = Utils.libDownloadDir(project, libName)
+    def zip = Utils.libZipFile(project, libName, libVersion)
+    def parserCFile = Utils.libParserCFile(project, libName, libVersion)
+    inputs.files(layout.projectDirectory.file("gradle.properties"))
+    outputs.files(parserCFile)
+    doLast {
+        download.run {
+            src zipUrl
+            dest zip
+            overwrite false
+        }
+        copy {
+            from zipTree(zip)
+            into downloadDir
+        }
+    }
+
+}
+
+tasks.register("buildNative") {
+    group = "build"
+    description = "Build parser native modules"
+    dependsOn "downloadSource", rootProject.bootstrap
+    def jniSrcDir = Utils.jniSrcDir(project)
+    def outDir = Utils.jniOutDir(project)
+    def jniCFile = Utils.jniCFile(project, "org_treesitter_TreeSitterAda.c")
+    def parserCFile = Utils.libParserCFile(project, libName, libVersion)
+    def libSrcDir = Utils.libSrcDir(project, libName, libVersion)
+    def jniInclude = Utils.jniIncludeDir(project)
+
+    def targets = Utils.treeSitterTargets(project)
+    def outputFiles = targets.collect()
+            { t -> Utils.jniOutFile(project, t, libName)}
+    outputs.files(outputFiles)
+    inputs.files(jniCFile, parserCFile, rootProject.layout.projectDirectory.file("gradle.properties"))
+    doLast{
+        mkdir(outDir)
+        targets.each {target ->
+            def jniMdInclude = Utils.jniMdInclude(project, target)
+            def jniOutFile = Utils.jniOutFile(project, target, libName)
+            exec{
+                workingDir jniSrcDir
+                commandLine(rootProject.downloadZig.zigExe, "cc",
+                        "-g",
+                        "-shared",
+                        "-target", target,
+                        "-I", libSrcDir,
+                        "-I", jniInclude,
+                        "-I", jniMdInclude,
+                        "-o", jniOutFile,
+                        jniCFile,
+                        parserCFile
+                )
+            }
+        }
+        Utils.removeWindowsDebugFiles(project)
+    }
+
+}

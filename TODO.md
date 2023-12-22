@@ -1,0 +1,3 @@
+- refactor package structure
+- add documentation
+- add CI

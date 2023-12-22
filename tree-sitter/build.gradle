@@ -1,9 +1,14 @@
+import org.treesitter.build.Utils
+
+import java.util.stream.Collectors
+import java.util.stream.Stream
+
 plugins {
     id 'java'
 }
 
 group = 'org.treesitter'
-version = '1.0-SNAPSHOT'
+version = treesitterVersion
 
 repositories {
     mavenCentral()
@@ -11,18 +16,80 @@ repositories {
 
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'ch.qos.logback:logback-classic:1.4.14'
+    testImplementation project(':tree-sitter-json')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation project(":tree-sitter-core")
 }
 
 test {
     useJUnitPlatform()
 }
 
-tasks.register('buildNative') {
-    dependsOn ":bootStrap"
-    group = "build"
+def libName = "tree-sitter"
+
+tasks.register('downloadTreeSitterSource') {
+    group = "build setup"
+    description = "Download TreeSitter source"
+    def zipUrl = """https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v${treesitterVersion}.zip"""
+    def treeSitterDir = Utils.libDownloadDir(project, libName)
+    def treeSitterZip =  Utils.libZipFile(project, libName, treesitterVersion)
+    def treeSitterSrcDir = Utils.libSrcDir(project, libName, treesitterVersion, "lib/src")
+    inputs.files(layout.projectDirectory.file("gradle.properties"))
+    outputs.dir(treeSitterSrcDir)
     doLast {
-        println("Build Native")
+        download.run {
+            src zipUrl
+            dest treeSitterZip
+            overwrite false
+        }
+        copy {
+            from zipTree(treeSitterZip)
+            into treeSitterDir
+        }
+    }
+
+}
+tasks.register("buildNative") {
+    group = "build"
+    description = "Download TreeSitter native modules"
+    dependsOn "downloadTreeSitterSource", rootProject.bootstrap
+    def jniDir = Utils.jniSrcDir(project)
+    def jniOutDir = Utils.jniOutDir(project)
+    def jniCFile = Utils.jniCFile(project, "org_treesitter_TSParser.c")
+    def jniInclude = Utils.jniIncludeDir(project)
+    def treeSitterSrcDir = Utils.libSrcDir(project, libName, treesitterVersion, "lib/src")
+    def treeSitterInclude = Utils.libSrcDir(project, libName, treesitterVersion, "lib/include")
+    def treeSitterCFile = treeSitterSrcDir.file("lib.c")
+    def targets = Utils.treeSitterTargets(project)
+    def outputFiles = Stream.of(targets)
+            .map( t -> Utils.jniOutFile(project, t, libName))
+            .collect(Collectors.toList())
+    inputs.files(treeSitterCFile, jniCFile,  rootProject.layout.projectDirectory.file("gradle.properties"))
+    outputs.files(outputFiles)
+    doLast{
+        mkdir(jniOutDir)
+        targets.each {target ->
+            def jniMdInclude = Utils.jniMdInclude(project, target)
+            def outFile = Utils.jniOutFile(project, target, libName)
+            exec{
+                workingDir jniDir
+                println "arch $target"
+                commandLine(rootProject.downloadZig.zigExe, "cc",
+                        "-g",
+                        "-shared",
+                        "-target", target,
+                        "-I", jniInclude,
+                        "-I", jniMdInclude,
+                        "-I", treeSitterSrcDir,
+                        "-I", treeSitterInclude,
+                        "-o", outFile,
+                        treeSitterCFile,
+                        jniCFile,
+                )
+            }
+        }
+        Utils.removeWindowsDebugFiles(project)
     }
 
 }

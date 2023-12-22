@@ -1,0 +1,3 @@
+dependencies {
+    implementation group: 'de.undercouch', name: 'gradle-download-task', version: '5.5.0'
+}

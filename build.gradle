@@ -24,11 +24,11 @@ tasks.register("downloadMiniSign") {
     } else if(os.macOsX) {
         miniSignUrl = "https://github.com/jedisct1/minisign/releases/download/0.11/minisign-0.11-macos.zip"
         miniSignZip = miniSignDir.file("minisign-0.11-macos.zip")
-        miniSignExe = miniSignDir.file("minisign-linux/minisign")
+        miniSignExe = miniSignDir.file("minisign")
     } else if(os.linux) {
         miniSignUrl = "https://github.com/jedisct1/minisign/releases/download/0.11/minisign-0.11-linux.tar.gz"
         miniSignZip = miniSignDir.file("minisign-0.11-linux.tar.gz")
-        miniSignExe = miniSignDir.file("minisign-linux/minisign")
+        miniSignExe = miniSignDir.file("minisign-linux/x86_64/minisign")
     } else {
         throw new GradleException("Download miniSig error: Unsupported OS: " + System.getProperty("os.name"))
     }
@@ -43,7 +43,11 @@ tasks.register("downloadMiniSign") {
             overwrite false
         }
         copy{
-            from zipTree(miniSignZip)
+            if(miniSignZip.asFile.name.endsWith("zip")){
+                from zipTree(miniSignZip)
+            }else if(miniSignZip.asFile.name.endsWith("tar.gz")){
+                from tarTree(miniSignZip)
+            }
             into miniSignDir
         }
     }

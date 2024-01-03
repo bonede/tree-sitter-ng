@@ -4,6 +4,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 public abstract class NativeUtils {
     private static String getFullLibName(String libName){
@@ -17,7 +19,7 @@ public abstract class NativeUtils {
             os = "windows";
         }else if(osName.contains("linux")){
             ext = "so";
-            os = "linux";
+            os = "linux-gnu";
         }else if(osName.contains("mac")){
             ext = "dylib";
             os = "macos";
@@ -44,6 +46,53 @@ public abstract class NativeUtils {
         return stringBuilder.toString();
     }
 
+    static private Path getLibStorePath(){
+        String userDefinedPath = System.getProperty("tree-sitter-lib");
+        if(userDefinedPath == null){
+            return Path.of(System.getProperty("user.home") ,".tree-sitter");
+        }
+        return Path.of(userDefinedPath);
+    }
+
+
+    private static long crc32(byte[] bytes) {
+        Checksum crc32 = new CRC32();
+        crc32.update(bytes, 0, bytes.length);
+        return crc32.getValue();
+    }
+
+    private static byte[] readFile(File file){
+        try(
+            InputStream inputStream = new FileInputStream(file);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream()
+        ){
+            inputStream.transferTo(outputStream);
+            return outputStream.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static byte[] readInputStream(InputStream inputStream){
+        try(
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream()
+        ){
+            inputStream.transferTo(outputStream);
+            return outputStream.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static byte[] readLib(String libName){
+        String fullLibName = getFullLibName(libName);
+        InputStream inputStream = NativeUtils.class.getClassLoader().getResourceAsStream(fullLibName);
+        if(inputStream == null){
+            throw new RuntimeException(String.format("Can't open %s", fullLibName));
+        }
+        return readInputStream(inputStream);
+    }
+
     /**
      * Load native lib from class path by name convention.
      *
@@ -57,31 +106,31 @@ public abstract class NativeUtils {
      */
     public static void loadLib(String libName){
         String fullLibName = getFullLibName(libName);
-        File file;
-        try {
-            Path tempFilePath = Files.createTempDirectory("lib").resolve(fullLibName);
-            file = tempFilePath.toFile();
-            if(!file.getParentFile().mkdirs()){
-                throw new RuntimeException(String.format("Can't make dir: %s", file.getParentFile()));
+        Path filePath = getLibStorePath().resolve(fullLibName);
+        File file = filePath.toFile();
+        file.getParentFile().mkdirs();
+        boolean shouldOverwrite = false;
+        byte[] newFileBytes = null;
+        if(file.exists()){
+            byte[] oldFileBytes = readFile(file);
+            newFileBytes = readLib(libName);
+            if(crc32(oldFileBytes) != crc32(newFileBytes)){
+                shouldOverwrite = true;
             }
-        }catch (IOException e){
-            throw new RuntimeException(e);
+        }else{
+           shouldOverwrite = true;
         }
-
-        try(
-            InputStream inputStream = NativeUtils.class.getClassLoader().getResourceAsStream(fullLibName);
-            FileOutputStream outputStream =  new FileOutputStream(file)
-        ){
-            if(inputStream == null){
-                throw new RuntimeException(String.format("Can't open %s", fullLibName));
+        if(shouldOverwrite){
+            if(newFileBytes == null){
+                newFileBytes = readLib(libName);
             }
-            byte[] buf = new byte[8192];
-            int length;
-            while ((length = inputStream.read(buf)) != -1) {
-                outputStream.write(buf, 0, length);
+            try(
+                FileOutputStream outputStream =  new FileOutputStream(file)
+            ){
+                new ByteArrayInputStream(newFileBytes).transferTo(outputStream);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
         System.load(file.getAbsolutePath());
     }

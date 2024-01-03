@@ -16,8 +16,7 @@ repositories {
 
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.9.1')
-    testImplementation 'ch.qos.logback:logback-classic:1.4.14'
-    testImplementation project(':tree-sitter-json')
+    implementation project(':tree-sitter-json')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     implementation project(":tree-sitter-core")
 }

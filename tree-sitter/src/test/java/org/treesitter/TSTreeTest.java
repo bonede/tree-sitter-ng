@@ -2,8 +2,6 @@ package org.treesitter;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +15,6 @@ class TSTreeTest {
     private static TSTree tree;
     private static TSLanguage json = new TreeSitterJson();
     private static TSParser parser = new TSParser();
-    private static Logger logger = LoggerFactory.getLogger(TSTreeTest.class);
 
     @BeforeAll
     static void beforeAll() {
@@ -72,7 +69,6 @@ class TSTreeTest {
         TSReader reader = new TSReader() {
             @Override
             public int read(byte[] buf, int offset, TSPoint position) {
-                logger.info("edited: {} offset: {}", edited, offset);
                 ByteBuffer byteBuffer = ByteBuffer.wrap(buf);
                 if(edited.get()){
                     if(offset >= newJsonSrc.length()){
@@ -113,7 +109,6 @@ class TSTreeTest {
         TSReader reader = new TSReader() {
             @Override
             public int read(byte[] buf, int offset, TSPoint position) {
-                logger.info("edited: {} offset: {}", edited, offset);
                 ByteBuffer byteBuffer = ByteBuffer.wrap(buf);
                 if(edited.get()){
                     if(offset >= newJsonSrc.length()){

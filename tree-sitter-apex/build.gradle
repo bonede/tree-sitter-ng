@@ -92,7 +92,7 @@ tasks.register("buildNative") {
                 def jniOutFile = Utils.jniOutFile(project, target, "tree-sitter-$name")
                 def cmd = [
                         rootProject.downloadZig.zigExe, "c++",
-                        "-g",
+                        "-g0",
                         "-shared",
                         "-target", target,
                         "-I", libSrcDir,

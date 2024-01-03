@@ -75,6 +75,7 @@ tasks.register("buildNative") {
                 workingDir jniDir
                 println "arch $target"
                 commandLine(rootProject.downloadZig.zigExe, "cc",
+                        "-g0",
                         "-shared",
                         "-target", target,
                         "-I", jniInclude,

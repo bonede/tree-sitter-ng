@@ -4,7 +4,7 @@ import org.treesitter.build.GenTask
 import org.treesitter.build.Utils
 
 plugins {
-    id "de.undercouch.download"
+    id "de.undercouch.download" version "5.5.0"
 }
 // MiniSign Release: https://jedisct1.github.io/minisign/
 tasks.register("downloadMiniSign") {

@@ -26,7 +26,7 @@ public abstract class NativeUtils {
         }else{
             throw new RuntimeException(String.format("Does not support OS: %s", osName));
         }
-        if(archName.contains("amd64")){
+        if(archName.contains("amd64") || archName.contains("x86_64")){
             arch = "x86_64";
         }else if(archName.contains("aarch64")){
             arch = "aarch64";

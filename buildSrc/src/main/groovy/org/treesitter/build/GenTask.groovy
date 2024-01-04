@@ -16,10 +16,15 @@ class GenTask extends DefaultTask {
         return libShortName.split("-").collect {it.capitalize()}.join("")
     }
 
+    static String libIdentifierName(String libShortName){
+        return libShortName.replace("-", "_")
+    }
+
 
     static void genJavaFile(File projectDir, String libShortName){
         def capitalized = capitalizedLibName(libShortName)
         def className = "TreeSitter$capitalized"
+        def idName = libIdentifierName(libShortName)
         def classFile = new File(projectDir, "src/main/java/org/treesitter/${className}.java")
         def content = """
 package org.treesitter;
@@ -31,12 +36,12 @@ public class $className implements TSLanguage {
     static {
         NativeUtils.loadLib("lib/tree-sitter-$libShortName");
     }
-    private native static long tree_sitter_$libShortName();
+    private native static long tree_sitter_$idName();
 
     private final long ptr;
 
     public $className() {
-        ptr = tree_sitter_$libShortName();
+        ptr = tree_sitter_$idName();
     }
 
     @Override
@@ -186,21 +191,25 @@ tasks.register("buildNative") {
             outputStream.withPrintWriter {writer -> writer.write(content)}
         }
     }
-
+    static String jniMethodName(String idName){
+        return idName.replace("_", "_1")
+    }
     static void genJniCFile(File projectDir, String libShortName){
         def capitalized = capitalizedLibName(libShortName)
         def cFile = new File(projectDir, "src/main/c/org_treesitter_TreeSitter${capitalized}.c")
+        def idName = libIdentifierName(libShortName)
+        def jniMethodName = jniMethodName(idName)
         def content = """
 #include <jni.h>
-void *tree_sitter_$libShortName();
+void *tree_sitter_$idName();
 /*
  * Class:     org_treesitter_TreeSitter$capitalized
- * Method:    tree_sitter_$libShortName
+ * Method:    tree_sitter_$idName
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_org_treesitter_TreeSitter${capitalized}_tree_1sitter_1$libShortName
+JNIEXPORT jlong JNICALL Java_org_treesitter_TreeSitter${capitalized}_tree_1sitter_1$jniMethodName
   (JNIEnv *env, jclass clz){
-   return (jlong) tree_sitter_$libShortName();
+   return (jlong) tree_sitter_$idName();
 }
 """
         cFile.getParentFile().mkdirs()

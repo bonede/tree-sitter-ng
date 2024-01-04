@@ -1,0 +1,99 @@
+
+
+import org.treesitter.build.Utils
+
+plugins {
+    id 'java'
+}
+
+group = 'org.treesitter'
+version = libVersion
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation project(":tree-sitter-core")
+}
+
+test {
+    useJUnitPlatform()
+}
+def libName = "tree-sitter-ocaml"
+tasks.register('downloadSource') {
+    group = "build setup"
+    description = "Download parser source"
+    def zipUrl = "https://github.com/tree-sitter/tree-sitter-ocaml/archive/refs/tags/v${libVersion}.zip"
+    def downloadDir = Utils.libDownloadDir(project, libName)
+    def zip = Utils.libZipFile(project, libName, libVersion)
+    def libSrcDir = Utils.libSrcDir(project, libName, libVersion, "ocaml/src")
+    def outputFiles = project.fileTree(libSrcDir) {
+        include(Utils.libFiles())
+    }.toList()
+    inputs.files(layout.projectDirectory.file("gradle.properties"))
+    outputs.files(outputFiles)
+    doLast {
+        download.run {
+            src zipUrl
+            dest zip
+            overwrite false
+        }
+        copy {
+            from zipTree(zip)
+            into downloadDir
+        }
+    }
+
+}
+
+tasks.register("buildNative") {
+    group = "build"
+    description = "Build parser native modules"
+    dependsOn "downloadSource", rootProject.bootstrap
+    def jniSrcDir = Utils.jniSrcDir(project)
+    def outDir = Utils.jniOutDir(project)
+    def jniCFile = Utils.jniCFile(project, "org_treesitter_TreeSitterOcaml.c")
+    def libSrcDir = Utils.libSrcDir(project, libName, libVersion, "ocaml/src")
+    def jniInclude = Utils.jniIncludeDir(project)
+
+    def targets = Utils.treeSitterTargets(project)
+    def outputFiles = targets.collect()
+            { t -> Utils.jniOutFile(project, t, libName)}
+    def srcFiles = project.fileTree(libSrcDir) {
+        include(Utils.libFiles())
+    }.toList()
+    outputs.files(outputFiles)
+    def inputFiles = srcFiles + [rootProject.layout.projectDirectory.file("gradle.properties")]
+    inputs.files(inputFiles)
+    doLast{
+        mkdir(outDir)
+        targets.each {target ->
+            def jniMdInclude = Utils.jniMdInclude(project, target)
+            def jniOutFile = Utils.jniOutFile(project, target, libName)
+            def files = project.fileTree(libSrcDir) {
+                include(Utils.libFiles())
+            }.toList()
+            def cmd = [
+                        rootProject.downloadZig.zigExe, "c++",
+                        "-g0",
+                        "-shared",
+                        "-target", target,
+                        "-I", libSrcDir,
+                        "-I", jniInclude,
+                        "-I", jniMdInclude,
+                        "-o", jniOutFile,
+                        jniCFile,
+            ]
+
+            cmd.addAll(files)
+            exec{
+                workingDir jniSrcDir
+                commandLine(cmd)
+            }
+        }
+        Utils.removeWindowsDebugFiles(project)
+    }
+}

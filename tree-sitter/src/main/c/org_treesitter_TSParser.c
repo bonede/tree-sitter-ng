@@ -392,7 +392,6 @@ JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1parser_1print_1dot_1grap
    if(fd == -1){
      fd = (*env)->GetLongField(env, fd_object, ts_jni_get_field_id(env, fd_class, "handle", "J"));
    }
-   printf("fd: %ld\n", fd);
    ts_parser_print_dot_graphs((TSParser *) parser_ptr, fd);
 }
 
@@ -757,7 +756,6 @@ JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1tree_1print_1dot_1graph
     if(fd == -1){
         fd = (*env)->GetLongField(env, fd_object, ts_jni_get_field_id(env, fd_class, "handle", "J"));
     }
-    printf("fd: %ld\n", fd);
     ts_tree_print_dot_graph((TSTree *) tree_ptr, fd);
 }
 

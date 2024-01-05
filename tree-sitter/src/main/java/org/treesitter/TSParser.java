@@ -191,8 +191,8 @@ public class TSParser {
      * assigned. True means assignment succeeded. False means there was a version
      * mismatch: the language was generated with an incompatible version of the
      * Tree-sitter CLI. Check the language's version using `ts_language_version`
-     * and compare it to this library's `TREE_SITTER_LANGUAGE_VERSION` and
-     * `TREE_SITTER_MIN_COMPATIBLE_LANGUAGE_VERSION` constants.
+     * and compare it to this library's {@link TSParser#TREE_SITTER_LANGUAGE_VERSION} and
+     * {@link TSParser#TREE_SITTER_MIN_COMPATIBLE_LANGUAGE_VERSION} constants.
      */
     public boolean setLanguage(TSLanguage language) {
         return ts_parser_set_language(ptr, language.getPtr());

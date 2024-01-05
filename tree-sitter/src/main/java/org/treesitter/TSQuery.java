@@ -25,6 +25,15 @@ public class TSQuery {
         cleaner.register(this, () -> new TSQuery.TSQueryCleaner(ptr));
     }
 
+    /**
+     * Create a new query from a string containing one or more S-expression
+     * patterns. The query is associated with a particular language, and can
+     * only be run on syntax nodes parsed with that language.<br>
+     *
+     * If all the given patterns are valid, this returns a {@link  TSQuery}.<br>
+     * If a pattern is invalid, it throws.
+     * @throws TSQueryException if the query is invalid
+     */
     public TSQuery(TSLanguage language, String query){
         this(ts_query_new(language.getPtr(), query));
     }
@@ -32,39 +41,91 @@ public class TSQuery {
     protected long getPtr() {
         return ptr;
     }
-
+    /**
+     * Get the number of patterns.
+     */
     public int getPatternCount(){
         return ts_query_pattern_count(ptr);
     }
 
+    /**
+     * Get the number of captures.
+     */
     public int getCaptureCount(){
         return ts_query_capture_count(ptr);
     }
 
+    /**
+     * Get the number of strings.
+     */
     public int getStringCount(){
         return ts_query_string_count(ptr);
     }
-
+    /**
+     * Get the byte offset where the given pattern starts in the query's source.<br>
+     *
+     * This can be useful when combining queries by concatenating their source
+     * code strings.
+     */
     public int getStartByteForPattern(int patternIndex) {
         return ts_query_start_byte_for_pattern(ptr, patternIndex);
     }
 
+    /**
+     * Get all the predicates for the given pattern in the query.<br>
+     *
+     * The predicates are represented as a single array of steps. There are three
+     * types of steps in this array, which correspond to the three legal values for
+     * the <code>type</code> field:
+     * <ul>
+     * <li> `TSQueryPredicateStepTypeCapture` - Steps with this type represent names
+     *    of captures. Their `value_id` can be used with the
+     *   `ts_query_capture_name_for_id` function to obtain the name of the capture.</li>
+     * <li> `TSQueryPredicateStepTypeString` - Steps with this type represent literal
+     *    strings. Their `value_id` can be used with the
+     *    `ts_query_string_value_for_id` function to obtain their string value.</li>
+     * <li> `TSQueryPredicateStepTypeDone` - Steps with this type are *sentinels*
+     *    that represent the end of an individual predicate. If a pattern has two
+     *    predicates, then there will be two steps with this `type` in the array.</li>
+     * </ul>
+     */
     public TSQueryPredicateStep[] getPredicateForPattern(int patternIndex) {
         return ts_query_predicates_for_pattern(ptr, patternIndex);
     }
 
+    /**
+     * Check if the given pattern in the query has a single root node.
+     */
     public boolean isPatternRooted(int patternIndex) {
         return ts_query_is_pattern_rooted(ptr, patternIndex);
     }
 
+    /**
+     * Check if the given pattern in the query is 'non-local'.<br>
+     *
+     * A non-local pattern has multiple root nodes and can match within a
+     * repeating sequence of nodes, as specified by the grammar. Non-local
+     * patterns disable certain optimizations that would otherwise be possible
+     * when executing a query on a specific range of a syntax tree.
+     */
     public boolean isPatterNonLocal(int patternIndex) {
         return ts_query_is_pattern_non_local(ptr, patternIndex);
     }
 
+    /**
+     * Check if a given pattern is guaranteed to match once a given step is reached.
+     * The step is specified by its byte offset in the query's source code.
+     */
     public boolean isPatternGuaranteedAtStep(int byteOffset) {
         return ts_query_is_pattern_guaranteed_at_step(ptr, byteOffset);
     }
 
+
+    /**
+     * Get the name and length of one of the query's captures, or one of the
+     * query's string literals. Each capture and string is associated with a
+     * numeric id based on the order that it appeared in the query's source.
+     */
     public String getCaptureNameForId(int captureId) {
         int captureCount = getCaptureCount();
         if(captureId >= captureCount){
@@ -73,28 +134,51 @@ public class TSQuery {
         return ts_query_capture_name_for_id(ptr, captureId);
     }
 
+    /**
+     * Get the quantifier of the query's captures. Each capture is * associated
+     * with a numeric id based on the order that it appeared in the query's source.
+     */
     public int getCaptureQuantifierForId(int patternId, int captureId) {
         return ts_query_capture_quantifier_for_id(ptr, patternId, captureId);
     }
 
-    public String getStringValueForId(int index) {
+    /**
+     * Get TSQueryPredicateStepTypeString by id. See {@link #getPredicateForPattern(int)}
+     * @param id the <code>valueId</code> got from {@link #getPredicateForPattern(int)}.
+     * @return the literal string value.
+     * @throws TSQueryException if the id is invalid.
+     */
+    public String getStringValueForId(int id) {
         int patternCount = getPatternCount();
         for(int i = 0; i < patternCount; i++){
             TSQueryPredicateStep[] predicates = getPredicateForPattern(i);
             for(int j = 0; j < predicates.length; j++){
                 TSQueryPredicateStep predicate = predicates[j];
-                if(index == predicate.getValueId() && predicate.getType() == TSQueryPredicateStepType.TSQueryPredicateStepTypeString){
+                if(id == predicate.getValueId() && predicate.getType() == TSQueryPredicateStepType.TSQueryPredicateStepTypeString){
                     return ts_query_string_value_for_id(ptr, predicate.getValueId());
                 }
             }
         }
-        throw new TSException("Invalid string id: " + index);
+        throw new TSException("Invalid string id: " + id);
     }
 
+    /**
+     * Disable a certain capture within a query. <br>
+     *
+     * This prevents the capture from being returned in matches, and also avoids
+     * any resource usage associated with recording the capture. Currently, there
+     * is no way to undo this.
+     */
     public void disableCapture(String name) {
         ts_query_disable_capture(ptr, name);
     }
 
+    /**
+     * Disable a certain pattern within a query.<br>
+     *
+     * This prevents the pattern from matching and removes most of the overhead
+     * associated with the pattern. Currently, there is no way to undo this.
+     */
     public void disablePattern(int index){
         ts_query_disable_pattern(ptr, index);
     }

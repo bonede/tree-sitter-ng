@@ -145,12 +145,12 @@ class TSParserTest {
         TSLanguage json = new TreeSitterJson();
         parser.setLanguage(json);
         File dotFile = File.createTempFile("json", ".dot");
-        OutputStream outputStream = parser.printDotGraphs(dotFile);
+        parser.printDotGraphs(dotFile);
         parser.parseString(null, JSON_SRC);
         System.out.println("dot file: " + dotFile);
         parser.printDotGraphs(null);
         parser.reset();
         parser.parseString(null, JSON_SRC);
-        outputStream.close();
+
     }
 }

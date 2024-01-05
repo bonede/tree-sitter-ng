@@ -143,9 +143,12 @@ class TSParserTest {
         TSParser parser = new TSParser();
         TSLanguage json = new TreeSitterJson();
         parser.setLanguage(json);
-        parser.printDotGraphs(new File("/data/foo.dot"));
+        File dotFile = File.createTempFile("json", ".dot");
+        parser.printDotGraphs(dotFile);
         parser.parseString(null, JSON_SRC);
+        System.out.println("dot file size: " + dotFile.length());
         parser.printDotGraphs(null);
         parser.reset();
+        parser.parseString(null, JSON_SRC);
     }
 }

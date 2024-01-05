@@ -387,6 +387,10 @@ JNIEXPORT void JNICALL Java_org_treesitter_TSParser_free_1logger
  */
 JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1parser_1print_1dot_1graphs
   (JNIEnv *env, jclass clz, jlong parser_ptr, jobject fd_object){
+   if(fd_object == NULL){
+     ts_parser_print_dot_graphs((TSParser *) parser_ptr, -1);
+     return;
+   }
    jclass fd_class = (*env)->GetObjectClass(env, fd_object);
    jlong fd = (*env)->GetIntField(env, fd_object, ts_jni_get_field_id(env, fd_class, "fd", "I"));
    if(fd == -1){

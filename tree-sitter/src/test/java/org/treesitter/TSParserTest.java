@@ -3,6 +3,7 @@ package org.treesitter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -142,8 +143,9 @@ class TSParserTest {
         TSParser parser = new TSParser();
         TSLanguage json = new TreeSitterJson();
         parser.setLanguage(json);
-
-        TSLogger logger = (type, message) -> System.out.format("%s %s\n", type, message);
-        parser.setLogger(logger);
+        parser.printDotGraphs(new File("/data/foo.dot"));
+        parser.parseString(null, JSON_SRC);
+        parser.printDotGraphs(null);
+        parser.reset();
     }
 }

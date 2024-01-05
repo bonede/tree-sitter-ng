@@ -28,7 +28,7 @@ public class TSParser {
     private static native long get_cancellation_flag_value(long flag_ptr);
     private static native void free_cancellation_flag(long flag_ptr);
     private static native void write_cancellation_flag(long flag_ptr, long value);
-    private static native int ts_language_version(long ts_language_ptr);
+    protected static native int ts_language_version(long ts_language_ptr);
     private static native void ts_parser_set_logger(long ts_parser_ptr, TSLogger logger);
     private static native void free_logger(long ts_parser_ptr);
     private static native void ts_parser_print_dot_graphs(long ts_parser_ptr, FileDescriptor fileDescriptor);
@@ -113,13 +113,13 @@ public class TSParser {
     protected static native void ts_query_cursor_remove_match(long ts_query_cursor_ptr, int match_id);
     protected static native boolean ts_query_cursor_next_capture(long ts_query_cursor_ptr, TSQueryMatch match);
     protected static native void ts_tree_print_dot_graph(long ts_tree_ptr, FileDescriptor fileDescriptor);
-    private static native int ts_language_field_count(long ts_language_ptr);
-    private static native String ts_language_field_name_for_id(long ts_language_ptr, int ts_field_id);
-    private static native int ts_language_field_id_for_name(long ts_language_ptr, String field_name);
-    private static native int ts_language_symbol_type(long ts_language_ptr, int ts_symbol);
-    private static native int ts_language_symbol_count(long ts_language_ptr);
-    private static native String ts_language_symbol_name(long ts_language_ptr, int ts_symbol);
-    private static native int ts_language_symbol_for_name(long ts_language_ptr, String name, boolean is_named);
+    protected static native int ts_language_field_count(long ts_language_ptr);
+    protected static native String ts_language_field_name_for_id(long ts_language_ptr, int ts_field_id);
+    protected static native int ts_language_field_id_for_name(long ts_language_ptr, String field_name);
+    protected static native int ts_language_symbol_type(long ts_language_ptr, int ts_symbol);
+    protected static native int ts_language_symbol_count(long ts_language_ptr);
+    protected static native String ts_language_symbol_name(long ts_language_ptr, int ts_symbol);
+    protected static native int ts_language_symbol_for_name(long ts_language_ptr, String name, boolean is_named);
 
     private final long ptr;
 
@@ -179,38 +179,6 @@ public class TSParser {
         return ts_parser_set_language(ptr, language.getPtr());
     }
 
-    public static int getLanguageVersion(TSLanguage lang) {
-        return ts_language_version(lang.getPtr());
-    }
-    public static TSSymbolType getLanguageSymbolType(TSLanguage lang, int symbol) {
-        int type = ts_language_symbol_type(lang.getPtr(), symbol);
-        switch (type){
-            case 0: return TSSymbolType.TSSymbolTypeRegular;
-            case 1: return TSSymbolType.TSSymbolTypeAnonymous;
-            case 2: return TSSymbolType.TSSymbolTypeAnonymous;
-            default: throw new TSException("Can't handle symbol type: %d" + type);
-        }
-    }
-    public static String getLanguageSymbolName(TSLanguage lang, int symbol) {
-        return ts_language_symbol_name(lang.getPtr(), symbol);
-    }
-    public static int languageSymbolForName(TSLanguage lang, String name, boolean isNamed) {
-        return ts_language_symbol_for_name(lang.getPtr(), name, isNamed);
-    }
-    public static int getLanguageSymbolCount(TSLanguage lang) {
-        return ts_language_symbol_count(lang.getPtr());
-    }
-    public static int getFieldCount(TSLanguage lang) {
-        return ts_language_field_count(lang.getPtr());
-    }
-
-    public static String getFieldNameForId(TSLanguage lang, int fieldId){
-        return ts_language_field_name_for_id(lang.getPtr(), fieldId);
-    }
-
-    public static int getFieldIdForName(TSLanguage lang, String fieldName){
-        return ts_language_field_id_for_name(lang.getPtr(), fieldName);
-    }
 
     public TSTree parseString(TSTree oldTree, String input) {
         long oldTreePtr = oldTree == null ? 0 : oldTree.getPtr();

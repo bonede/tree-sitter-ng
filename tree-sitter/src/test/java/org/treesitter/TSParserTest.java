@@ -25,42 +25,6 @@ class TSParserTest {
     }
 
     @Test
-    public void getLanguageVersion(){
-        assertEquals(14, TSParser.getLanguageVersion(json));
-    }
-    @Test
-    public void getLanguageSymbolType(){
-        assertEquals(TSSymbolType.TSSymbolTypeAnonymous, TSParser.getLanguageSymbolType(json, 0));
-    }
-    @Test
-    public void getLanguageSymbolName(){
-        assertEquals("end", TSParser.getLanguageSymbolName(json, 0));
-    }
-    @Test
-    public void languageSymbolForName(){
-        assertEquals(0, TSParser.languageSymbolForName(json, "end", false));
-    }
-    @Test
-    public void getLanguageSymbolCount(){
-        assertEquals(26, TSParser.getLanguageSymbolCount(json));
-    }
-
-    @Test
-    public void getFieldCount(){
-        assertEquals(2, TSParser.getFieldCount(json));
-    }
-
-    @Test
-    public void getFieldNameForId(){
-        assertEquals("key", TSParser.getFieldNameForId(json, 1));
-    }
-
-    @Test
-    public void getFieldIdForName(){
-        assertEquals(1, TSParser.getFieldIdForName(json, "key"));
-    }
-
-    @Test
     public void parseEncoding(){
         parser.reset();
         TSTree tree = parser.parseStringEncoding(null, JSON_SRC, TSInputEncoding.TSInputEncodingUTF8);

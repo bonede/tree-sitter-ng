@@ -16,9 +16,8 @@ repositories {
 
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.9.1')
-    implementation project(':tree-sitter-json')
     testImplementation 'org.junit.jupiter:junit-jupiter'
-    implementation project(":tree-sitter-core")
+    testImplementation project(':tree-sitter-json')
 }
 
 test {

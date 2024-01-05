@@ -8,6 +8,8 @@ public interface TSLanguage {
      * Tree-sitter.<br>
      *
      * See also {@link TSParser#setLanguage(TSLanguage) TSParser#setLanguage}.
+     *
+     * @return The language version number.
      */
     default int version(){
         return TSParser.ts_language_version(this.getPtr());
@@ -15,6 +17,8 @@ public interface TSLanguage {
 
     /**
      * Get the number of distinct field names in the language.
+     *
+     * @return The number of fields.
      */
     default int fieldCount(){
         return TSParser.ts_language_field_count(this.getPtr());
@@ -22,6 +26,10 @@ public interface TSLanguage {
 
     /**
      * Get the field name string for the given numerical id.
+     *
+     * @param id the field id.
+     *
+     * @return The field name string.
      */
     default String fieldNameForId(int id){
         return TSParser.ts_language_field_name_for_id(this.getPtr(), id);
@@ -29,6 +37,10 @@ public interface TSLanguage {
 
     /**
      * Get the numerical id for the given field name string.
+     *
+     * @param name the field name string.
+     *
+     * @return The field id.
      */
     default int fieldIdForName(String name){
         return TSParser.ts_language_field_id_for_name(this.getPtr(), name);
@@ -39,6 +51,10 @@ public interface TSLanguage {
      * or a hidden nodes.<br>
      *
      * See also {@link TSNode#isNamed()}. Hidden nodes are never returned from the API.
+     *
+     * @param symbol the node type id.
+     *
+     * @return The symbol type.
      */
     default TSSymbolType symbolType(int symbol){
         int type = TSParser.ts_language_symbol_type(this.getPtr(), symbol);
@@ -52,6 +68,8 @@ public interface TSLanguage {
 
     /**
      * Get the number of distinct node types in the language.
+     *
+     * @return the number of symbols.
      */
     default int symbolCount(){
         return TSParser.ts_language_symbol_count(this.getPtr());
@@ -59,6 +77,10 @@ public interface TSLanguage {
 
     /**
      * Get a node type string for the given numerical id.
+     *
+     * @param symbol the node type id.
+     *
+     * @return the node type string.
      */
     default String symbolName(int symbol){
         return TSParser.ts_language_symbol_name(this.getPtr(), symbol);
@@ -66,6 +88,11 @@ public interface TSLanguage {
 
     /**
      * Get the numerical id for the given node type string.
+     *
+     * @param name the node type string.
+     * @param isNamed whether the node type is a named node.
+     *
+     * @return the node type id.
      */
     default int symbolForName(String name, boolean isNamed){
         return TSParser.ts_language_symbol_for_name(this.getPtr(), name, isNamed);

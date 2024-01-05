@@ -171,12 +171,16 @@ public class TSParser {
     }
     /**
      * Get the parser's current logger.
+     *
+     * @return The logger that the parser is using.
      */
     public TSLogger getLogger() {
         return logger;
     }
     /**
      * Set the logger that a parser should use during parsing.<br>
+     *
+     * @param logger The logger that the parser should use.
      *
      */
     public void setLogger(TSLogger logger) {
@@ -193,6 +197,10 @@ public class TSParser {
      * Tree-sitter CLI. Check the language's version using `ts_language_version`
      * and compare it to this library's {@link TSParser#TREE_SITTER_LANGUAGE_VERSION} and
      * {@link TSParser#TREE_SITTER_MIN_COMPATIBLE_LANGUAGE_VERSION} constants.
+     *
+     * @param language The language that the parser should use.
+     *
+     * @return True if the language was successfully applied. False otherwise.
      */
     public boolean setLanguage(TSLanguage language) {
         return ts_parser_set_language(ptr, language.getPtr());
@@ -202,6 +210,11 @@ public class TSParser {
      * Use the parser to parse some source code stored in one contiguous buffer.
      * The first two parameters are the same as in the {@link #parse(byte[], TSTree, TSReader, TSInputEncoding) parse()} function
      * above.
+     *
+     * @param oldTree The old tree to use. If any.
+     * @param input the source code to parse.
+     *
+     * @return {@link TSTree}
      */
     public TSTree parseString(TSTree oldTree, String input) {
         long oldTreePtr = oldTree == null ? 0 : oldTree.getPtr();
@@ -214,6 +227,12 @@ public class TSParser {
      * a given encoding. The first four parameters work the same as in the
      * {@link #parseString(TSTree, String) parserString()} method above. The final parameter indicates whether
      * the text is encoded as UTF8 or UTF16.
+     *
+     * @param oldTree The old tree to use. If any.
+     * @param input The source code to parse.
+     * @param encoding The encoding of the source code.
+     *
+     * @return {@link TSTree}
      */
     public TSTree parseStringEncoding(TSTree oldTree, String input, TSInputEncoding encoding){
         long oldTreePtr = oldTree == null ? 0 : oldTree.getPtr();
@@ -232,7 +251,7 @@ public class TSParser {
      * already edited the old syntax tree using the {@link TSTree#edit(TSInputEdit) edit} function in a
      * way that exactly matches the source code changes.<br>
      *
-     * This function returns a syntax tree on success, and <code>null</code on failure. There
+     * This function returns a syntax tree on success, and <code>null</code> on failure. There
      * are three possible reasons for failure:<br>
      * <ol>
      *    <li>The parser does not have a language assigned. Check for this using the
@@ -247,10 +266,11 @@ public class TSParser {
      *        from where the parser left out by calling {@link #parse(byte[], TSTree, TSReader, TSInputEncoding) parse()} again with
      *        the same arguments.</li>
      * </ol>
-     * @param buf buffer to use while reading from reader.
-     * @param oldTree the old syntax tree to reuse. If any.
-     * @param reader the reader to read source code from.
-     * @param encoding source code encoding.
+     * @param buf Buffer to use while reading from reader.
+     * @param oldTree The old tree to use. If any.
+     * @param reader The reader to read source code from.
+     * @param encoding The encoding of the source code.
+     *
      * @return {@link TSTree} if success, <code>null</code> otherwise.
      */
     public TSTree parse(byte[] buf, TSTree oldTree, TSReader reader, TSInputEncoding encoding){
@@ -264,6 +284,8 @@ public class TSParser {
 
     /**
      * Get the parser's current language.
+     *
+     * @return {@link TSLanguage}
      */
     public TSLanguage getLanguage(){
         return () -> ts_parser_language(ptr);
@@ -274,20 +296,23 @@ public class TSParser {
      * By default, the parser will always include entire documents. This function
      * allows you to parse only a *portion* of a document but still return a syntax
      * tree whose ranges match up with the document as a whole. You can also pass
-     * multiple disjoint ranges.</br>
+     * multiple disjoint ranges.<br>
      *
      * The second and third parameters specify the location and length of an array
      * of ranges. The parser does *not* take ownership of these ranges; it copies
      * the data, so it doesn't matter how these ranges are allocated.<br>
      *
-     * If `length` is zero, then the entire document will be parsed. Otherwise,
+     * If <code>length</code> is zero, then the entire document will be parsed. Otherwise,
      * the given ranges must be ordered from earliest to latest in the document,
      * and they must not overlap. That is, the following must hold for all
-     * `i` < `length - 1`: ranges[i].end_byte <= ranges[i + 1].start_byte <br>
+     * <code> i &lt; length - 1: ranges[i].end_byte &lt;= ranges[i + 1].start_byte </code> <br>
      *
      * If this requirement is not satisfied, the operation will fail, the ranges
-     * will not be assigned, and this function will return `false`. On success,
-     * this function returns `true`
+     * will not be assigned, and this function will return <code>false</code>. On success,
+     * this function returns <code>true</code>
+     *
+     * @param ranges The ranges to include.
+     * @return <code>true</code> on success, <code>false</code> otherwise.
      */
     public boolean setIncludedRanges(TSRange[] ranges) {
         return ts_parser_set_included_ranges(ptr, ranges);
@@ -295,6 +320,8 @@ public class TSParser {
 
     /**
      * Get the ranges of text that the parser will include when parsing.
+     *
+     * @return {@link TSRange}[]
      *
      */
     public TSRange[] getIncludedRanges() {
@@ -319,6 +346,8 @@ public class TSParser {
      *
      * If parsing takes longer than this, it will halt early, returning <code>null</code>.
      * See {@link #parse(byte[], TSTree, TSReader, TSInputEncoding) parse()} for more information.
+     *
+     * @param timeoutMicros The maximum duration in microseconds.
      */
     public void setTimeoutMicros(long timeoutMicros){
         ts_parser_set_timeout_micros(ptr, timeoutMicros);
@@ -326,16 +355,21 @@ public class TSParser {
 
     /**
      * Get the duration in microseconds that parsing is allowed to take.
+     *
+     * @return The maximum duration in microseconds.
      */
     public long getTimeoutMicros(){
         return ts_parser_timeout_micros(ptr);
     }
+
     /**
      * Set the parser's current cancellation flag.<br>
      *
      * If a non-zero value is assigned, then the parser will periodically read
      * from this pointer during parsing. If it reads a non-zero value, it will
      * halt early, returning <code>null</code>. See {@link #parse(byte[], TSTree, TSReader, TSInputEncoding) parse()} for more information.
+     *
+     * @param flag The cancellation flag.
      */
     public void setCancellationFlag(long flag){
         write_cancellation_flag(ts_parser_cancellation_flag(ptr), flag);
@@ -343,6 +377,8 @@ public class TSParser {
 
     /**
      * Get the parser's current cancellation flag.
+     *
+     * @return The cancellation flag.
      */
     public long getCancellationFlag(){
         return get_cancellation_flag_value(ts_parser_cancellation_flag(ptr));
@@ -357,6 +393,8 @@ public class TSParser {
      * NOTE: This is function is not implemented on Windows. <a href="https://github.com/tree-sitter/tree-sitter/blob/660481dbf71413eba5a928b0b0ab8da50c1109e0/lib/src/tree.c#L128">Reference</a>
      *
      * @param file the file to which the parser should write debugging graphs. Passing <code>null</code> to disable logging.
+     *
+     * @throws IOException if the file cannot be written to.
      */
     public void printDotGraphs(File file) throws IOException {
         // TODO add Windows support

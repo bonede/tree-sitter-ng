@@ -32,7 +32,11 @@ public class TSQuery {
      *
      * If all the given patterns are valid, this returns a {@link  TSQuery}.<br>
      * If a pattern is invalid, it throws.
-     * @throws TSQueryException if the query is invalid
+     *
+     * @param language The language to which the query is associated
+     * @param query The S-expression query
+     *
+     * @throws TSQueryException If the query is invalid
      */
     public TSQuery(TSLanguage language, String query){
         this(ts_query_new(language.getPtr(), query));
@@ -43,6 +47,8 @@ public class TSQuery {
     }
     /**
      * Get the number of patterns.
+     *
+     * @return The number of patterns.
      */
     public int getPatternCount(){
         return ts_query_pattern_count(ptr);
@@ -50,6 +56,8 @@ public class TSQuery {
 
     /**
      * Get the number of captures.
+     *
+     * @return The number of captures.
      */
     public int getCaptureCount(){
         return ts_query_capture_count(ptr);
@@ -57,15 +65,23 @@ public class TSQuery {
 
     /**
      * Get the number of strings.
+     *
+     * @return The number of strings.
      */
     public int getStringCount(){
         return ts_query_string_count(ptr);
     }
+
+
     /**
      * Get the byte offset where the given pattern starts in the query's source.<br>
      *
      * This can be useful when combining queries by concatenating their source
      * code strings.
+     *
+     * @param patternIndex The index of the pattern.
+     *
+     * @return The byte offset where the pattern starts.
      */
     public int getStartByteForPattern(int patternIndex) {
         return ts_query_start_byte_for_pattern(ptr, patternIndex);
@@ -88,6 +104,10 @@ public class TSQuery {
      *    that represent the end of an individual predicate. If a pattern has two
      *    predicates, then there will be two steps with this `type` in the array.</li>
      * </ul>
+     *
+     * @param patternIndex The index of the pattern.
+     *
+     * @return The predicates for the pattern.
      */
     public TSQueryPredicateStep[] getPredicateForPattern(int patternIndex) {
         return ts_query_predicates_for_pattern(ptr, patternIndex);
@@ -95,6 +115,10 @@ public class TSQuery {
 
     /**
      * Check if the given pattern in the query has a single root node.
+     *
+     * @param patternIndex The index of the pattern.
+     *
+     * @return True if the pattern has a single root node, false otherwise.
      */
     public boolean isPatternRooted(int patternIndex) {
         return ts_query_is_pattern_rooted(ptr, patternIndex);
@@ -107,6 +131,10 @@ public class TSQuery {
      * repeating sequence of nodes, as specified by the grammar. Non-local
      * patterns disable certain optimizations that would otherwise be possible
      * when executing a query on a specific range of a syntax tree.
+     *
+     * @param patternIndex The index of the pattern.
+     *
+     * @return True if the pattern is non-local, false otherwise.
      */
     public boolean isPatterNonLocal(int patternIndex) {
         return ts_query_is_pattern_non_local(ptr, patternIndex);
@@ -115,6 +143,10 @@ public class TSQuery {
     /**
      * Check if a given pattern is guaranteed to match once a given step is reached.
      * The step is specified by its byte offset in the query's source code.
+     *
+     * @param  byteOffset The byte offset in the query's source code.
+     *
+     * @return True if the pattern is guaranteed to match once the step is reached,
      */
     public boolean isPatternGuaranteedAtStep(int byteOffset) {
         return ts_query_is_pattern_guaranteed_at_step(ptr, byteOffset);
@@ -125,6 +157,10 @@ public class TSQuery {
      * Get the name and length of one of the query's captures, or one of the
      * query's string literals. Each capture and string is associated with a
      * numeric id based on the order that it appeared in the query's source.
+     *
+     * @param captureId The id of the capture.
+     *
+     * @return The name of the capture.
      */
     public String getCaptureNameForId(int captureId) {
         int captureCount = getCaptureCount();
@@ -137,6 +173,11 @@ public class TSQuery {
     /**
      * Get the quantifier of the query's captures. Each capture is * associated
      * with a numeric id based on the order that it appeared in the query's source.
+     *
+     * @param patternId The id of the pattern.
+     * @param captureId The id of the capture.
+     *
+     * @return The quantifier of the capture.
      */
     public int getCaptureQuantifierForId(int patternId, int captureId) {
         return ts_query_capture_quantifier_for_id(ptr, patternId, captureId);
@@ -168,6 +209,8 @@ public class TSQuery {
      * This prevents the capture from being returned in matches, and also avoids
      * any resource usage associated with recording the capture. Currently, there
      * is no way to undo this.
+     *
+     * @param name The name of the capture to disable.
      */
     public void disableCapture(String name) {
         ts_query_disable_capture(ptr, name);
@@ -178,6 +221,8 @@ public class TSQuery {
      *
      * This prevents the pattern from matching and removes most of the overhead
      * associated with the pattern. Currently, there is no way to undo this.
+     *
+     * @param index The index of the pattern to disable.
      */
     public void disablePattern(int index){
         ts_query_disable_pattern(ptr, index);

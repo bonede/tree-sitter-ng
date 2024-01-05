@@ -42,8 +42,8 @@ public class TSQueryCursor {
      *    captures that appear *before* some of the captures from a previous match.</li>
      * <li> Repeatedly call {@link #nextCapture(TSQueryMatch) nextCapture()} to iterate over all of the
      *    individual *captures* in the order that they appear. This is useful if
-     *    don't care about which pattern matched, and just want a single ordered</li>
-     *    sequence of captures.
+     *    don't care about which pattern matched, and just want a single ordered
+     *    sequence of captures.</li>
      * </ol>
      * If you don't care about consuming all the results, you can stop calling
      *  {@link #nextMatch(TSQueryMatch) nextMatch()} or {@link #nextCapture(TSQueryMatch) nextCapture()} at any point.
@@ -56,6 +56,9 @@ public class TSQueryCursor {
 
     /**
      * Start running a given query on a given node.
+     *
+     * @param query The query to run.
+     * @param node The node to run the query on.
      */
     public void exec(TSQuery query, TSNode node){
         executed = true;
@@ -78,9 +81,11 @@ public class TSQueryCursor {
      * Query cursors have an optional maximum capacity for storing lists of
      * in-progress captures. If this capacity is exceeded, then the
      * earliest-starting match will silently be dropped to make room for further
-     * matches. This maximum capacity is optional — by default, query cursors allow
+     * matches. This maximum capacity is optional by default, query cursors allow
      * any number of pending matches, dynamically allocating new space for them as
      * needed as the query is executed.
+     *
+     * @param limit The maximum number of in-progress matches allowed by this query cursor.
      */
     public void setMatchLimit(int limit){
         ts_query_cursor_set_match_limit(ptr, limit);
@@ -89,6 +94,9 @@ public class TSQueryCursor {
     /**
      * Set the range of bytes in which the query
      * will be executed.
+     *
+     * @param startByte  The index of the start byte in the range.
+     * @param endByte    The index of the end byte in the range.
      */
     public void setByteRange(int startByte, int endByte){
         ts_query_cursor_set_byte_range(ptr, startByte, endByte);
@@ -97,6 +105,9 @@ public class TSQueryCursor {
     /**
      * Set the (row, column) positions in which the query
      * will be executed.
+     *
+     * @param startPoint  The start point of the range.
+     * @param endPoint    The end point of the range.
      */
     public void setPointRange(TSPoint startPoint, TSPoint endPoint){
         ts_query_cursor_set_point_range(ptr, startPoint, endPoint);
@@ -107,6 +118,10 @@ public class TSQueryCursor {
      *
      * If there is a match, write it to <code>match</code> and return <code>true</code>.
      * Otherwise, return <code>false</code>.
+     *
+     * @param match The match to write to.
+     *
+     * @return Whether there was a match.
      *
      * @throws TSException if the query has not been executed yet.
      */
@@ -126,6 +141,10 @@ public class TSQueryCursor {
      *
      * If there is a capture, write its match to <code>match</code> and its index within
      * the match's capture list to <code>captureIndex</code>. Otherwise, return <code>false</code>.
+     *
+     * @param match The match to write to.
+     *
+     * @return Whether there was a capture.
      *
      * @throws TSException if the query has not been executed yet.
      */

@@ -1,9 +1,6 @@
 package org.treesitter;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.ref.Cleaner;
 
 import static org.treesitter.TSParser.*;

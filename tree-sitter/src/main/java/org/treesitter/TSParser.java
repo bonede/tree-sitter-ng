@@ -390,20 +390,24 @@ public class TSParser {
      * You may want to pipe these graphs directly to a <code>dot(1)</code> process in order to generate
      * SVG output. You can turn off this logging by passing <code>null</code> as file.<br>
      *
-     * NOTE: This is function is not implemented on Windows. <a href="https://github.com/tree-sitter/tree-sitter/blob/660481dbf71413eba5a928b0b0ab8da50c1109e0/lib/src/tree.c#L128">Reference</a>
+     * NOTE: This is function is not implemented on Windows. <a href="https://github.com/tree-sitter/tree-sitter/blob/660481dbf71413eba5a928b0b0ab8da50c1109e0/lib/src/tree.c#L128">Reference</a><br>
+     *
+     * NOTE: Remember to close the output stream when you're done with it.
      *
      * @param file the file to which the parser should write debugging graphs. Passing <code>null</code> to disable logging.
      *
+     * @return The output stream of the file.
+     *
      * @throws IOException if the file cannot be written to.
      */
-    public void printDotGraphs(File file) throws IOException {
+    public OutputStream printDotGraphs(File file) throws IOException {
         // TODO add Windows support
         if(file == null) {
             ts_parser_print_dot_graphs(ptr, null);
-            return;
+            return null;
         }
         FileOutputStream outputStream = new FileOutputStream(file);
         ts_parser_print_dot_graphs(ptr, outputStream.getFD());
-        outputStream.close();
+        return outputStream;
     }
 }

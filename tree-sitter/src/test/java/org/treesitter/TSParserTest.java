@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -144,11 +145,12 @@ class TSParserTest {
         TSLanguage json = new TreeSitterJson();
         parser.setLanguage(json);
         File dotFile = File.createTempFile("json", ".dot");
-        parser.printDotGraphs(dotFile);
+        OutputStream outputStream = parser.printDotGraphs(dotFile);
         parser.parseString(null, JSON_SRC);
-        System.out.println("dot file size: " + dotFile.length());
+        System.out.println("dot file: " + dotFile);
         parser.printDotGraphs(null);
         parser.reset();
         parser.parseString(null, JSON_SRC);
+        outputStream.close();
     }
 }

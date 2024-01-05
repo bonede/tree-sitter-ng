@@ -380,6 +380,7 @@ JNIEXPORT void JNICALL Java_org_treesitter_TSParser_free_1logger
   }
 }
 
+
 /*
  * Class:     org_treesitter_TSParser
  * Method:    ts_parser_print_dot_graphs

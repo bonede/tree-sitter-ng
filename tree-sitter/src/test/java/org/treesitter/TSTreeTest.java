@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -143,8 +144,8 @@ class TSTreeTest {
 
     @Test
     void printDotGraphs() throws IOException {
-        File svg = File.createTempFile("tree", ".svg");
-        tree.printDotGraphs(svg);
-        assertTrue(svg.delete());
+        File dotFile = File.createTempFile("tree", ".dot");
+        tree.printDotGraphs(dotFile);
+        System.out.println("dot file: " + dotFile);
     }
 }

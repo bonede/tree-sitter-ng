@@ -4,6 +4,8 @@ import org.treesitter.build.Utils
 
 plugins {
     id 'java'
+    id 'signing'
+    id 'maven-publish'
 }
 
 group = 'io.github.bonede'
@@ -23,6 +25,60 @@ test {
     useJUnitPlatform()
 }
 def libName = "tree-sitter-perl"
+
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "MavenCentral"
+            def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotsRepoUrl =  "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+            credentials {
+                username = ossrhUsername
+                password = ossrhPassword
+            }
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+        }
+    }
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            pom {
+                name = libName
+                url = 'https://github.com/bonede/tree-sitter-ng'
+                description = "Next generation Tree Sitter Java binding"
+                licenses {
+                    license {
+                        name = 'MIT'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/bonede/tree-sitter-ng.git'
+                    developerConnection = 'scm:git:https://github.com/bonede/tree-sitter-ng.git'
+                    url = 'https://github.com/bonede/tree-sitter-ng'
+                }
+                developers {
+                    developer {
+                        id = 'bonede'
+                        name = 'Wang Liang'
+                        email = 'bonede@qq.com'
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+signing {
+    sign configurations.archives
+    sign publishing.publications
+}
 tasks.register('downloadSource') {
     group = "build setup"
     description = "Download parser source"

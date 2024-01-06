@@ -7,7 +7,6 @@ plugins {
     id 'java'
     id 'signing'
     id 'maven-publish'
-
 }
 
 group = 'io.github.bonede'

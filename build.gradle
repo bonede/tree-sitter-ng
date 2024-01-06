@@ -5,7 +5,16 @@ import org.treesitter.build.Utils
 
 plugins {
     id "de.undercouch.download" version "5.5.0"
+    id 'io.codearte.nexus-staging' version '0.30.0'
 }
+
+nexusStaging {
+    serverUrl = "https://s01.oss.sonatype.org/service/local/"
+    packageGroup = "io.github.bonede"//required only for projects registered in Sonatype after 2021-02-24
+    username = ossrhUsername
+    password = ossrhPassword
+}
+
 // MiniSign Release: https://jedisct1.github.io/minisign/
 tasks.register("downloadMiniSign") {
     group = "build setup"

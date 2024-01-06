@@ -394,8 +394,6 @@ public class TSParser {
      *
      * @param file the file to which the parser should write debugging graphs. Passing <code>null</code> to disable logging and close the file if any.
      *
-     * @return The output stream of the file.
-     *
      * @throws IOException if the file cannot be written to.
      */
     public void printDotGraphs(File file) throws IOException {

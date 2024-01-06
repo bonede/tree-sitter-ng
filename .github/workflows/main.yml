@@ -9,7 +9,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-
+    env:
+      ORG_GRADLE_PROJECT_ossrhUsername: na
+      ORG_GRADLE_PROJECT_ossrhPassword: na
     steps:
     - uses: actions/checkout@v3
     - name: Set up JDK 11

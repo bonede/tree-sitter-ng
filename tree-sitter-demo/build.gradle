@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'io.github.bonede'
-version = 'unspecified'
+version = '0.1.0'
 
 repositories {
     mavenCentral()

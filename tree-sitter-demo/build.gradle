@@ -2,7 +2,7 @@ plugins {
     id 'java'
 }
 
-group = 'org.treesitter'
+group = 'io.github.bonede'
 version = 'unspecified'
 
 repositories {

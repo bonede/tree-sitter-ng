@@ -96,7 +96,7 @@ plugins {
     id 'java'
 }
 
-group = 'org.treesitter'
+group = 'io.github.bonede'
 version = libVersion
 
 repositories {

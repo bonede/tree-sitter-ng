@@ -10,7 +10,7 @@ plugins {
 }
 
 group = 'io.github.bonede'
-version = treeSitterJsonVersion
+version = libVersion
 
 repositories {
     mavenCentral()

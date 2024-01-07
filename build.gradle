@@ -137,3 +137,18 @@ tasks.register("gen", GenTask) {
     group = "build setup"
     description = "Generate sub project for tree sitter parser"
 }
+
+tasks.register("printSubProjectAsMarkdown") {
+    doLast {
+
+        projectDir.eachFile(groovy.io.FileType.DIRECTORIES, { dir -> {
+            if(dir.name.startsWith("tree-sitter-") && dir.name != "tree-sitter-demo"){
+                def name = dir.name
+                File settingsFile = new File(dir, "gradle.properties")
+                String content = new FileReader(settingsFile).readLine()
+                String version = content.replace("libVersion=", "")
+                println "| `io.github.bonede:$name:$version`  | ![Maven Central](https://img.shields.io/maven-central/v/io.github.bonede/$name) |"
+            }
+        }})
+    }
+}

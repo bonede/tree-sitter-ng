@@ -1,2 +1,1 @@
-- refactor package structure
-- add documentation
+- Add xz decompression support on Linux and MacOS.

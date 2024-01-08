@@ -57,6 +57,13 @@ class Main {
 - Easy to bootstrap cross compiling environments powered by [Zig](https://ziglang.org/).
 - Include only parsers you need in your project.
 
+# Supported CPUs and OSes
+- x86_64-windows
+- x86_64-macos
+- aarch64-macos
+- x86_64-linux
+- aarch64-linux
+
 # Supported parsers
 
 | Name                                        | Veriosn |

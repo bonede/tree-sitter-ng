@@ -88,10 +88,10 @@ def jniCFileName= "org_treesitter_json_TreeSitterJson.c"
 tasks.register('downloadSource') {
     group = "build setup"
     description = "Download parser source"
-    def zipUrl = "https://github.com/tree-sitter/tree-sitter-json/archive/refs/tags/v${treeSitterJsonVersion}.zip"
+    def zipUrl = "https://github.com/tree-sitter/tree-sitter-json/archive/refs/tags/v${libVersion}.zip"
     def downloadDir = Utils.libDownloadDir(project, libName)
-    def zip = Utils.libZipFile(project, libName, treeSitterJsonVersion)
-    def parserCFile = Utils.libParserCFile(project, libName, treeSitterJsonVersion)
+    def zip = Utils.libZipFile(project, libName, libVersion)
+    def parserCFile = Utils.libParserCFile(project, libName, libVersion)
     inputs.files(layout.projectDirectory.file("gradle.properties"))
     outputs.files(parserCFile)
     doLast {
@@ -114,8 +114,8 @@ tasks.register("buildNative") {
     def jniSrcDir = Utils.jniSrcDir(project)
     def outDir = Utils.jniOutDir(project)
     def jniCFile =  Utils.jniCFile(project, jniCFileName)
-    def parserCFile = Utils.libParserCFile(project, libName, treeSitterJsonVersion)
-    def libSrcDir = Utils.libSrcDir(project, libName, treeSitterJsonVersion)
+    def parserCFile = Utils.libParserCFile(project, libName, libVersion)
+    def libSrcDir = Utils.libSrcDir(project, libName, libVersion)
     def jniInclude = Utils.jniIncludeDir(project)
     def targets = Utils.treeSitterTargets(project)
     def outputFiles = Stream.of(targets)

@@ -43,3 +43,4 @@ bin/
 **/*.log
 **/*.pdb
 /secring.gpg
+/playground

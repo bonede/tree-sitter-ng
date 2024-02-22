@@ -1,6 +1,12 @@
 #include <jni.h>
 #include <tree_sitter/api.h>
-#include <stdio.h>
+
+#ifdef _WIN32
+
+#include <io.h>
+#include <fcntl.h>
+
+#endif
 
 // TODO cache field, method at startup
 #define TS_NODE_CLASS_NAME "org/treesitter/TSNode"
@@ -394,9 +400,12 @@ JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1parser_1print_1dot_1grap
    }
    jclass fd_class = (*env)->GetObjectClass(env, fd_object);
    jlong fd = (*env)->GetIntField(env, fd_object, ts_jni_get_field_id(env, fd_class, "fd", "I"));
-   if(fd == -1){
-     fd = (*env)->GetLongField(env, fd_object, ts_jni_get_field_id(env, fd_class, "handle", "J"));
-   }
+   #ifdef _WIN32
+
+   int handle = (*env)->GetLongField(env, fd_object, ts_jni_get_field_id(env, fd_class, "handle", "J"));
+   fd = _open_osfhandle(handle, _O_RDWR);
+
+   #endif
    ts_parser_print_dot_graphs((TSParser *) parser_ptr, fd);
 }
 
@@ -748,14 +757,8 @@ JNIEXPORT jboolean JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1next_
    }
    return ret;
 }
-#include <stdio.h>
 
-#ifdef _WIN32
 
-#include <io.h>
-#include <fcntl.h>
-
-#endif
 /*
  * Class:     org_treesitter_TSParser
  * Method:    ts_tree_print_dot_graph

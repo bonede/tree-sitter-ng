@@ -147,7 +147,7 @@ class TSParserTest {
         File dotFile = File.createTempFile("json", ".dot");
         parser.printDotGraphs(dotFile);
         parser.parseString(null, JSON_SRC);
-        System.out.println("dot file: " + dotFile);
+        assertTrue(dotFile.length() > 0);
         parser.printDotGraphs(null);
         parser.reset();
         parser.parseString(null, JSON_SRC);

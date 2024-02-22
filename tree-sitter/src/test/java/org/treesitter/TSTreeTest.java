@@ -146,6 +146,6 @@ class TSTreeTest {
     void printDotGraphs() throws IOException {
         File dotFile = File.createTempFile("tree", ".dot");
         tree.printDotGraphs(dotFile);
-        System.out.println("dot file: " + dotFile);
+        assertTrue(dotFile.length() > 0);
     }
 }

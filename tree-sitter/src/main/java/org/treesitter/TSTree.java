@@ -120,14 +120,11 @@ public class TSTree {
     /**
      * Write a DOT graph describing the syntax tree to the given file.<br>
      *
-     * NOTE: This is function is not implemented on Windows. <a href="https://github.com/tree-sitter/tree-sitter/blob/660481dbf71413eba5a928b0b0ab8da50c1109e0/lib/src/tree.c#L128">Reference</a>
-     *
      * @param file The file to write to.
      *
      * @throws IOException If the file could not be written to.
      */
     public void printDotGraphs(File file) throws IOException {
-        // TODO add Windows support
         FileOutputStream outputStream = new FileOutputStream(file);
         ts_tree_print_dot_graph(ptr, outputStream.getFD());
         outputStream.close();

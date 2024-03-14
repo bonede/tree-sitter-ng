@@ -1,10 +1,9 @@
 # Tree Sitter NG
 Next generation Tree Sitter Java binding.
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/bonede/tree-sitter-ng/main.yml)
-![Maven Central](https://img.shields.io/maven-central/v/io.github.bonede/tree-sitter)
+[![Maven Central](https://img.shields.io/github/actions/workflow/status/bonede/tree-sitter-ng/main.yml)](https://github.com/bonede/tree-sitter-ng/actions)
 
-
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.bonede/tree-sitter)](https://central.sonatype.com/artifact/io.github.bonede/tree-sitter)
 
 # Getting started
 Add dependencies to your `build.gradle` or `pom.xml`.

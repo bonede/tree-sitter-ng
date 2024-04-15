@@ -1,11 +1,10 @@
 
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.treesitter.build.GenTask
-import org.treesitter.build.Utils
 
 plugins {
-    id "de.undercouch.download" version "5.5.0"
-    id 'io.codearte.nexus-staging' version '0.30.0'
+    alias(libs.plugins.download)
+    alias(libs.plugins.nexus.staging)
 }
 
 nexusStaging {

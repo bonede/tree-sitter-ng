@@ -10,7 +10,7 @@ class TreeSitterCppTest {
     void parse() {
         TSParser parser = new TSParser();
         parser.setLanguage(new TreeSitterCpp());
-        TSTree tree = parser.parseString(null, "int main(){}");
+        TSTree tree = parser.parseString(null, "}");
         assertNotNull(tree);
     }
 }

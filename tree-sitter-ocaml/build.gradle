@@ -85,7 +85,7 @@ tasks.register('downloadSource') {
     def zipUrl = "https://github.com/tree-sitter/tree-sitter-ocaml/archive/refs/tags/v${libVersion}.zip"
     def downloadDir = Utils.libDownloadDir(project, libName)
     def zip = Utils.libZipFile(project, libName, libVersion)
-    def libSrcDir = Utils.libSrcDir(project, libName, libVersion, "ocaml/src")
+    def libSrcDir = Utils.libSrcDir(project, libName, libVersion, "grammars/ocaml/src")
     def outputFiles = project.fileTree(libSrcDir) {
         include(Utils.libFiles())
     }.toList()
@@ -112,7 +112,8 @@ tasks.register("buildNative") {
     def jniSrcDir = Utils.jniSrcDir(project)
     def outDir = Utils.jniOutDir(project)
     def jniCFile = Utils.jniCFile(project, "org_treesitter_TreeSitterOcaml.c")
-    def libSrcDir = Utils.libSrcDir(project, libName, libVersion, "ocaml/src")
+    def libSrcDir = Utils.libSrcDir(project, libName, libVersion, "grammars/ocaml/src")
+    def treeSitterHeaderDir = Utils.libSrcDir(project, libName, libVersion, "include")
     def jniInclude = Utils.jniIncludeDir(project)
 
     def targets = Utils.treeSitterTargets(project)
@@ -140,6 +141,7 @@ tasks.register("buildNative") {
                         "-I", libSrcDir,
                         "-I", jniInclude,
                         "-I", jniMdInclude,
+                        "-I", treeSitterHeaderDir,
                         "-o", jniOutFile,
                         jniCFile,
             ]

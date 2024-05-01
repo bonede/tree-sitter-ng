@@ -1,20 +1,17 @@
 package org.treesitter;
 
 import java.io.*;
-import java.lang.ref.Cleaner;
 
 import static org.treesitter.TSParser.*;
 
 public class TSTree {
 
-    static Cleaner cleaner = Cleaner.create();
-
     private final long ptr;
 
-    static class TSTreeCleaner implements Runnable {
+    private static class TSTreeCleanAction implements Runnable {
         private final long ptr;
 
-        public TSTreeCleaner(long ptr) {
+        public TSTreeCleanAction(long ptr) {
             this.ptr = ptr;
         }
 
@@ -26,7 +23,7 @@ public class TSTree {
 
     TSTree(long ptr) {
         this.ptr = ptr;
-        cleaner.register(this, () -> new TSTreeCleaner(ptr));
+        CleanerRunner.register(this, new TSTreeCleanAction(ptr));
     }
 
     protected long getPtr(){

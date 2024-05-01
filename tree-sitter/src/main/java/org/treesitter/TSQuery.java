@@ -1,16 +1,14 @@
 package org.treesitter;
 
-import java.lang.ref.Cleaner;
-
 import static org.treesitter.TSParser.*;
 
 public class TSQuery {
     private final long ptr;
-    private static Cleaner cleaner = Cleaner.create();
-    static class TSQueryCleaner implements Runnable {
+
+    private static class TSQueryCleanRunner implements Runnable {
         private final long ptr;
 
-        public TSQueryCleaner(long ptr) {
+        public TSQueryCleanRunner(long ptr) {
             this.ptr = ptr;
         }
 
@@ -22,7 +20,7 @@ public class TSQuery {
 
     private TSQuery(long ptr) {
         this.ptr = ptr;
-        cleaner.register(this, () -> new TSQuery.TSQueryCleaner(ptr));
+        CleanerRunner.register(this, new TSQueryCleanRunner(ptr));
     }
 
     /**

@@ -139,10 +139,10 @@ public class TSParser {
     private final long ptr;
 
 
-    static class TSParserCleaner implements Runnable{
+    private static class TSParserCleanAction implements Runnable{
         private final long ptr;
 
-        public TSParserCleaner(long ptr) {
+        public TSParserCleanAction(long ptr) {
             this.ptr = ptr;
         }
 
@@ -157,7 +157,7 @@ public class TSParser {
         }
     }
 
-    static Cleaner cleaner = Cleaner.create();
+
     private TSLogger logger;
     /**
      * Create a new parser.
@@ -167,7 +167,7 @@ public class TSParser {
         long cancellationFlagPtr = alloc_cancellation_flag();
         write_cancellation_flag(cancellationFlagPtr, 0);
         ts_parser_set_cancellation_flag(ptr, cancellationFlagPtr);
-        cleaner.register(this, new TSParserCleaner(this.ptr));
+        CleanerRunner.register(this, new TSParserCleanAction(this.ptr));
     }
     /**
      * Get the parser's current logger.

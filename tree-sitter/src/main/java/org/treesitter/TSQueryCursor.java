@@ -1,19 +1,16 @@
 package org.treesitter;
 
-import java.lang.ref.Cleaner;
-
 import static org.treesitter.TSParser.*;
 
 public class TSQueryCursor {
-    // TODO refactor this to a global cleaner
-    private static Cleaner cleaner = Cleaner.create();
+
     private final long ptr;
     private boolean executed = false;
 
-    static private class TSQueryCursorCleaner implements Runnable {
+    private static class TSQueryCursorCleanAction implements Runnable {
         private final long ptr;
 
-        public TSQueryCursorCleaner(long ptr) {
+        public TSQueryCursorCleanAction(long ptr) {
             this.ptr = ptr;
         }
 
@@ -25,8 +22,9 @@ public class TSQueryCursor {
 
     private TSQueryCursor(long ptr) {
         this.ptr = ptr;
-        cleaner.register(this, () -> new TSQueryCursorCleaner(ptr));
+        CleanerRunner.register(this, new TSQueryCursorCleanAction(ptr));
     }
+
     /**
      * Create a new cursor for executing a given query.<br>
      *

@@ -1,9 +1,7 @@
 package org.treesitter.utils;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 

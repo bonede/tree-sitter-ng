@@ -2,7 +2,7 @@ package org.treesitter;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class TSLanguageTest {
     private final TSLanguage json = new TreeSitterJson();

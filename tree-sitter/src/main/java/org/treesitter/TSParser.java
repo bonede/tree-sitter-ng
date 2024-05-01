@@ -2,8 +2,10 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-import java.io.*;
-import java.lang.ref.Cleaner;
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class TSParser {
     /**

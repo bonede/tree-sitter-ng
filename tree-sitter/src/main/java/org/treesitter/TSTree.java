@@ -1,6 +1,8 @@
 package org.treesitter;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import static org.treesitter.TSParser.*;
 

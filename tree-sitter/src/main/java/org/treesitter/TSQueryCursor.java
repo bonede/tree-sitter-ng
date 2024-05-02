@@ -1,6 +1,11 @@
 package org.treesitter;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.function.BiFunction;
+
 import static org.treesitter.TSParser.*;
+import static org.treesitter.TSParser.ts_query_cursor_next_match;
 
 public class TSQueryCursor {
 
@@ -115,7 +120,9 @@ public class TSQueryCursor {
      * Advance to the next match of the currently running query.<br>
      *
      * If there is a match, write it to <code>match</code> and return <code>true</code>.
-     * Otherwise, return <code>false</code>.
+     * Otherwise, return <code>false</code>. <br>
+     *
+     * NOTE: More Java-ish method is {@link TSQueryCursor#getMatches()}.
      *
      * @param match The match to write to.
      *
@@ -124,11 +131,10 @@ public class TSQueryCursor {
      * @throws TSException if the query has not been executed yet.
      */
     public boolean nextMatch(TSQueryMatch match){
-        if(!executed){
-            throw new TSException("Query not executed, call exec() first.");
-        }
+        assertExecuted();
         return ts_query_cursor_next_match(ptr, match);
     }
+
 
     public void removeMatch(int matchId){
         ts_query_cursor_remove_match(ptr, matchId);
@@ -138,19 +144,103 @@ public class TSQueryCursor {
      * Advance to the next capture of the currently running query.<br>
      *
      * If there is a capture, write its match to <code>match</code> and its index within
-     * the match's capture list to <code>captureIndex</code>. Otherwise, return <code>false</code>.
+     * the match's capture list to <code>captureIndex</code>. Otherwise, return <code>false</code>. <br>
+     *
+     * NOTE: More Java-ish method is {@link TSQueryCursor#getCaptures()}.
      *
      * @param match The match to write to.
      *
      * @return Whether there was a capture.
      *
      * @throws TSException if the query has not been executed yet.
+     *
      */
+    @SuppressWarnings("deprecation")
     public boolean nextCapture(TSQueryMatch match){
+        assertExecuted();
+        return ts_query_cursor_next_capture(ptr, match);
+    }
+
+    private void assertExecuted(){
         if(!executed){
             throw new TSException("Query not executed, call exec() first.");
         }
-        return ts_query_cursor_next_capture(ptr, match);
+    }
+
+    /**
+     * Get the match iterator.<br>
+     *
+     * @return An iterator over the matches.
+     *
+     */
+    public TSMatchIterator getMatches(){
+        return new TSMatchIterator(TSParser::ts_query_cursor_next_match);
+    }
+
+    /**
+     * Get the capture iterator.<br>
+     *
+     * @return An iterator over the captures.
+     *
+     */
+    public TSMatchIterator getCaptures(){
+        return new TSMatchIterator(TSParser::ts_query_cursor_next_capture);
+    }
+
+    public class TSMatchIterator implements Iterator<TSQueryMatch>{
+        private TSQueryMatch tempMatch = null;
+        private TSQueryMatch lastMatch = null;
+        private BiFunction<Long, TSQueryMatch, Boolean> nextFunction;
+        public TSMatchIterator(BiFunction<Long, TSQueryMatch, Boolean> nextFunction) {
+            this.nextFunction = nextFunction;
+        }
+
+        private TSQueryMatch nextMatch(){
+            assertExecuted();
+            TSQueryMatch match = new TSQueryMatch();
+            boolean ret = nextFunction.apply(ptr, match);
+            if(ret){
+                return match;
+            }else{
+                return null;
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            TSQueryMatch match = nextMatch();
+            if(match != null){
+                tempMatch = match;
+                return true;
+            }else{
+                return false;
+            }
+        }
+
+        @Override
+        public TSQueryMatch next() {
+            if(tempMatch != null){
+                TSQueryMatch newMatch = tempMatch;
+                tempMatch = null;
+                return newMatch;
+            }else{
+                TSQueryMatch match = nextMatch();
+                if(match != null){
+                    lastMatch = match;
+                    return match;
+                }else{
+                    throw new NoSuchElementException();
+                }
+            }
+        }
+
+        @Override
+        public void remove() {
+            if(lastMatch == null){
+                throw new IllegalStateException();
+            }
+            ts_query_cursor_remove_match(ptr, tempMatch.getId());
+        }
     }
 
 }

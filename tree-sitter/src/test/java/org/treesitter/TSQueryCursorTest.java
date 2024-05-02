@@ -85,4 +85,29 @@ class TSQueryCursorTest {
         assertEquals(0, match.getCaptureIndex());
         assertTrue(TSNode.eq(rootNode, match.getCaptures()[0].getNode()));
     }
+
+    @Test
+    void getMatches(){
+        cursor.exec(query, rootNode);
+        TSQueryCursor.TSMatchIterator matchIter = cursor.getMatches();
+        while (matchIter.hasNext()){
+            TSQueryMatch match = matchIter.next();
+            assertEquals(0, match.getId());
+            assertEquals(0, match.getPatternIndex());
+        }
+    }
+
+    @Test
+    void getCaptures(){
+        cursor.exec(query, rootNode);
+        TSQueryCursor.TSMatchIterator captureIter = cursor.getCaptures();
+        while (captureIter.hasNext()){
+            TSQueryMatch match = captureIter.next();
+            assertEquals(0, match.getId());
+            assertEquals(0, match.getPatternIndex());
+            assertEquals(1, match.getCaptures().length);
+            assertEquals(0, match.getCaptureIndex());
+            assertTrue(TSNode.eq(rootNode, match.getCaptures()[0].getNode()));
+        }
+    }
 }

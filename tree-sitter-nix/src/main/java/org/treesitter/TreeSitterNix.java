@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterNix implements TSLanguage {
+public class TreeSitterNix extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-nix");
     }
     private native static long tree_sitter_nix();
 
-    private final long ptr;
-
     public TreeSitterNix() {
-        ptr = tree_sitter_nix();
+        super(tree_sitter_nix());
+    }
+
+    private TreeSitterNix(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterNix(copyPtr());
     }
 }

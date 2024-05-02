@@ -1,14 +1,13 @@
 package org.treesitter;
 
-public class AnonymousLanguage implements TSLanguage{
-    private final long ptr;
+public class AnonymousLanguage extends TSLanguage{
 
-    public AnonymousLanguage(long ptr) {
-        this.ptr = ptr;
+    protected AnonymousLanguage(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new AnonymousLanguage(copyPtr());
     }
 }

@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterCmake implements TSLanguage {
+public class TreeSitterCmake extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-cmake");
     }
     private native static long tree_sitter_cmake();
 
-    private final long ptr;
-
     public TreeSitterCmake() {
-        ptr = tree_sitter_cmake();
+        super(tree_sitter_cmake());
+    }
+
+    protected TreeSitterCmake(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterCmake(copyPtr());
     }
 }

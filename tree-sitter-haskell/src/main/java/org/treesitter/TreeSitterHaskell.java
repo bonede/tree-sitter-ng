@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterHaskell implements TSLanguage {
+public class TreeSitterHaskell extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-haskell");
     }
     private native static long tree_sitter_haskell();
 
-    private final long ptr;
-
     public TreeSitterHaskell() {
-        ptr = tree_sitter_haskell();
+        super(tree_sitter_haskell());
+    }
+
+    private TreeSitterHaskell(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterHaskell(copyPtr());
     }
 }

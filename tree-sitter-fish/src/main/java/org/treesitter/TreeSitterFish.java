@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterFish implements TSLanguage {
+public class TreeSitterFish extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-fish");
     }
     private native static long tree_sitter_fish();
 
-    private final long ptr;
-
     public TreeSitterFish() {
-        ptr = tree_sitter_fish();
+        super(tree_sitter_fish());;
+    }
+
+    private TreeSitterFish(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterFish(copyPtr());
     }
 }

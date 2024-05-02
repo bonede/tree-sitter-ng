@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterEno implements TSLanguage {
+public class TreeSitterEno extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-eno");
     }
     private native static long tree_sitter_eno();
 
-    private final long ptr;
-
     public TreeSitterEno() {
-        ptr = tree_sitter_eno();
+        super(tree_sitter_eno());;
+    }
+
+    private TreeSitterEno(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterEno(copyPtr());
     }
 }

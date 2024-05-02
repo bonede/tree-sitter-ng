@@ -3,21 +3,25 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterPod implements TSLanguage {
+public class TreeSitterPod extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-pod");
     }
     private native static long tree_sitter_pod();
 
-    private final long ptr;
+
 
     public TreeSitterPod() {
-        ptr = tree_sitter_pod();
+        super(tree_sitter_pod());
+    }
+
+    private TreeSitterPod(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterPod(copyPtr());
     }
 }

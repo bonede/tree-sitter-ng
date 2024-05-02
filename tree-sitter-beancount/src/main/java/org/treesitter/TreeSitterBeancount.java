@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterBeancount implements TSLanguage {
+public class TreeSitterBeancount extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-beancount");
     }
     private native static long tree_sitter_beancount();
 
-    private final long ptr;
-
     public TreeSitterBeancount() {
-        ptr = tree_sitter_beancount();
+        super(tree_sitter_beancount());
+    }
+
+    protected TreeSitterBeancount(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterBeancount(copyPtr());
     }
 }

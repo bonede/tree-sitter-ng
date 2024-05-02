@@ -3,21 +3,25 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterApex implements TSLanguage {
+public class TreeSitterApex extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-apex");
     }
     private native static long tree_sitter_apex();
 
-    private final long ptr;
-
     public TreeSitterApex() {
-        ptr = tree_sitter_apex();
+        super(tree_sitter_apex());
+    }
+
+    protected TreeSitterApex(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterApex(copyPtr());
     }
+
+
 }

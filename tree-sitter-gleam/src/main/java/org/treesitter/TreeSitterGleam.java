@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterGleam implements TSLanguage {
+public class TreeSitterGleam extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-gleam");
     }
     private native static long tree_sitter_gleam();
 
-    private final long ptr;
-
     public TreeSitterGleam() {
-        ptr = tree_sitter_gleam();
+        super(tree_sitter_gleam());
+    }
+
+    private TreeSitterGleam(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterGleam(copyPtr());
     }
 }

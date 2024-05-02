@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterHcl implements TSLanguage {
+public class TreeSitterHcl extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-hcl");
     }
     private native static long tree_sitter_hcl();
 
-    private final long ptr;
-
     public TreeSitterHcl() {
-        ptr = tree_sitter_hcl();
+        super(tree_sitter_hcl());
+    }
+
+    private TreeSitterHcl(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterHcl(copyPtr());
     }
 }

@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterPascal implements TSLanguage {
+public class TreeSitterPascal extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-pascal");
     }
     private native static long tree_sitter_pascal();
 
-    private final long ptr;
-
     public TreeSitterPascal() {
-        ptr = tree_sitter_pascal();
+        super(tree_sitter_pascal());
+    }
+
+    private TreeSitterPascal(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterPascal(copyPtr());
     }
 }

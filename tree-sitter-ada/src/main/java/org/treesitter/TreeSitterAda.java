@@ -2,20 +2,22 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterAda implements TSLanguage{
+public class TreeSitterAda extends TSLanguage{
     static {
         NativeUtils.loadLib("lib/tree-sitter-ada");
     }
     private native static long tree_sitter_ada();
 
-    private long ptr;
-
     public TreeSitterAda() {
-        this.ptr = tree_sitter_ada();
+        super(tree_sitter_ada());
+    }
+
+    protected TreeSitterAda(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterAda(copyPtr());
     }
 }

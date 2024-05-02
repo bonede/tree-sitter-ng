@@ -1632,3 +1632,13 @@ JNIEXPORT jint JNICALL Java_org_treesitter_TSParser_ts_1language_1symbol_1for_1n
    (*env)->ReleaseStringUTFChars(env, name, str);
    return (jint) ts_symbol;
 }
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_language_copy
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1language_1copy
+  (JNIEnv *, jclass, jlong){
+
+}

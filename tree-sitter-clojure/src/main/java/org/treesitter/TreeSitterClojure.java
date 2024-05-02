@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterClojure implements TSLanguage {
+public class TreeSitterClojure extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-clojure");
     }
     private native static long tree_sitter_clojure();
 
-    private final long ptr;
-
     public TreeSitterClojure() {
-        ptr = tree_sitter_clojure();
+        super(tree_sitter_clojure());
+    }
+
+    public TreeSitterClojure(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterClojure(copyPtr());
     }
 }

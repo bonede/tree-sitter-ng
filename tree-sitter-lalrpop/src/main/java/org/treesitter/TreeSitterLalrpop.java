@@ -3,21 +3,24 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterLalrpop implements TSLanguage {
+public class TreeSitterLalrpop extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-lalrpop");
     }
     private native static long tree_sitter_lalrpop();
 
-    private final long ptr;
-
     public TreeSitterLalrpop() {
-        ptr = tree_sitter_lalrpop();
+        super(tree_sitter_lalrpop());
+    }
+
+
+    private TreeSitterLalrpop(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterLalrpop(copyPtr());
     }
 }

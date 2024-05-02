@@ -3,21 +3,25 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterQmljs implements TSLanguage {
+public class TreeSitterQmljs extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-qmljs");
     }
     private native static long tree_sitter_qmljs();
 
-    private final long ptr;
-
     public TreeSitterQmljs() {
-        ptr = tree_sitter_qmljs();
+        super(tree_sitter_qmljs());
+    }
+
+    private TreeSitterQmljs(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterQmljs(copyPtr());
     }
+
+
 }

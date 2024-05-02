@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterAgda implements TSLanguage {
+public class TreeSitterAgda extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-agda");
     }
     private native static long tree_sitter_agda();
 
-    private final long ptr;
-
     public TreeSitterAgda() {
-        ptr = tree_sitter_agda();
+        super(tree_sitter_agda());
+    }
+
+    protected TreeSitterAgda(long ptr){
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterAgda(copyPtr());
     }
 }

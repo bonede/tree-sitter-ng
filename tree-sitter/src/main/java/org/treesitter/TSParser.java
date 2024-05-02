@@ -27,6 +27,7 @@ public class TSParser {
         NativeUtils.loadLib("lib/tree-sitter");
     }
 
+    private TSLanguage language;
     public  static native long ts_parser_new();
     public static native void ts_parser_delete(long tree_parser_ptr);
     private static native boolean ts_parser_set_language(long ts_parser_ptr, long ts_language_ptr);
@@ -45,7 +46,6 @@ public class TSParser {
     private static native long get_cancellation_flag_value(long flag_ptr);
     private static native void free_cancellation_flag(long flag_ptr);
     private static native void write_cancellation_flag(long flag_ptr, long value);
-    protected static native int ts_language_version(long ts_language_ptr);
     private static native void ts_parser_set_logger(long ts_parser_ptr, TSLogger logger);
     private static native void free_logger(long ts_parser_ptr);
     private static native void ts_parser_print_dot_graphs(long ts_parser_ptr, FileDescriptor fileDescriptor);
@@ -59,6 +59,8 @@ public class TSParser {
     protected static native TSRange[] ts_tree_get_changed_ranges(long old_tree_ptr, long new_tree_ptr);
     protected static native String ts_node_type(TSNode node);
     protected static native int ts_node_symbol(TSNode node);
+    protected static native String ts_node_grammar_type(TSNode node);
+    protected static native int ts_node_grammar_symbol(TSNode node);
     protected static native int ts_node_start_byte(TSNode node);
     protected static native TSPoint ts_node_start_point(TSNode node);
     protected static native int ts_node_end_byte(TSNode node);
@@ -70,6 +72,9 @@ public class TSParser {
     protected static native boolean ts_node_is_extra(TSNode node);
     protected static native boolean ts_node_has_changes(TSNode node);
     protected static native boolean ts_node_has_error(TSNode node);
+    protected static native boolean ts_node_is_error(TSNode node);
+    protected static native int ts_node_parse_state(TSNode node);
+    protected static native int ts_node_next_parse_state(TSNode node);
     protected static native TSNode ts_node_parent(TSNode node);
     protected static native TSNode ts_node_child(TSNode node, int index);
     protected static native String ts_node_field_name_for_child(TSNode node, int index);
@@ -130,6 +135,12 @@ public class TSParser {
     protected static native void ts_query_cursor_remove_match(long ts_query_cursor_ptr, int match_id);
     protected static native boolean ts_query_cursor_next_capture(long ts_query_cursor_ptr, TSQueryMatch match);
     protected static native void ts_tree_print_dot_graph(long ts_tree_ptr, FileDescriptor fileDescriptor);
+
+    protected static native long ts_language_copy(long ts_language_ptr);
+    protected static native void ts_language_delete(long ts_language_ptr);
+    protected static native int ts_language_state_count(long ts_language_ptr);
+    protected static native int ts_language_next_state(long ts_language_ptr, int ts_symbol);
+
     protected static native int ts_language_field_count(long ts_language_ptr);
     protected static native String ts_language_field_name_for_id(long ts_language_ptr, int ts_field_id);
     protected static native int ts_language_field_id_for_name(long ts_language_ptr, String field_name);
@@ -137,9 +148,18 @@ public class TSParser {
     protected static native int ts_language_symbol_count(long ts_language_ptr);
     protected static native String ts_language_symbol_name(long ts_language_ptr, int ts_symbol);
     protected static native int ts_language_symbol_for_name(long ts_language_ptr, String name, boolean is_named);
+    protected static native int ts_language_version(long ts_language_ptr);
+
+    protected static native long ts_lookahead_iterator_new(long ts_language_ptr, int ts_state_id);
+    protected static native void ts_lookahead_iterator_delete(long ts_lookahead_iterator_ptr);
+    protected static native boolean ts_lookahead_iterator_reset_state(long ts_lookahead_iterator_ptr, int ts_state_id);
+    protected static native boolean ts_lookahead_iterator_reset(long ts_lookahead_iterator_ptr, long ts_lang_ptr, int ts_state_id);
+    protected static native long ts_lookahead_iterator_language(long ts_lookahead_iterator_ptr);
+    protected static native boolean ts_lookahead_iterator_next(long ts_lookahead_iterator_ptr);
+    protected static native int ts_lookahead_iterator_current_symbol(long ts_lookahead_iterator_ptr);
+    protected static native String ts_lookahead_iterator_current_symbol_name(long ts_lookahead_iterator_ptr);
 
     private final long ptr;
-
 
     private static class TSParserCleanAction implements Runnable{
         private final long ptr;
@@ -205,6 +225,7 @@ public class TSParser {
      * @return True if the language was successfully applied. False otherwise.
      */
     public boolean setLanguage(TSLanguage language) {
+        this.language = language;
         return ts_parser_set_language(ptr, language.getPtr());
     }
 
@@ -290,7 +311,7 @@ public class TSParser {
      * @return {@link TSLanguage}
      */
     public TSLanguage getLanguage(){
-        return () -> ts_parser_language(ptr);
+        return new AnonymousLanguage(ts_parser_language(ptr));
     }
     /**
      * Set the ranges of text that the parser should include when parsing.<br>

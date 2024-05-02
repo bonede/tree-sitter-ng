@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterGitattributes implements TSLanguage {
+public class TreeSitterGitattributes extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-gitattributes");
     }
     private native static long tree_sitter_gitattributes();
 
-    private final long ptr;
-
     public TreeSitterGitattributes() {
-        ptr = tree_sitter_gitattributes();
+        super(tree_sitter_gitattributes());
+    }
+
+    private TreeSitterGitattributes(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterGitattributes(copyPtr());
     }
 }

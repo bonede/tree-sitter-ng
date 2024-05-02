@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterGo implements TSLanguage {
+public class TreeSitterGo extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-go");
     }
     private native static long tree_sitter_go();
 
-    private final long ptr;
-
     public TreeSitterGo() {
-        ptr = tree_sitter_go();
+        super(tree_sitter_go());
+    }
+
+    private TreeSitterGo(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterGo(copyPtr());
     }
 }

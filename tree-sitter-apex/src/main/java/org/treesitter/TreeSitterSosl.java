@@ -12,7 +12,7 @@ public class TreeSitterSosl extends TSLanguage{
         super(tree_sitter_sosl());
     }
 
-    protected TreeSitterSosl(long ptr) {
+    private TreeSitterSosl(long ptr) {
         super(ptr);
     }
 

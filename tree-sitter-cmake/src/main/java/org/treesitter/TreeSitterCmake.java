@@ -14,7 +14,7 @@ public class TreeSitterCmake extends TSLanguage {
         super(tree_sitter_cmake());
     }
 
-    protected TreeSitterCmake(long ptr) {
+    private TreeSitterCmake(long ptr) {
         super(ptr);
     }
 

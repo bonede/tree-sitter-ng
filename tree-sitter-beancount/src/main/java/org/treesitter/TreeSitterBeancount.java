@@ -14,7 +14,7 @@ public class TreeSitterBeancount extends TSLanguage {
         super(tree_sitter_beancount());
     }
 
-    protected TreeSitterBeancount(long ptr) {
+    private TreeSitterBeancount(long ptr) {
         super(ptr);
     }
 

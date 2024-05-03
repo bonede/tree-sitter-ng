@@ -12,7 +12,7 @@ public class TreeSitterAda extends TSLanguage{
         super(tree_sitter_ada());
     }
 
-    protected TreeSitterAda(long ptr) {
+    private TreeSitterAda(long ptr) {
         super(ptr);
     }
 

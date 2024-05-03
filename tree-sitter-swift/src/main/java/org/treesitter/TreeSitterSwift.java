@@ -3,21 +3,25 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterSwift implements TSLanguage {
+public class TreeSitterSwift extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-swift");
     }
     private native static long tree_sitter_swift();
 
-    private final long ptr;
-
     public TreeSitterSwift() {
-        ptr = tree_sitter_swift();
+        super(tree_sitter_swift());
+    }
+
+    private TreeSitterSwift(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterSwift(copyPtr());
     }
+
+
 }

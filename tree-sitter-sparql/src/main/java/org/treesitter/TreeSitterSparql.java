@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterSparql implements TSLanguage {
+public class TreeSitterSparql extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-sparql");
     }
     private native static long tree_sitter_sparql();
 
-    private final long ptr;
-
     public TreeSitterSparql() {
-        ptr = tree_sitter_sparql();
+        super(tree_sitter_sparql());
+    }
+
+    private TreeSitterSparql(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterSparql(copyPtr());
     }
 }

@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterOhm implements TSLanguage {
+public class TreeSitterOhm extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-ohm");
     }
     private native static long tree_sitter_ohm();
 
-    private final long ptr;
-
     public TreeSitterOhm() {
-        ptr = tree_sitter_ohm();
+        super(tree_sitter_ohm());
+    }
+
+    private TreeSitterOhm(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterOhm(copyPtr());
     }
 }

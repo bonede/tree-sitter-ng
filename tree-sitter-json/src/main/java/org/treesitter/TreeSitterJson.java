@@ -14,7 +14,7 @@ public class TreeSitterJson extends TSLanguage {
         super(tree_sitter_json());
     }
 
-    protected TreeSitterJson(long ptr) {
+    private TreeSitterJson(long ptr) {
         super(ptr);
     }
 

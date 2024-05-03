@@ -12,7 +12,7 @@ public class TreeSitterSoql extends TSLanguage{
         super(tree_sitter_soql());
     }
 
-    protected TreeSitterSoql(long ptr) {
+    private TreeSitterSoql(long ptr) {
         super(ptr);
     }
 

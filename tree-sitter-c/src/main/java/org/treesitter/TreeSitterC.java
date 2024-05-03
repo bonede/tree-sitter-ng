@@ -13,7 +13,7 @@ public class TreeSitterC extends TSLanguage {
         super(tree_sitter_c());
     }
 
-    protected TreeSitterC(long ptr) {
+    private TreeSitterC(long ptr) {
         super(ptr);
     }
 

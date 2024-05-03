@@ -3,21 +3,25 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterSexp implements TSLanguage {
+public class TreeSitterSexp extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-sexp");
     }
     private native static long tree_sitter_sexp();
 
-    private final long ptr;
-
     public TreeSitterSexp() {
-        ptr = tree_sitter_sexp();
+        super(tree_sitter_sexp());
+    }
+
+    private TreeSitterSexp(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterSexp(copyPtr());
     }
+
+
 }

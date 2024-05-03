@@ -14,7 +14,7 @@ public class TreeSitterBash extends TSLanguage {
         super(tree_sitter_bash());
     }
 
-    protected TreeSitterBash(long ptr){
+    private TreeSitterBash(long ptr){
         super(ptr);
     }
 

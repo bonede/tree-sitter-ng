@@ -15,7 +15,7 @@ public class TreeSitterCSharp extends TSLanguage {
         super(tree_sitter_c_sharp());
     }
 
-    protected TreeSitterCSharp(long ptr) {
+    private TreeSitterCSharp(long ptr) {
         super(ptr);
     }
 

@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterTablegen implements TSLanguage {
+public class TreeSitterTablegen extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-tablegen");
     }
     private native static long tree_sitter_tablegen();
 
-    private final long ptr;
-
     public TreeSitterTablegen() {
-        ptr = tree_sitter_tablegen();
+        super(tree_sitter_tablegen());
+    }
+
+    private TreeSitterTablegen(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterTablegen(copyPtr());
     }
 }

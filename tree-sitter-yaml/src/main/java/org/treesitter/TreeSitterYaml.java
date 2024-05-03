@@ -3,21 +3,24 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterYaml implements TSLanguage {
+public class TreeSitterYaml extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-yaml");
     }
     private native static long tree_sitter_yaml();
 
-    private final long ptr;
-
     public TreeSitterYaml() {
-        ptr = tree_sitter_yaml();
+        super(tree_sitter_yaml());
+    }
+
+
+    private TreeSitterYaml(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterYaml(copyPtr());
     }
 }

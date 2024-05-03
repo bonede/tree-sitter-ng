@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterTurtle implements TSLanguage {
+public class TreeSitterTurtle extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-turtle");
     }
     private native static long tree_sitter_turtle();
 
-    private final long ptr;
-
     public TreeSitterTurtle() {
-        ptr = tree_sitter_turtle();
+        super(tree_sitter_turtle());
+    }
+
+    private TreeSitterTurtle(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterTurtle(copyPtr());
     }
 }

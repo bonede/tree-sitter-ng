@@ -3,21 +3,25 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterSshClientConfig implements TSLanguage {
+public class TreeSitterSshClientConfig extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-ssh-client-config");
     }
     private native static long tree_sitter_ssh_client_config();
 
-    private final long ptr;
 
     public TreeSitterSshClientConfig() {
-        ptr = tree_sitter_ssh_client_config();
+        super(tree_sitter_ssh_client_config());
+    }
+
+
+    private TreeSitterSshClientConfig(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterSshClientConfig(copyPtr());
     }
 }

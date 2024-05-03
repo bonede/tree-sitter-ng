@@ -14,7 +14,7 @@ public class TreeSitterCapnp extends TSLanguage {
         super(tree_sitter_capnp());
     }
 
-    protected TreeSitterCapnp(long ptr) {
+    private TreeSitterCapnp(long ptr) {
         super(ptr);
     }
 

@@ -14,7 +14,7 @@ public class TreeSitterAgda extends TSLanguage {
         super(tree_sitter_agda());
     }
 
-    protected TreeSitterAgda(long ptr){
+    private TreeSitterAgda(long ptr){
         super(ptr);
     }
 

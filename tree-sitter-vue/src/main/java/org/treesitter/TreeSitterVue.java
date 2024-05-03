@@ -3,21 +3,23 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public class TreeSitterVue implements TSLanguage {
+public class TreeSitterVue extends TSLanguage {
 
     static {
         NativeUtils.loadLib("lib/tree-sitter-vue");
     }
     private native static long tree_sitter_vue();
 
-    private final long ptr;
-
     public TreeSitterVue() {
-        ptr = tree_sitter_vue();
+        super(tree_sitter_vue());
+    }
+
+    private TreeSitterVue(long ptr) {
+        super(ptr);
     }
 
     @Override
-    public long getPtr() {
-        return ptr;
+    public TSLanguage copy() {
+        return new TreeSitterVue(copyPtr());
     }
 }

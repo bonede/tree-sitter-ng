@@ -14,7 +14,7 @@ public class TreeSitterApex extends TSLanguage {
         super(tree_sitter_apex());
     }
 
-    protected TreeSitterApex(long ptr) {
+    private TreeSitterApex(long ptr) {
         super(ptr);
     }
 

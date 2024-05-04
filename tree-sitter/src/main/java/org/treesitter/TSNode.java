@@ -405,4 +405,23 @@ public class TSNode {
         }
         return TSParser.ts_node_string(this);
     }
+
+    /**
+     * Get the node's type as it appears in the grammar ignoring aliases as a string.
+     */
+    public String getGrammarType(){
+        asserNotNull();
+        return TSParser.ts_node_grammar_type(this);
+    }
+
+    /**
+     * Get the node's type as a numerical id as it appears in the grammar ignoring
+     * aliases. This should be used in {@link TSLanguage#nextState(int, int)} instead of {@link TSNode#getSymbol()}
+     */
+    public int getGrammarSymbol(){
+        asserNotNull();
+        return TSParser.ts_node_grammar_symbol(this);
+    }
+
+
 }

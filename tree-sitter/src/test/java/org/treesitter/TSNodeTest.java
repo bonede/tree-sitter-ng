@@ -204,4 +204,15 @@ class TSNodeTest {
     void eq() {
         assertFalse(TSNode.eq(rootNode, numberNode));
     }
+
+    @Test
+    void getGrammarType(){
+        assertEquals("document", rootNode.getGrammarType());
+    }
+
+
+    @Test
+    void getGrammarSymbol(){
+        assertEquals(15, rootNode.getGrammarSymbol());
+    }
 }

@@ -1639,6 +1639,161 @@ JNIEXPORT jint JNICALL Java_org_treesitter_TSParser_ts_1language_1symbol_1for_1n
  * Signature: (J)J
  */
 JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1language_1copy
-  (JNIEnv *, jclass, jlong){
+  (JNIEnv *env, jclass clz, jlong lang_ptr){
+    return (jlong) ts_language_copy((const TSLanguage *) lang_ptr);
+}
 
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_language_state_count
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_org_treesitter_TSParser_ts_1language_1state_1count
+  (JNIEnv *env, jclass clz, jlong lang_ptr){
+    return ts_language_state_count((const TSLanguage *) lang_ptr);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_language_next_state
+ * Signature: (JI)I
+ */
+JNIEXPORT jint JNICALL Java_org_treesitter_TSParser_ts_1language_1next_1state
+  (JNIEnv *env, jclass clz, jlong lang_ptr, jint ts_state_id, jint ts_symbol){
+    return ts_language_next_state((const TSLanguage *) lang_ptr, ts_state_id, ts_symbol);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_node_grammar_type
+ * Signature: (Lorg/treesitter/TSNode;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_treesitter_TSParser_ts_1node_1grammar_1type
+  (JNIEnv *env, jclass clz, jobject ts_node_obj){
+  TSNode ts_node = ts_node_from_obj(env, ts_node_obj);
+  const char *str = ts_node_grammar_type(ts_node);
+  return (*env)->NewStringUTF(env, str);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_node_grammar_symbol
+ * Signature: (Lorg/treesitter/TSNode;)I
+ */
+JNIEXPORT jint JNICALL Java_org_treesitter_TSParser_ts_1node_1grammar_1symbol
+  (JNIEnv *env, jclass clz, jobject ts_node_obj){
+    return ts_node_grammar_symbol(ts_node_from_obj(env, ts_node_obj));
+}
+
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_node_is_error
+ * Signature: (Lorg/treesitter/TSNode;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_treesitter_TSParser_ts_1node_1is_1error
+  (JNIEnv *env, jclass clz, jobject ts_node_obj){
+    return ts_node_is_error(ts_node_from_obj(env, ts_node_obj));
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_node_parse_state
+ * Signature: (Lorg/treesitter/TSNode;)I
+ */
+JNIEXPORT jint JNICALL Java_org_treesitter_TSParser_ts_1node_1parse_1state
+  (JNIEnv *env, jclass clz, jobject ts_node_obj){
+    return ts_node_parse_state(ts_node_from_obj(env, ts_node_obj));
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_node_next_parse_state
+ * Signature: (Lorg/treesitter/TSNode;)I
+ */
+JNIEXPORT jint JNICALL Java_org_treesitter_TSParser_ts_1node_1next_1parse_1state
+  (JNIEnv *env, jclass clz, jobject ts_node_obj){
+    return ts_node_next_parse_state(ts_node_from_obj(env, ts_node_obj));
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_lookahead_iterator_new
+ * Signature: (JI)J
+ */
+JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1lookahead_1iterator_1new
+  (JNIEnv *env, jclass clz, jlong lang_ptr, jint ts_state_id){
+    return (jlong) ts_lookahead_iterator_new((const TSLanguage*) lang_ptr, ts_state_id);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_lookahead_iterator_delete
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1lookahead_1iterator_1delete
+  (JNIEnv *env, jclass clz, jlong iter_ptr){
+    ts_lookahead_iterator_delete((TSLookaheadIterator *) iter_ptr);
+}
+
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_lookahead_iterator_reset_state
+ * Signature: (JI)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_treesitter_TSParser_ts_1lookahead_1iterator_1reset_1state
+  (JNIEnv *env, jclass clz, jlong iter_ptr, jint ts_state_id){
+    return ts_lookahead_iterator_reset_state((TSLookaheadIterator *) iter_ptr, ts_state_id);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_lookahead_iterator_reset
+ * Signature: (JJI)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_treesitter_TSParser_ts_1lookahead_1iterator_1reset
+  (JNIEnv *env, jclass clz, jlong iter_ptr, jlong lang_ptr, jint ts_state_id){
+    return ts_lookahead_iterator_reset((TSLookaheadIterator *) iter_ptr, (const TSLanguage *) lang_ptr, ts_state_id);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_lookahead_iterator_language
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1lookahead_1iterator_1language
+  (JNIEnv *env, jclass clz, jlong iter_ptr){
+    return (jlong) ts_lookahead_iterator_language((TSLookaheadIterator *) iter_ptr);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_lookahead_iterator_next
+ * Signature: (J)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_treesitter_TSParser_ts_1lookahead_1iterator_1next
+  (JNIEnv *env, jclass clz, jlong iter_ptr){
+    return ts_lookahead_iterator_next((TSLookaheadIterator *) iter_ptr);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_lookahead_iterator_current_symbol
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_org_treesitter_TSParser_ts_1lookahead_1iterator_1current_1symbol
+  (JNIEnv *env, jclass clz, jlong iter_ptr){
+    return ts_lookahead_iterator_current_symbol((TSLookaheadIterator *) iter_ptr);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_lookahead_iterator_current_symbol_name
+ * Signature: (J)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_treesitter_TSParser_ts_1lookahead_1iterator_1current_1symbol_1name
+  (JNIEnv *env, jclass clz, jlong iter_ptr){
+    const char *str = ts_lookahead_iterator_current_symbol_name((TSLookaheadIterator *) iter_ptr);
+    return (*env)->NewStringUTF(env, str);
 }

@@ -3,6 +3,7 @@ package org.treesitter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class TSLanguageTest {
     private final TSLanguage json = new TreeSitterJson();
@@ -46,4 +47,20 @@ class TSLanguageTest {
     void symbolForName() {
         assertEquals(0, json.symbolForName("end", false));
     }
+
+    @Test
+    void copy(){
+        assertNotNull(json.copy());
+    }
+
+    @Test
+    void stateCount(){
+        assertEquals(33, json.stateCount());
+    }
+
+    @Test
+    void nextState(){
+        assertEquals(0, json.nextState(0, 15));
+    }
+
 }

@@ -105,6 +105,10 @@ public abstract class TSLanguage {
     public int symbolForName(String name, boolean isNamed){
         return TSParser.ts_language_symbol_for_name(this.getPtr(), name, isNamed);
     }
+
+    /**
+     * Get another reference to the given language.
+     */
     public abstract TSLanguage copy();
 
     protected long copyPtr(){
@@ -123,4 +127,21 @@ public abstract class TSLanguage {
             TSParser.ts_language_delete(ptr);
         }
     }
+
+    /**
+     * Get the next parse state. Combine this with lookahead iterators to generate
+     * completion suggestions or valid symbols in error nodes. Use
+     * {@link TSNode#getGrammarSymbol()} for valid symbols.
+     */
+    public int nextState(int state, int symbol){
+        return TSParser.ts_language_next_state(ptr, state, symbol);
+    }
+
+    /**
+     * Get the number of valid states in this language.
+     */
+    public int stateCount(){
+        return TSParser.ts_language_state_count(ptr);
+    }
+
 }

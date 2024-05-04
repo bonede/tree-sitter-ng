@@ -139,7 +139,7 @@ public class TSParser {
     protected static native long ts_language_copy(long ts_language_ptr);
     protected static native void ts_language_delete(long ts_language_ptr);
     protected static native int ts_language_state_count(long ts_language_ptr);
-    protected static native int ts_language_next_state(long ts_language_ptr, int ts_symbol);
+    protected static native int ts_language_next_state(long ts_language_ptr, int ts_state_id, int ts_symbol);
 
     protected static native int ts_language_field_count(long ts_language_ptr);
     protected static native String ts_language_field_name_for_id(long ts_language_ptr, int ts_field_id);

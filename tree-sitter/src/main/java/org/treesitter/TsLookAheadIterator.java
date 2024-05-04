@@ -1,37 +1,74 @@
 package org.treesitter;
 
-import static org.treesitter.TSParser.ts_tree_language;
-
 public class TsLookAheadIterator {
     private long ptr;
-
-    protected TsLookAheadIterator(TSLanguage language, int tsStateId) {
-        this.ptr = TSParser.ts_lookahead_iterator_new(language.getPtr(), tsStateId);
+    /**
+     * Create a new lookahead iterator for the given language and parse state. <br>
+     *
+     * Repeatedly using {@link TsLookAheadIterator#next()} and
+     * {@link TsLookAheadIterator#currentSymbol()} will generate valid symbols in the
+     * given parse state. Newly created lookahead iterators will contain the ERROR
+     * symbol. <br>
+     *
+     * Lookahead iterators can be useful to generate suggestions and improve syntax
+     * error diagnostics. To get symbols valid in an ERROR node, use the lookahead
+     * iterator on its first leaf node state. For MISSING nodes, a lookahead
+     * iterator created on the previous non-extra leaf node may be appropriate.
+     *
+     * @throws TSException If state is invalid for the language
+     */
+    public TsLookAheadIterator(TSLanguage language, int state) {
+        this.ptr = TSParser.ts_lookahead_iterator_new(language.getPtr(), state);
         if(this.ptr == 0){
-            throw new TSException("tsStateId is invalid.");
+            throw new TSException("State is invalid.");
         }
         CleanerRunner.register(this, new TsLookAheadIteratorCleanAction(ptr));
     }
 
-    public boolean resetState(int tsStateId){
-        return TSParser.ts_lookahead_iterator_reset_state(ptr, tsStateId);
+    /**
+     * Reset the lookahead iterator to another state.
+     *
+     * @return <code>true</code> if the iterator was reset to the given state and <code>false</code> otherwise.
+     */
+    public boolean resetState(int state){
+        return TSParser.ts_lookahead_iterator_reset_state(ptr, state);
     }
 
-    public boolean reset(TSLanguage language, int tsStateId){
-        return TSParser.ts_lookahead_iterator_reset(ptr, language.getPtr(), tsStateId);
+    /**
+     * Reset the lookahead iterator.
+     *
+     * @return <code>true</code> if the language was set successfully and <code>false</code> otherwise.
+     */
+    public boolean reset(TSLanguage language, int state){
+        return TSParser.ts_lookahead_iterator_reset(ptr, language.getPtr(), state);
     }
 
+    /**
+     * Get the current language of the lookahead iterator.
+     */
     public TSLanguage getLanguage(){
         return new AnonymousLanguage(TSParser.ts_lookahead_iterator_language(ptr));
     }
 
+    /**
+     * Advance the lookahead iterator to the next symbol.
+     *
+     * @return <code>true</code> if there is a new symbol and <code>false</code> otherwise.
+     */
     public boolean next(){
         return TSParser.ts_lookahead_iterator_next(ptr);
     }
 
+    /**
+     * Get the current symbol of the lookahead iterator
+     */
     public int currentSymbol(){
         return TSParser.ts_lookahead_iterator_current_symbol(ptr);
     }
+
+    /**
+     * Get the current symbol type of the lookahead iterator as a string.
+     */
     public String currentSymbolName(){
         return TSParser.ts_lookahead_iterator_current_symbol_name(ptr);
     }

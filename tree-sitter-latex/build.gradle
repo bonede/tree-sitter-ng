@@ -82,7 +82,7 @@ signing {
 tasks.register('downloadSource') {
     group = "build setup"
     description = "Download parser source"
-    def zipUrl = "https://github.com/latex-lsp/tree-sitter-latex/archive/refs/tags/v0.3.0.zip"
+    def zipUrl = "https://github.com/latex-lsp/tree-sitter-latex/archive/refs/tags/v${libVersion}.zip"
     def downloadDir = Utils.libDownloadDir(project, libName)
     def zip = Utils.libZipFile(project, libName, libVersion)
     def parserCFile = Utils.libParserCFile(project, libName, libVersion)

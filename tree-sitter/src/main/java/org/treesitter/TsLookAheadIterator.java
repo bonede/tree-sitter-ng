@@ -15,6 +15,9 @@ public class TsLookAheadIterator {
      * iterator on its first leaf node state. For MISSING nodes, a lookahead
      * iterator created on the previous non-extra leaf node may be appropriate.
      *
+     * @param language The language
+     * @param state Parser state
+     *
      * @throws TSException If state is invalid for the language
      */
     public TsLookAheadIterator(TSLanguage language, int state) {
@@ -28,6 +31,8 @@ public class TsLookAheadIterator {
     /**
      * Reset the lookahead iterator to another state.
      *
+     * @param state New state
+     *
      * @return <code>true</code> if the iterator was reset to the given state and <code>false</code> otherwise.
      */
     public boolean resetState(int state){
@@ -37,6 +42,9 @@ public class TsLookAheadIterator {
     /**
      * Reset the lookahead iterator.
      *
+     * @param language The language
+     * @param state New state
+     *
      * @return <code>true</code> if the language was set successfully and <code>false</code> otherwise.
      */
     public boolean reset(TSLanguage language, int state){
@@ -45,6 +53,8 @@ public class TsLookAheadIterator {
 
     /**
      * Get the current language of the lookahead iterator.
+     *
+     * @return The language of the lookahead iterator
      */
     public TSLanguage getLanguage(){
         return new AnonymousLanguage(TSParser.ts_lookahead_iterator_language(ptr));
@@ -61,6 +71,8 @@ public class TsLookAheadIterator {
 
     /**
      * Get the current symbol of the lookahead iterator
+     *
+     * @return Current symbol
      */
     public int currentSymbol(){
         return TSParser.ts_lookahead_iterator_current_symbol(ptr);
@@ -68,6 +80,8 @@ public class TsLookAheadIterator {
 
     /**
      * Get the current symbol type of the lookahead iterator as a string.
+     *
+     * @return Current symbol name
      */
     public String currentSymbolName(){
         return TSParser.ts_lookahead_iterator_current_symbol_name(ptr);

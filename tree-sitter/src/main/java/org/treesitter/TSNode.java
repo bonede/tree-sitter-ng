@@ -408,6 +408,8 @@ public class TSNode {
 
     /**
      * Get the node's type as it appears in the grammar ignoring aliases as a string.
+     * 
+     * @return Node grammar type
      */
     public String getGrammarType(){
         asserNotNull();
@@ -417,6 +419,8 @@ public class TSNode {
     /**
      * Get the node's type as a numerical id as it appears in the grammar ignoring
      * aliases. This should be used in {@link TSLanguage#nextState(int, int)} instead of {@link TSNode#getSymbol()}
+     *
+     * @return Node grammar symbol
      */
     public int getGrammarSymbol(){
         asserNotNull();

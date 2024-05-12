@@ -109,7 +109,7 @@ tasks.register("buildNative") {
     def jniSrcDir = Utils.jniSrcDir(project)
     def outDir = Utils.jniOutDir(project)
     def jniCFile = Utils.jniCFile(project, "org_treesitter_TreeSitterMeson.c")
-    def libSrcDir = Utils.libSrcDir(project, libName, libVersion, "ocaml/src")
+    def libSrcDir = Utils.libSrcDir(project, libName, libVersion)
     def jniInclude = Utils.jniIncludeDir(project)
     def parserCFile = Utils.libParserCFile(project, libName, libVersion)
     def targets = Utils.treeSitterTargets(project)
@@ -140,7 +140,6 @@ tasks.register("buildNative") {
                         "-o", jniOutFile,
                         jniCFile,
             ]
-
             cmd.addAll(files)
             exec{
                 workingDir jniSrcDir

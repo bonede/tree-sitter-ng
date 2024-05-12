@@ -108,6 +108,8 @@ public abstract class TSLanguage {
 
     /**
      * Get another reference to the given language.
+     *
+     * @return Another reference to the given language
      */
     public abstract TSLanguage copy();
 
@@ -132,6 +134,10 @@ public abstract class TSLanguage {
      * Get the next parse state. Combine this with lookahead iterators to generate
      * completion suggestions or valid symbols in error nodes. Use
      * {@link TSNode#getGrammarSymbol()} for valid symbols.
+     *
+     * @param state Current state
+     * @param symbol Symbol id
+     * @return Next state
      */
     public int nextState(int state, int symbol){
         return TSParser.ts_language_next_state(ptr, state, symbol);
@@ -139,6 +145,8 @@ public abstract class TSLanguage {
 
     /**
      * Get the number of valid states in this language.
+     *
+     * @return Valid states counts
      */
     public int stateCount(){
         return TSParser.ts_language_state_count(ptr);

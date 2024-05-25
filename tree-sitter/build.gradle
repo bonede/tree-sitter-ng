@@ -22,6 +22,14 @@ dependencies {
     testImplementation project(':tree-sitter-json')
 }
 
+// force javac to treat source file as utf8 encoded
+tasks.withType(JavaCompile) {
+    options.compilerArgs = [
+            '-encoding',
+            'utf8'
+    ]
+}
+
 test {
     useJUnitPlatform()
 }
@@ -110,6 +118,7 @@ tasks.register("buildNative") {
     def jniDir = Utils.jniSrcDir(project)
     def jniOutDir = Utils.jniOutDir(project)
     def jniCFile = Utils.jniCFile(project, "org_treesitter_TSParser.c")
+    def convertUtfCFile = Utils.jniCFile(project, "ConvertUTF.c")
     def jniInclude = Utils.jniIncludeDir(project)
     def treeSitterSrcDir = Utils.libSrcDir(project, libName, treesitterVersion, "lib/src")
     def treeSitterInclude = Utils.libSrcDir(project, libName, treesitterVersion, "lib/include")
@@ -139,6 +148,7 @@ tasks.register("buildNative") {
                         "-o", outFile,
                         treeSitterCFile,
                         jniCFile,
+                        convertUtfCFile
                 )
             }
         }

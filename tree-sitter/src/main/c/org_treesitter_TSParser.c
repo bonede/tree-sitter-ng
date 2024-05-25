@@ -1,6 +1,6 @@
 #include <jni.h>
 #include <tree_sitter/api.h>
-
+#include "ConvertUTF.h"
 #ifdef _WIN32
 
 #include <io.h>
@@ -194,6 +194,9 @@ JNIEXPORT jint JNICALL Java_org_treesitter_TSParser_ts_1language_1version
     return ts_language_version((TSLanguage *) lang_ptr);
 }
 
+#include <stdio.h>
+
+
 /*
  * Class:     org_treesitter_TSParser
  * Method:    ts_parser_parse_string
@@ -201,14 +204,27 @@ JNIEXPORT jint JNICALL Java_org_treesitter_TSParser_ts_1language_1version
  */
 JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1parser_1parse_1string
   (JNIEnv *env, jclass clz, jlong parser, jlong old_tree, jstring input){
-    const char *str = (*env)->GetStringUTFChars(env, input, NULL);
+    const jchar *str = (*env)->GetStringChars(env, input, NULL); // utf16 string
+    int str_chars = (*env)->GetStringLength(env, input); // number of java chars
+    int buf_size = str_chars * 2 * 2; // double the utf16 buffer size
+    const UTF16 *source_start = (const UTF16 *) str;
+    const UTF16 *source_end = source_start + str_chars;
+    UTF8 *utf8_buf = (UTF8 *) malloc(buf_size);
+    UTF8 *target_start = utf8_buf;
+    UTF8 *target_end = utf8_buf + buf_size;
+    ConversionResult ret = ConvertUTF16toUTF8(&source_start, source_end, &target_start, target_end, strictConversion);
+    if(ret != conversionOK){
+         (*env)->ThrowNew(env, (*env)->FindClass(env, "java/lang/RuntimeException"), "Invalid UTF-8 source input");
+    }
+    int target_size = target_start - utf8_buf;
     TSTree *tree = ts_parser_parse_string(
-        (TSParser *)parser,
+        (TSParser *) parser,
         (TSTree *) old_tree,
-        str,
-        (*env)->GetStringUTFLength(env, input)
+        (const char *) utf8_buf,
+        target_size
     );
-    (*env)->ReleaseStringUTFChars(env, input, str);
+    (*env)->ReleaseStringChars(env, input, str);
+    free(utf8_buf);
     return (jlong) tree;
 }
 

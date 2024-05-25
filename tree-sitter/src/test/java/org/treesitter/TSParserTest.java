@@ -3,9 +3,10 @@ package org.treesitter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -152,4 +153,29 @@ class TSParserTest {
         parser.parseString(null, JSON_SRC);
 
     }
+
+    @Test
+    void emojiInUtf16() {
+        // the 🌏 as in utf16
+        // ref https://www.fileformat.info/info/unicode/char/1f30e/index.htm
+        String emoji = "\uD83C\uDF0E";
+        parser.reset();
+        TSTree tree = parser.parseString(null, emoji);
+        TSNode node = tree.getRootNode();
+        byte[] bytes = emoji.getBytes(StandardCharsets.UTF_8);
+        assertEquals(4, bytes.length);
+        assertEquals(node.getEndByte(), bytes.length);
+    }
+
+    @Test
+    void emojiInSourceCode() {
+        String emoji = "🌏";
+        parser.reset();
+        TSTree tree = parser.parseString(null, emoji);
+        TSNode node = tree.getRootNode();
+        byte[] bytes = emoji.getBytes(StandardCharsets.UTF_8);
+        assertEquals(4, bytes.length);
+        assertEquals(node.getEndByte(), bytes.length);
+    }
+
 }

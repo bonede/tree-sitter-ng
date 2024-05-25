@@ -935,7 +935,7 @@ JNIEXPORT jobjectArray JNICALL Java_org_treesitter_TSParser_ts_1tree_1get_1chang
 JNIEXPORT jobject JNICALL Java_org_treesitter_TSParser_ts_1node_1named_1child
   (JNIEnv *env, jclass clz, jobject ts_node_object, jint index){
     TSNode ts_node = ts_node_from_obj(env, ts_node_object);
-    TSNode child_ts_node = ts_node_named_child(ts_node, 0);
+    TSNode child_ts_node = ts_node_named_child(ts_node, index);
     return ts_node_to_obj(env, child_ts_node);
 }
 

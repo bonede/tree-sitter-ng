@@ -7,6 +7,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -169,13 +170,31 @@ class TSParserTest {
 
     @Test
     void emojiInSourceCode() {
-        String emoji = "🌏";
+        // 🌏 emoji
+        String emoji = "\uD83C\uDF10";
         parser.reset();
         TSTree tree = parser.parseString(null, emoji);
         TSNode node = tree.getRootNode();
         byte[] bytes = emoji.getBytes(StandardCharsets.UTF_8);
         assertEquals(4, bytes.length);
         assertEquals(node.getEndByte(), bytes.length);
+    }
+
+    @Test
+    void nodeText(){
+        // 🌏 emoji
+        String emoji = "\uD83C\uDF10";
+        parser.reset();
+        TSTree tree = parser.parseString(null, emoji);
+        TSNode node = tree.getRootNode();
+        byte[] bytes = emoji.getBytes(StandardCharsets.UTF_8);
+        int startByte = node.getStartByte();
+        int endByte = node.getEndByte();
+        byte[] nodeBytes = Arrays.copyOfRange(bytes, startByte, endByte);
+        String s = new String(nodeBytes, StandardCharsets.UTF_8);
+        assertEquals(4, bytes.length);
+        assertEquals(node.getEndByte(), bytes.length);
+        assertEquals(s, emoji);
     }
 
 }

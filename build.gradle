@@ -3,6 +3,7 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.treesitter.build.GenTask
 
 plugins {
+    id "maven-publish"
     alias(libs.plugins.download)
     alias(libs.plugins.nexus.staging)
 }
@@ -149,5 +150,13 @@ tasks.register("printSubProjectAsMarkdown") {
                 println "| `io.github.bonede:$name:$version`  | ![Maven Central](https://img.shields.io/maven-central/v/io.github.bonede/$name) |"
             }
         }})
+    }
+}
+
+
+subprojects {
+    afterEvaluate { subproject ->
+        def sigArc = subproject.getTasks().findByPath("signArchives")
+        sigArc.each { it.dependsOn(publishMavenPublicationToMavenLocal) }
     }
 }

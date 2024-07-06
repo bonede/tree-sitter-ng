@@ -201,7 +201,7 @@ class TSParserTest {
     @RepeatedTest(1000)
     void cursor() {
         TSParser parser = new TSParser();
-        TSLanguage lang = new TreeSitterSql();
+        TSLanguage lang = new TreeSitterJson();
         parser.setLanguage(lang);
         TSTree tree = parser.parseString(null, "c");
         TSNode rootNode = tree.getRootNode();

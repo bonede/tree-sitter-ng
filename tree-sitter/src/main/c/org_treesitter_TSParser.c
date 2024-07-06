@@ -1325,6 +1325,7 @@ TSTreeCursor *alloc_tree_cursor(TSTreeCursor cursor){
     cursor_ptr->id = cursor.id;
     cursor_ptr->context[0] = cursor.context[0];
     cursor_ptr->context[1] = cursor.context[1];
+    cursor_ptr->context[2] = cursor.context[2];
     return cursor_ptr;
 }
 /*

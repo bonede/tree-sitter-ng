@@ -1,6 +1,7 @@
 package org.treesitter;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
@@ -195,6 +196,18 @@ class TSParserTest {
         assertEquals(4, bytes.length);
         assertEquals(node.getEndByte(), bytes.length);
         assertEquals(s, emoji);
+    }
+
+    @RepeatedTest(1000)
+    void cursor() {
+        TSParser parser = new TSParser();
+        TSLanguage lang = new TreeSitterSql();
+        parser.setLanguage(lang);
+        TSTree tree = parser.parseString(null, "c");
+        TSNode rootNode = tree.getRootNode();
+        TSTreeCursor cursor = new TSTreeCursor(rootNode);
+        TSNode currentNode = cursor.currentNode();
+        assertNotNull(currentNode.getType());
     }
 
 }

@@ -4,9 +4,10 @@ import static org.treesitter.TSParser.*;
 
 public class TSTreeCursor {
     private final long ptr;
+    private TSNode node;
+
     private static class TSTreeCursorCleanAction implements Runnable {
         private final long ptr;
-
         public TSTreeCursorCleanAction(long ptr) {
             this.ptr = ptr;
         }
@@ -33,6 +34,7 @@ public class TSTreeCursor {
      */
     public TSTreeCursor(TSNode node) {
         this(TSParser.ts_tree_cursor_new(node));
+        this.node = node;
     }
 
     /**
@@ -42,6 +44,7 @@ public class TSTreeCursor {
      */
     public void reset(TSNode node){
         ts_tree_cursor_reset(ptr, node);
+        this.node = node;
     }
 
     /**
@@ -50,7 +53,9 @@ public class TSTreeCursor {
      * @return The current node.
      */
     public TSNode currentNode(){
-        return ts_tree_cursor_current_node(ptr);
+        TSNode node = ts_tree_cursor_current_node(ptr);
+        node.setTree(this.node.getTree());
+        return node;
     }
 
     /**
@@ -137,8 +142,15 @@ public class TSTreeCursor {
         return ts_tree_cursor_goto_first_child_for_point(ptr, startPoint);
     }
 
+
+    protected void setNode(TSNode node){
+        this.node = node;
+    }
+
     public TSTreeCursor copy(){
-        return new TSTreeCursor(ts_tree_cursor_copy(ptr));
+        TSTreeCursor cursor = new TSTreeCursor(ts_tree_cursor_copy(ptr));
+        cursor.setNode(node);
+        return cursor;
     }
 
 

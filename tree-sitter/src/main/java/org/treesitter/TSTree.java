@@ -9,6 +9,7 @@ import static org.treesitter.TSParser.*;
 public class TSTree {
 
     private final long ptr;
+    private TSLanguage language;
 
     private static class TSTreeCleanAction implements Runnable {
         private final long ptr;
@@ -23,9 +24,14 @@ public class TSTree {
         }
     }
 
-    TSTree(long ptr) {
+    TSTree(long ptr, TSLanguage language) {
         this.ptr = ptr;
+        this.language = language;
         CleanerRunner.register(this, new TSTreeCleanAction(ptr));
+    }
+
+    protected void setLanguage(TSLanguage language){
+        this.language = language;
     }
 
     protected long getPtr(){
@@ -41,7 +47,7 @@ public class TSTree {
      * @return A copy of the syntax tree.
      */
     public TSTree copy(){
-        return new TSTree(ts_tree_copy(ptr));
+        return new TSTree(ts_tree_copy(ptr), language);
     }
 
     /**
@@ -50,7 +56,9 @@ public class TSTree {
      * @return The root node.
      */
     public TSNode getRootNode(){
-        return ts_tree_root_node(ptr);
+        TSNode node = ts_tree_root_node(ptr);
+        node.setTree(this);
+        return node;
     }
 
     /**
@@ -62,7 +70,9 @@ public class TSTree {
      * @return The node
      */
     public TSNode getRootNodeWithOffset(int offsetBytes, TSPoint offsetPoint){
-        return ts_tree_root_node_with_offset(ptr, offsetBytes, offsetPoint);
+        TSNode node = ts_tree_root_node_with_offset(ptr, offsetBytes, offsetPoint);
+        node.setTree(this);
+        return node;
     }
 
     /**
@@ -70,7 +80,7 @@ public class TSTree {
      * @return The language
      */
     public TSLanguage getLanguage(){
-        return new AnonymousLanguage(ts_tree_language(ptr));
+        return language;
     }
 
     /**

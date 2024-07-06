@@ -225,8 +225,11 @@ public class TSParser {
      * @return True if the language was successfully applied. False otherwise.
      */
     public boolean setLanguage(TSLanguage language) {
-        this.language = language;
-        return ts_parser_set_language(ptr, language.getPtr());
+        boolean ret = ts_parser_set_language(ptr, language.getPtr());
+        if(ret){
+            this.language = language;
+        }
+        return ret;
     }
 
     /**
@@ -242,7 +245,7 @@ public class TSParser {
     public TSTree parseString(TSTree oldTree, String input) {
         long oldTreePtr = oldTree == null ? 0 : oldTree.getPtr();
         long treePtr = ts_parser_parse_string(ptr, oldTreePtr, input);
-        return new TSTree(treePtr);
+        return new TSTree(treePtr, language);
     }
 
     /**
@@ -260,7 +263,7 @@ public class TSParser {
     public TSTree parseStringEncoding(TSTree oldTree, String input, TSInputEncoding encoding){
         long oldTreePtr = oldTree == null ? 0 : oldTree.getPtr();
         long treePtr = ts_parser_parse_string_encoding(ptr, oldTreePtr, input, encoding.ordinal());
-        return new TSTree(treePtr);
+        return new TSTree(treePtr, language);
     }
 
     /**
@@ -302,7 +305,7 @@ public class TSParser {
         if(treePtr == 0){
             return null;
         }
-        return new TSTree(treePtr);
+        return new TSTree(treePtr, language);
     }
 
     /**
@@ -311,7 +314,7 @@ public class TSParser {
      * @return {@link TSLanguage}
      */
     public TSLanguage getLanguage(){
-        return new AnonymousLanguage(ts_parser_language(ptr));
+        return language;
     }
     /**
      * Set the ranges of text that the parser should include when parsing.<br>

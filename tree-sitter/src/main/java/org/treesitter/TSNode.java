@@ -9,6 +9,19 @@ public class TSNode {
     private int context3;
     private long idPtr;
     private long treePtr;
+    private TSTree tree;
+
+    protected long getTreePtr() {
+        return treePtr;
+    }
+
+    public TSTree getTree() {
+        return tree;
+    }
+
+    protected void setTree(TSTree tree){
+        this.tree = tree;
+    }
 
     private void asserNotNull(){
         if(isNull()){

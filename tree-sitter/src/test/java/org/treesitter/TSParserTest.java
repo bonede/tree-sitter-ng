@@ -209,5 +209,4 @@ class TSParserTest {
         TSNode currentNode = cursor.currentNode();
         assertNotNull(currentNode.getType());
     }
-
 }

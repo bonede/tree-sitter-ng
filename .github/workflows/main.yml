@@ -20,6 +20,6 @@ jobs:
         java-version: '11'
         distribution: 'corretto'
     - name: Build with Gradle
-      uses: gradle/actions/setup-gradle@v4.0.0
+      uses: gradle/actions/setup-gradle@v4.0.1
       with:
         arguments: test

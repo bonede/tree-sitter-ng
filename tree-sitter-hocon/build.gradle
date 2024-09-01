@@ -1,8 +1,5 @@
 import org.treesitter.build.Utils
 
-import java.util.stream.Collectors
-import java.util.stream.Stream
-
 plugins {
     id 'java'
     id 'signing'
@@ -26,8 +23,7 @@ test {
     useJUnitPlatform()
 }
 
-
-def libName = "tree-sitter-json"
+def libName = "tree-sitter-hocon"
 
 
 java {
@@ -82,12 +78,10 @@ signing {
     sign configurations.archives
     sign publishing.publications
 }
-def jniCFileName= "org_treesitter_json_TreeSitterJson.c"
-
 tasks.register('downloadSource') {
     group = "build setup"
     description = "Download parser source"
-    def zipUrl = "https://github.com/tree-sitter/tree-sitter-json/archive/refs/tags/v${libVersion}.zip"
+    def zipUrl = "https://github.com/antosha417/tree-sitter-hocon/archive/refs/heads/master.zip"
     def downloadDir = Utils.libDownloadDir(project, libName)
     def zip = Utils.libZipFile(project, libName, libVersion)
     def parserCFile = Utils.libParserCFile(project, libName, libVersion)
@@ -106,44 +100,53 @@ tasks.register('downloadSource') {
     }
 
 }
+
 tasks.register("buildNative") {
     group = "build"
     description = "Build parser native modules"
     dependsOn "downloadSource", rootProject.bootstrap
     def jniSrcDir = Utils.jniSrcDir(project)
     def outDir = Utils.jniOutDir(project)
-    def jniCFile =  Utils.jniCFile(project, jniCFileName)
+    def jniCFile = Utils.jniCFile(project, "org_treesitter_TreeSitterHocon.c")
     def parserCFile = Utils.libParserCFile(project, libName, libVersion)
     def libSrcDir = Utils.libSrcDir(project, libName, libVersion)
     def jniInclude = Utils.jniIncludeDir(project)
-    def targets = Utils.treeSitterTargets(project)
-    def outputFiles = Stream.of(targets)
-            .map( t -> Utils.jniOutFile(project, t, libName))
-            .collect(Collectors.toList())
 
+    def targets = Utils.treeSitterTargets(project)
+    def outputFiles = targets.collect()
+            { t -> Utils.jniOutFile(project, t, libName)}
+    def srcFiles = project.fileTree(libSrcDir) {
+        include(Utils.libFiles())
+    }.toList()
     outputs.files(outputFiles)
-    inputs.files(jniCFile, parserCFile, rootProject.layout.projectDirectory.file("gradle.properties"))
+    def inputFiles = srcFiles + [parserCFile, rootProject.layout.projectDirectory.file("gradle.properties")]
+    inputs.files(inputFiles)
     doLast{
         mkdir(outDir)
         targets.each {target ->
             def jniMdInclude = Utils.jniMdInclude(project, target)
-            def outFile = Utils.jniOutFile(project, target, libName)
-            exec{
-                workingDir jniSrcDir
-                commandLine(rootProject.downloadZig.zigExe, "cc",
+            def jniOutFile = Utils.jniOutFile(project, target, libName)
+            def files = project.fileTree(libSrcDir) {
+                include(Utils.libFiles())
+            }.toList()
+            def cmd = [
+                        rootProject.downloadZig.zigExe, "c++",
                         "-g0",
                         "-shared",
                         "-target", target,
                         "-I", libSrcDir,
                         "-I", jniInclude,
                         "-I", jniMdInclude,
-                        "-o", outFile,
+                        "-o", jniOutFile,
                         jniCFile,
-                        parserCFile
-                )
+            ]
+
+            cmd.addAll(files)
+            exec{
+                workingDir jniSrcDir
+                commandLine(cmd)
             }
         }
         Utils.removeWindowsDebugFiles(project)
     }
-
 }

@@ -16,7 +16,6 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     implementation project(":tree-sitter")
     implementation project(":tree-sitter-json")
-    implementation project(":tree-sitter")
 }
 
 test {

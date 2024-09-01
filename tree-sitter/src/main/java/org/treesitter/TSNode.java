@@ -150,6 +150,38 @@ public class TSNode {
     }
 
     /**
+     * Check if the node is a syntax error.
+     *
+     * @return True node is a syntax error.
+     */
+    public boolean isError(){
+        asserNotNull();
+        return TSParser.ts_node_is_error(this);
+    }
+
+    /**
+     * Get this node's parser state.
+     *
+     * @return nodes's parser state.
+     */
+    public int getParserState(){
+        asserNotNull();
+        return TSParser.ts_node_parse_state(this);
+    }
+
+    /**
+     * Get this node's next parser state.
+     *
+     * @return nodes's next parser state.
+     */
+    public int getNextParserState(){
+        asserNotNull();
+        return TSParser.ts_node_next_parse_state(this);
+    }
+
+
+
+    /**
      * Get the node's start byte.
      *
      * @return The node's start byte.
@@ -197,6 +229,17 @@ public class TSNode {
     public TSNode getParent(){
         asserNotNull();
         return ts_node_parent(this);
+    }
+
+    /**
+     * Get the node's child that contains `descendant`.
+     *
+     * @param descendant the descendant to search.
+     * @return child that contains `descendant`.
+     */
+    public TSNode getChildContainingDescendant(TSNode descendant){
+        asserNotNull();
+        return TSParser.ts_node_child_containing_descendant(this, descendant);
     }
 
     /**

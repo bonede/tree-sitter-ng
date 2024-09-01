@@ -81,6 +81,21 @@ class TSNodeTest {
     }
 
     @Test
+    void isError(){
+        assertFalse(rootNode.isError());
+    }
+
+    @Test
+    void getParserState(){
+        assertEquals(rootNode.getParserState(), 0);
+    }
+
+    @Test
+    void nextParserState(){
+        assertEquals(rootNode.getNextParserState(), 0);
+    }
+
+    @Test
     void getStartByte() {
         assertEquals(0, rootNode.getStartByte());
     }
@@ -105,6 +120,13 @@ class TSNodeTest {
     @Test
     void getParent() {
         assertTrue(rootNode.getParent().isNull());
+    }
+
+    @Test
+    void getChildContainingDescendant(){
+        TSNode child = rootNode.getChild(0);
+        TSNode descendant = rootNode.getChild(0).getChild(0);
+        assertEquals(child.toString(), rootNode.getChildContainingDescendant(descendant).toString());
     }
 
     @Test

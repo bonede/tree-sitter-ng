@@ -86,6 +86,19 @@ public class TSQuery {
     }
 
     /**
+     * Get the byte offset where the given pattern ends in the query's source.<br>
+     *
+     * This can be useful when combining queries by concatenating their source
+     * code strings.
+     *
+     * @param patternIndex The index of the pattern.
+     * @return The byte offset where the pattern ends.
+     */
+    public int getEndByteForPattern(int patternIndex) {
+        return ts_query_end_byte_for_pattern(ptr, patternIndex);
+    }
+
+    /**
      * Get all the predicates for the given pattern in the query.<br>
      *
      * The predicates are represented as a single array of steps. There are three

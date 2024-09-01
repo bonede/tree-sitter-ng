@@ -48,6 +48,12 @@ class TSQueryTest {
     }
 
     @Test
+    void getEndByteForPattern() {
+        assertEquals(37, query.getEndByteForPattern(0));
+    }
+
+
+    @Test
     void getPredicateForPattern() {
         assertEquals(4, query.getPredicateForPattern(0).length);
     }

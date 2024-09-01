@@ -76,6 +76,7 @@ public class TSParser {
     protected static native int ts_node_parse_state(TSNode node);
     protected static native int ts_node_next_parse_state(TSNode node);
     protected static native TSNode ts_node_parent(TSNode node);
+    protected static native TSNode ts_node_child_containing_descendant(TSNode node, TSNode descendant);
     protected static native TSNode ts_node_child(TSNode node, int index);
     protected static native String ts_node_field_name_for_child(TSNode node, int index);
     protected static native int ts_node_child_count(TSNode node);
@@ -114,6 +115,7 @@ public class TSParser {
     protected static native int ts_query_capture_count(long ts_query_ptr);
     protected static native int ts_query_string_count(long ts_query_ptr);
     protected static native int ts_query_start_byte_for_pattern(long ts_query_ptr, int pattern_index);
+    protected static native int ts_query_end_byte_for_pattern(long ts_query_ptr, int pattern_index);
     protected static native TSQueryPredicateStep[] ts_query_predicates_for_pattern(long ts_query_ptr, int pattern_index);
     protected static native boolean ts_query_is_pattern_rooted(long ts_query_ptr, int pattern_index);
     protected static native boolean ts_query_is_pattern_non_local(long ts_query_ptr, int pattern_index);

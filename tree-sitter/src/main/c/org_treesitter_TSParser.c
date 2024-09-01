@@ -524,6 +524,16 @@ JNIEXPORT jint JNICALL Java_org_treesitter_TSParser_ts_1query_1start_1byte_1for_
 
 /*
  * Class:     org_treesitter_TSParser
+ * Method:    ts_query_end_byte_for_pattern
+ * Signature: (JI)I
+ */
+JNIEXPORT jint JNICALL Java_org_treesitter_TSParser_ts_1query_1end_1byte_1for_1pattern
+  (JNIEnv *env, jclass clz, jlong ts_query_ptr, jint patter_index){
+    return ts_query_end_byte_for_pattern((TSQuery *) ts_query_ptr, patter_index);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
  * Method:    ts_query_predicates_for_pattern
  * Signature: (JI)[Lorg/treesitter/TSQueryPredicateStep;
  */
@@ -1089,6 +1099,19 @@ JNIEXPORT jobject JNICALL Java_org_treesitter_TSParser_ts_1node_1parent
     TSNode ts_node = ts_node_from_obj(env, ts_node_object);
     TSNode parent_node = ts_node_parent(ts_node);
     return ts_node_to_obj(env, parent_node);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_node_child_containing_descendant
+ * Signature: (Lorg/treesitter/TSNode;Lorg/treesitter/TSNode;)Lorg/treesitter/TSNode;
+ */
+JNIEXPORT jobject JNICALL Java_org_treesitter_TSParser_ts_1node_1child_1containing_1descendant
+  (JNIEnv *env, jclass clz, jobject ts_node_object, jobject descendant_object){
+    TSNode ts_node = ts_node_from_obj(env, ts_node_object);
+    TSNode descendant = ts_node_from_obj(env, descendant_object);
+    TSNode child = ts_node_child_containing_descendant(ts_node, descendant);
+    return ts_node_to_obj(env, child);
 }
 
 /*

@@ -38,7 +38,8 @@ public class TSTreeCursor {
     }
 
     /**
-     * Re-initialize a tree cursor to start at a different node.
+     * Re-initialize a tree cursor to start at the original node that the cursor was
+     * constructed with.
      *
      * @param node The node to start the cursor at.
      */

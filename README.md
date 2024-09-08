@@ -105,6 +105,7 @@ class Main {
 | `tree-sitter-hack`              | ![Maven Central](https://img.shields.io/maven-central/v/io.github.bonede/tree-sitter-hack)              |
 | `tree-sitter-haskell`           | ![Maven Central](https://img.shields.io/maven-central/v/io.github.bonede/tree-sitter-haskell)           |
 | `tree-sitter-hcl`               | ![Maven Central](https://img.shields.io/maven-central/v/io.github.bonede/tree-sitter-hcl)               |
+| `tree-sitter-hocon`             | ![Maven Central](https://img.shields.io/maven-central/v/io.github.bonede/tree-sitter-hocon)             |
 | `tree-sitter-html`              | ![Maven Central](https://img.shields.io/maven-central/v/io.github.bonede/tree-sitter-html)              |
 | `tree-sitter-java`              | ![Maven Central](https://img.shields.io/maven-central/v/io.github.bonede/tree-sitter-java)              |
 | `tree-sitter-javascript`        | ![Maven Central](https://img.shields.io/maven-central/v/io.github.bonede/tree-sitter-javascript)        |

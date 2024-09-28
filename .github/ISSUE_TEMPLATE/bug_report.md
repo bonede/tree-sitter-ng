@@ -19,7 +19,7 @@ A clear and concise description of what you expected to happen.
 
 **Sample code:**
 ```
-Sample code to using the  parser.
+Sample code to show the bug. Please make it as short as possible.
 ```
 
 **Source code:**

@@ -1837,3 +1837,48 @@ JNIEXPORT jstring JNICALL Java_org_treesitter_TSParser_ts_1lookahead_1iterator_1
     const char *str = ts_lookahead_iterator_current_symbol_name((TSLookaheadIterator *) iter_ptr);
     return (*env)->NewStringUTF(env, str);
 }
+
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_node_child_with_descendant
+ * Signature: (Lorg/treesitter/TSNode;Lorg/treesitter/TSNode;)Lorg/treesitter/TSNode;
+ */
+JNIEXPORT jobject JNICALL Java_org_treesitter_TSParser_ts_1node_1child_1with_1descendant
+  (JNIEnv *env, jclass clz, jobject ts_node_obj, jobject ts_node_descendant_obj){
+    TSNode node = ts_node_from_obj(env, ts_node_obj);
+    TSNode descendant = ts_node_from_obj(env, ts_node_descendant_obj);
+    return ts_node_to_obj(env, ts_node_child_with_descendant(node, descendant));
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_node_field_name_for_named_child
+ * Signature: (Lorg/treesitter/TSNode;J)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_treesitter_TSParser_ts_1node_1field_1name_1for_1named_1child
+  (JNIEnv *env, jclass clz, jobject ts_node_obj, jlong named_child_index){
+    TSNode node = ts_node_from_obj(env, ts_node_obj);
+    const char *str = ts_node_field_name_for_named_child(node, named_child_index);
+    return (*env)->NewStringUTF(env, str);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_query_cursor_set_timeout_micros
+ * Signature: (JJ)V
+ */
+JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1set_1timeout_1micros
+  (JNIEnv *env, jclass clz, jlong ts_query_ptr, jlong timeout_micros){
+    ts_query_cursor_set_timeout_micros((TSQueryCursor *) ts_query_ptr, timeout_micros);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_query_cursor_timeout_micros
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1timeout_1micros
+  (JNIEnv *env, jclass clz, jlong ts_query_ptr){
+    return ts_query_cursor_timeout_micros((TSQueryCursor *) ts_query_ptr);
+}

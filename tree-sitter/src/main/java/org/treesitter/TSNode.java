@@ -236,10 +236,25 @@ public class TSNode {
      *
      * @param descendant the descendant to search.
      * @return child that contains `descendant`.
+     * @deprecated use {@link TSNode#getChildWithDescendant(TSNode)} instead, this will be removed in 0.25
      */
     public TSNode getChildContainingDescendant(TSNode descendant){
         asserNotNull();
         return TSParser.ts_node_child_containing_descendant(this, descendant);
+    }
+
+    /**
+     * Get the node that contains `descendant`.<br>
+     *
+     * Note that this can return `descendant` itself, unlike the deprecated function
+     * {@link TSNode#getChildContainingDescendant(TSNode)}
+     *
+     * @param descendant
+     * @return `descendant` itself
+     */
+    public TSNode getChildWithDescendant(TSNode descendant){
+        asserNotNull();
+        return TSParser.ts_node_child_with_descendant(this, descendant);
     }
 
     /**
@@ -266,6 +281,18 @@ public class TSNode {
     public String getFieldNameForChild(int index){
         asserNotNull();
         return ts_node_field_name_for_child(this, index);
+    }
+
+    /**
+     * Get the field name for node's named child at the given index, where zero
+     * represents the first named child. Returns null, if no field is found.
+     *
+     * @param namedChildIndex
+     * @return The field name for the node's named child at the given index.
+     */
+    public String getFieldNameForNamedChild(int namedChildIndex){
+        asserNotNull();
+        return TSParser.ts_node_field_name_for_named_child(this, namedChildIndex);
     }
 
     /**
@@ -482,6 +509,5 @@ public class TSNode {
         asserNotNull();
         return TSParser.ts_node_grammar_symbol(this);
     }
-
 
 }

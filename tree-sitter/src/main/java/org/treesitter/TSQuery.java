@@ -239,5 +239,32 @@ public class TSQuery {
         ts_query_disable_pattern(ptr, index);
     }
 
+    /**
+     * Set the maximum duration in microseconds that query execution should be allowed to
+     * take before halting.<br>
+     *
+     * If query execution takes longer than this, it will halt early, returning null.<br>
+     *
+     * @see TSQueryCursor#getMatches()
+     * @see TSQueryCursor#getCaptures()
+     *
+     * @param timeoutMicros Timeout in micro seconds.
+     */
+    public void setTimeoutMicros(long timeoutMicros){
+        TSParser.ts_query_cursor_set_timeout_micros(ptr, timeoutMicros);
+    }
+
+    /**
+     * Get the duration in microseconds that query execution is allowed to take.<br>
+     *
+     * This is set via {@link TSQuery#setTimeoutMicros(long)}
+     *
+     * @return Timeout in micro seconds.
+     */
+    public long getTimeoutMicros(){
+        return TSParser.ts_query_cursor_timeout_micros(ptr);
+    }
+
+
 
 }

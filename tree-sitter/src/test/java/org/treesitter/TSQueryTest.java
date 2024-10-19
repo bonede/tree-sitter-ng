@@ -98,4 +98,16 @@ class TSQueryTest {
     void disablePattern() {
         query.disablePattern(0);
     }
+
+    @Test
+    void setTimeoutMicros() {
+        query.setTimeoutMicros(1000l);
+    }
+
+    @Test
+    void getTimeoutMicros() {
+        long timeout = 1000l;
+        query.setTimeoutMicros(1000l);
+        assertEquals(timeout, query.getTimeoutMicros());;
+    }
 }

@@ -237,4 +237,17 @@ class TSNodeTest {
     void getGrammarSymbol(){
         assertEquals(15, rootNode.getGrammarSymbol());
     }
+
+    @Test
+    void getFieldNameForNamedChild() {
+        assertNull(rootNode.getFieldNameForNamedChild(0));
+    }
+
+    @Test
+    void getChildWithDescendant() {
+        TSNode child = rootNode.getChild(0);
+        TSNode descendant = rootNode.getChild(0).getChild(0);
+        assertEquals(child.toString(), rootNode.getChildWithDescendant(descendant).toString());
+        assertNotNull(rootNode.getChildWithDescendant(descendant));
+    }
 }

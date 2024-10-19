@@ -161,6 +161,13 @@ public class TSParser {
     protected static native int ts_lookahead_iterator_current_symbol(long ts_lookahead_iterator_ptr);
     protected static native String ts_lookahead_iterator_current_symbol_name(long ts_lookahead_iterator_ptr);
 
+
+    protected static native TSNode ts_node_child_with_descendant(TSNode node, TSNode descendant);
+    protected static native String ts_node_field_name_for_named_child(TSNode node, long namedChildIndex);
+    protected static native void ts_query_cursor_set_timeout_micros(long ts_query_ptr, long timeout_micros);
+    protected static native long ts_query_cursor_timeout_micros(long ts_query_ptr);
+
+
     private final long ptr;
 
     private static class TSParserCleanAction implements Runnable{

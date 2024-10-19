@@ -238,6 +238,7 @@ public class TSNode {
      * @return child that contains `descendant`.
      * @deprecated use {@link TSNode#getChildWithDescendant(TSNode)} instead, this will be removed in 0.25
      */
+    @Deprecated
     public TSNode getChildContainingDescendant(TSNode descendant){
         asserNotNull();
         return TSParser.ts_node_child_containing_descendant(this, descendant);
@@ -249,8 +250,8 @@ public class TSNode {
      * Note that this can return `descendant` itself, unlike the deprecated function
      * {@link TSNode#getChildContainingDescendant(TSNode)}
      *
-     * @param descendant
-     * @return `descendant` itself
+     * @param descendant the descendant to search.
+     * @return child that contains `descendant`.
      */
     public TSNode getChildWithDescendant(TSNode descendant){
         asserNotNull();
@@ -287,7 +288,7 @@ public class TSNode {
      * Get the field name for node's named child at the given index, where zero
      * represents the first named child. Returns null, if no field is found.
      *
-     * @param namedChildIndex
+     * @param namedChildIndex Index of the child
      * @return The field name for the node's named child at the given index.
      */
     public String getFieldNameForNamedChild(int namedChildIndex){

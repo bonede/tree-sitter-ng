@@ -35,7 +35,7 @@ class TSLanguageTest {
 
     @Test
     void symbolCount() {
-        assertEquals(26, json.symbolCount());
+        assertEquals(25, json.symbolCount());
     }
 
     @Test
@@ -55,7 +55,7 @@ class TSLanguageTest {
 
     @Test
     void stateCount(){
-        assertEquals(33, json.stateCount());
+        assertEquals(32, json.stateCount());
     }
 
     @Test

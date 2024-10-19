@@ -69,7 +69,8 @@ public abstract class TSLanguage {
         switch (type){
             case 0: return TSSymbolType.TSSymbolTypeRegular;
             case 1: return TSSymbolType.TSSymbolTypeAnonymous;
-            case 2: return TSSymbolType.TSSymbolTypeAuxiliary;
+            case 2: return TSSymbolType.TSSymbolTypeSupertype;
+            case 3: return TSSymbolType.TSSymbolTypeAuxiliary;
             default: throw new TSException("Can't handle symbol type: %d" + type);
         }
     }

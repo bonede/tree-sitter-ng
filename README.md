@@ -13,7 +13,7 @@ dependencies {
     // add tree sitter
     implementation 'io.github.bonede:tree-sitter:0.24.3'
     // add json parser
-    implementation 'io.github.bonede:tree-sitter-json:0.21.0a'
+    implementation 'io.github.bonede:tree-sitter-json:0.23.0'
 }
 ```
 
@@ -30,7 +30,7 @@ dependencies {
     <dependency>
         <groupId>io.github.bonede</groupId>
         <artifactId>tree-sitter-json</artifactId>
-        <version>0.21.0a</version>
+        <version>0.23.0</version>
     </dependency>
 </dpendencies>
 ```

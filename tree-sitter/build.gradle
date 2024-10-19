@@ -111,6 +111,13 @@ tasks.register('downloadTreeSitterSource') {
     }
 
 }
+
+tasks.withType(Javadoc) {
+    options.locale = 'en_US'
+    options.JFlags = ["-Duser.language=en_US"]
+}
+
+
 tasks.register("buildNative") {
     group = "build"
     description = "Download TreeSitter native modules"

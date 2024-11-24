@@ -190,8 +190,16 @@ public class TSQuery {
      *
      * @return The quantifier of the capture.
      */
-    public int getCaptureQuantifierForId(int patternId, int captureId) {
-        return ts_query_capture_quantifier_for_id(ptr, patternId, captureId);
+    public TSQuantifier getCaptureQuantifierForId(int patternId, int captureId) {
+        int quantifier = ts_query_capture_quantifier_for_id(ptr, patternId, captureId);
+        switch (quantifier){
+            case 0: return TSQuantifier.TSQuantifierZero;
+            case 1: return TSQuantifier.TSQuantifierZeroOrOne;
+            case 2: return TSQuantifier.TSQuantifierZeroOrMore;
+            case 3: return TSQuantifier.TSQuantifierOne;
+            case 4: return TSQuantifier.TSQuantifierOneOrMore;
+            default: throw new TSException("Can't handle quantifier type: %d" + quantifier);
+        }
     }
 
     /**

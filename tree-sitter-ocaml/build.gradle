@@ -136,6 +136,7 @@ tasks.register("buildNative") {
             def cmd = [
                         rootProject.downloadZig.zigExe, "c++",
                         "-g0",
+                        "-fno-sanitize=undefined",
                         "-shared",
                         "-target", target,
                         "-I", libSrcDir,

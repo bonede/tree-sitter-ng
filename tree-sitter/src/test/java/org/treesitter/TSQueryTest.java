@@ -81,7 +81,7 @@ class TSQueryTest {
 
     @Test
     void getCaptureQuantifierForId() {
-        assertEquals(3, query.getCaptureQuantifierForId(0, 0));
+        assertEquals(TSQuantifier.TSQuantifierOne, query.getCaptureQuantifierForId(0, 0));
     }
 
     @Test

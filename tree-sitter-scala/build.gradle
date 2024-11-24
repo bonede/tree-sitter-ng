@@ -121,7 +121,7 @@ tasks.register("buildNative") {
         include(Utils.libFiles())
     }.toList()
     outputs.files(outputFiles)
-    def inputFiles = srcFiles + [parserCFile, rootProject.layout.projectDirectory.file("gradle.properties")]
+    def inputFiles = srcFiles + [parserCFile, scannerCFile, rootProject.layout.projectDirectory.file("gradle.properties")]
     inputs.files(inputFiles)
     doLast{
         mkdir(outDir)
@@ -134,6 +134,7 @@ tasks.register("buildNative") {
             def cmd = [
                         rootProject.downloadZig.zigExe, "c++",
                         "-g0",
+                        "-fno-sanitize=undefined",
                         "-shared",
                         "-target", target,
                         "-I", libSrcDir,
@@ -149,6 +150,5 @@ tasks.register("buildNative") {
                 commandLine(cmd)
             }
         }
-        Utils.removeWindowsDebugFiles(project)
     }
 }

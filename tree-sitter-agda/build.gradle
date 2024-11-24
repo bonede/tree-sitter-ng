@@ -82,7 +82,7 @@ signing {
 tasks.register('downloadSource') {
     group = "build setup"
     description = "Download parser source"
-    def zipUrl = "https://github.com/tree-sitter/tree-sitter-agda/archive/refs/tags/${libVersion}.zip"
+    def zipUrl = "https://github.com/tree-sitter/tree-sitter-agda/archive/refs/tags/v${libVersion}.zip"
     def downloadDir = Utils.libDownloadDir(project, libName)
     def zip = Utils.libZipFile(project, libName, libVersion)
     def parserCFile = Utils.libParserCFile(project, libName, libVersion)
@@ -129,6 +129,7 @@ tasks.register("buildNative") {
             def cmd = [
                         rootProject.downloadZig.zigExe, "c++",
                         "-g0",
+                        "-fno-sanitize=undefined",
                         "-shared",
                         "-target", target,
                         "-I", libSrcDir,

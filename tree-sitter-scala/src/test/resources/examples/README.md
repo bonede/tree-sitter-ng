@@ -1,0 +1,1 @@
+Examples from https://github.com/tree-sitter/tree-sitter-scala/tree/master/examples

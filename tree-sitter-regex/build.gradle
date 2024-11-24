@@ -135,6 +135,7 @@ tasks.register("buildNative") {
                         rootProject.downloadZig.zigExe, "c++",
                         "-g0",
                         "-shared",
+                        "-fno-sanitize=undefined",
                         "-target", target,
                         "-I", libSrcDir,
                         "-I", jniInclude,

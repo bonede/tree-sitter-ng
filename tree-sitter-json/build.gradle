@@ -132,6 +132,7 @@ tasks.register("buildNative") {
                 workingDir jniSrcDir
                 commandLine(rootProject.downloadZig.zigExe, "cc",
                         "-g0",
+                        "-fno-sanitize=undefined",
                         "-shared",
                         "-target", target,
                         "-I", libSrcDir,

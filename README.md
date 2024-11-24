@@ -11,9 +11,9 @@ Add dependencies to your `build.gradle` or `pom.xml`.
 // Gradle
 dependencies {
     // add tree sitter
-    implementation 'io.github.bonede:tree-sitter:0.24.3'
+    implementation 'io.github.bonede:tree-sitter:0.24.4'
     // add json parser
-    implementation 'io.github.bonede:tree-sitter-json:0.23.0'
+    implementation 'io.github.bonede:tree-sitter-json:0.24.8'
 }
 ```
 
@@ -24,13 +24,13 @@ dependencies {
     <dependency>
         <groupId>io.github.bonede</groupId>
         <artifactId>tree-sitter</artifactId>
-        <version>0.24.3</version>
+        <version>0.24.4</version>
     </dependency>
     <!-- add json parser -->
     <dependency>
         <groupId>io.github.bonede</groupId>
         <artifactId>tree-sitter-json</artifactId>
-        <version>0.23.0</version>
+        <version>0.24.8</version>
     </dependency>
 </dpendencies>
 ```
@@ -246,3 +246,6 @@ You can edit the `build.gradle` to customize the native library build process.
 # run tests
 ./gradlew tree-sitter-<parser name>:test
 ```
+
+# TODO
+- [ ] Utilize test cases in parser's repository

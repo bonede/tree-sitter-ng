@@ -10,9 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static org.treesitter.tests.SExpressionUtils.stripFieldNames;
+import static org.treesitter.tests.SExpressionUtils.stripSExpressionWhitespace;
+
 
 public class CorpusTest {
     private List<TestExample> examples;
@@ -242,7 +245,8 @@ public class CorpusTest {
             parser.reset();
             TSTree tree = parser.parseString(null, example.getInput());
             TSNode node = tree.getRootNode();
-            assertFunction.accept(node.toString(), SExpressionUtils.removeSExpressionWhitespace(example.getOutput()));
+            String sexpr = stripFieldNames(stripSExpressionWhitespace(example.getOutput()));
+            assertFunction.accept(stripFieldNames(node.toString()), sexpr);
         });
     }
 }

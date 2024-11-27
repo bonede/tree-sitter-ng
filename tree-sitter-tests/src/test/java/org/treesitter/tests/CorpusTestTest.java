@@ -8,9 +8,7 @@ import org.treesitter.TreeSitterScala;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -120,4 +118,5 @@ class CorpusTestTest {
         TSLanguage lang = new TreeSitterScala();
         corpusTest.runTest(lang, Assertions::assertEquals);
     }
+
 }

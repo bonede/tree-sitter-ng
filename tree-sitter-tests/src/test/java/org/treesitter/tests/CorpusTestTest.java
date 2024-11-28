@@ -108,15 +108,21 @@ class CorpusTestTest {
 
     @Test
     void parse() throws IOException {
-        testParseFile("annotations.txt");
-        testParseFile("annotations_extra_delim.txt");
+        testParseFile("test/corpus/annotations.txt");
+        testParseFile("test/corpus/annotations_extra_delim.txt");
     }
 
     @Test
     void runTest() throws IOException {
-        CorpusTest corpusTest = loadTest("annotations.txt");
+        CorpusTest corpusTest = loadTest("test/corpus/annotations.txt");
         TSLanguage lang = new TreeSitterScala();
         corpusTest.runTest(lang, Assertions::assertEquals);
+    }
+
+    @Test
+    void runAllTestInFolder() throws IOException {
+        TSLanguage lang = new TreeSitterScala();
+        CorpusTest.runAllTestsInFolder("src/test/resources/test/corpus", lang, Assertions::assertEquals);
     }
 
 }

@@ -6,12 +6,16 @@ import org.treesitter.TSParser;
 import org.treesitter.TSTree;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static org.treesitter.tests.SExpressionUtils.stripFieldNames;
 import static org.treesitter.tests.SExpressionUtils.stripSExpressionWhitespace;
@@ -248,5 +252,22 @@ public class CorpusTest {
             String sexpr = stripFieldNames(stripSExpressionWhitespace(example.getOutput()));
             assertFunction.accept(stripFieldNames(node.toString()), sexpr);
         });
+    }
+
+    public static void runAllTestsInFolder(String folder, TSLanguage language, BiConsumer<String, String> assertFunction) throws IOException {
+        File folderPath = new File(folder);
+        if(!folderPath.exists() || !folderPath.isDirectory()){
+            throw new TreeSitterTestException(folder + " does not exist or not a folder.");
+        }
+        File[] files = folderPath.listFiles();
+        if(files == null){
+            return;
+        }
+        for(File file : files){
+            CorpusTest corpusTest = new CorpusTest(file);
+            corpusTest.runTest(language, assertFunction);
+        }
+
+
     }
 }

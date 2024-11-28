@@ -1,16 +1,15 @@
 package org.treesitter.tests;
 
-import org.treesitter.TSLanguage;
-import org.treesitter.TSNode;
-import org.treesitter.TSParser;
-import org.treesitter.TSTree;
+import org.treesitter.*;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.StringJoiner;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
@@ -135,9 +134,8 @@ public class CorpusTest {
     }
 
     private void parseTest(InputStream inputStream) throws IOException {
-        this.reader = new BufferedReader(new InputStreamReader(inputStream));
+        this.reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
         this.examples = new ArrayList<>();
-        // handle null
         while(this.state != STATE_STOP){
             readLine();
             switch (state){
@@ -219,7 +217,6 @@ public class CorpusTest {
     }
 
     private boolean isDeviderDelim(){
-
         if(this.suffix.isEmpty()){
             return DIVIDER_DELIM_PTN.matcher(this.line).matches();
         }else{
@@ -242,19 +239,23 @@ public class CorpusTest {
         return dividerDelim.replace("-", "");
     }
 
-    public void runTest(TSLanguage language, BiConsumer<String, String> assertFunction){
+    public void runTest(TSLanguage language){
         TSParser parser = new TSParser();
         parser.setLanguage(language);
         examples.forEach(example -> {
             parser.reset();
             TSTree tree = parser.parseString(null, example.getInput());
             TSNode node = tree.getRootNode();
-            String sexpr = stripFieldNames(stripSExpressionWhitespace(example.getOutput()));
-            assertFunction.accept(stripFieldNames(node.toString()), sexpr);
+            String expect = stripFieldNames(stripSExpressionWhitespace(example.getOutput()));
+            String actual = stripFieldNames(node.toString());
+            if(!expect.equals(actual)){
+                throw new TreeSitterTestException(example.getName() + " test error: " + "\n" + expect + "\nNot equal to:\n" + actual + "\nWith input:\n" + example.getInput());
+            }
+
         });
     }
 
-    public static void runAllTestsInFolder(String folder, TSLanguage language, BiConsumer<String, String> assertFunction) throws IOException {
+    public static void runAllTestsInFolder(String folder, TSLanguage language) throws IOException {
         File folderPath = new File(folder);
         if(!folderPath.exists() || !folderPath.isDirectory()){
             throw new TreeSitterTestException(folder + " does not exist or not a folder.");
@@ -265,9 +266,17 @@ public class CorpusTest {
         }
         for(File file : files){
             CorpusTest corpusTest = new CorpusTest(file);
-            corpusTest.runTest(language, assertFunction);
+            corpusTest.runTest(language);
         }
+    }
 
-
+    public static void runAllTestsInDefaultFolder(TSLanguage language, String projectName) throws IOException {
+        try (FileInputStream input = new FileInputStream("gradle.properties")) {
+            Properties properties = new Properties();
+            properties.load(input);
+            String libVersion = (String) properties.get("libVersion");
+            String corpusFolder = "build/tree-sitter-scala/tree-sitter-" + projectName + "-" + libVersion + "/test/corpus";
+            CorpusTest.runAllTestsInFolder(corpusFolder, language);
+        }
     }
 }

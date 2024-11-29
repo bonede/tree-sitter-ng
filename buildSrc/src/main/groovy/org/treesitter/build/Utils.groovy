@@ -1,9 +1,13 @@
 package org.treesitter.build
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
+import org.gradle.internal.impldep.org.apache.tools.tar.TarEntry
 
 import java.nio.file.FileSystems
 import java.nio.file.FileVisitOption
@@ -13,6 +17,8 @@ import java.nio.file.Path
 import java.nio.file.PathMatcher
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 
 abstract class Utils {
     /**
@@ -136,5 +142,58 @@ abstract class Utils {
                 "parser.cc",
                 "scanner.cc",
         ]
+    }
+
+    static void downloadFile(URL url, File dest){
+        url.openConnection().with { conn ->
+            dest.withOutputStream { output ->
+                conn.inputStream.with {input ->
+                    output << input
+                    input.close()
+                }
+            }
+        }
+    }
+
+    static void downloadFile(String url, File dest){
+        downloadFile(new URL(url), dest)
+    }
+
+    static unzipFile(File zipFile, File outputDir) {
+        if (!outputDir.exists()) {
+            outputDir.mkdirs()
+        }
+        ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile))
+        ZipEntry entry
+        while ((entry = zipInputStream.nextEntry) != null) {
+            File outputFile = new File(outputDir, entry.name)
+            if (entry.isDirectory()) {
+                outputFile.mkdirs()
+            } else {
+                outputFile.withOutputStream {output -> {
+                    output << zipInputStream
+                }}
+            }
+            zipInputStream.closeEntry()
+        }
+        zipInputStream.close()
+    }
+
+    static unzipTar(File tgzFile, File outputDir){
+        FileInputStream fileInputStream = new FileInputStream(tgzFile)
+        GzipCompressorInputStream gzipInputStream = new GzipCompressorInputStream(fileInputStream)
+        TarArchiveInputStream tarInputStream = new TarArchiveInputStream(gzipInputStream)
+        TarArchiveEntry entry
+        while ((entry = tarInputStream.nextEntry) != null) {
+            File outputFile = new File(outputDir, entry.name)
+            if (entry.isDirectory()) {
+                outputFile.mkdirs()
+            } else {
+                outputFile.withOutputStream {output -> {
+                    output << tarInputStream
+                }}
+            }
+        }
+        tarInputStream.close()
     }
 }

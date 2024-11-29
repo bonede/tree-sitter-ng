@@ -1,5 +1,4 @@
 
-import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.treesitter.build.GenTask
 
 plugins {
@@ -9,145 +8,19 @@ plugins {
 
 nexusStaging {
     serverUrl = "https://s01.oss.sonatype.org/service/local/"
-    packageGroup = "io.github.bonede"//required only for projects registered in Sonatype after 2021-02-24
+    packageGroup = "io.github.bonede"
     username = ossrhUsername
     password = ossrhPassword
 }
 
-// MiniSign Release: https://jedisct1.github.io/minisign/
-tasks.register("downloadMiniSign") {
-    group = "build setup"
-    description = "Download Minisign signature tool required by Zig"
+tasks.register('downloadMiniSign', DownloadMiniSignTask)
 
-    def os = DefaultNativePlatform.currentOperatingSystem
-    def miniSignDir = layout.buildDirectory.dir("mini-sign").get()
-
-    String miniSignUrl
-    RegularFile miniSignZip
-    RegularFile miniSignExe
-    if (os.windows) {
-        miniSignUrl = "https://github.com/jedisct1/minisign/releases/download/0.11/minisign-0.11-win64.zip"
-        miniSignZip =  miniSignDir.file("minisign-0.11-win64.zip")
-        miniSignExe = miniSignDir.file("minisign-win64/minisign.exe")
-    } else if(os.macOsX) {
-        miniSignUrl = "https://github.com/jedisct1/minisign/releases/download/0.11/minisign-0.11-macos.zip"
-        miniSignZip = miniSignDir.file("minisign-0.11-macos.zip")
-        miniSignExe = miniSignDir.file("minisign")
-    } else if(os.linux) {
-        miniSignUrl = "https://github.com/jedisct1/minisign/releases/download/0.11/minisign-0.11-linux.tar.gz"
-        miniSignZip = miniSignDir.file("minisign-0.11-linux.tar.gz")
-        miniSignExe = miniSignDir.file("minisign-linux/x86_64/minisign")
-    } else {
-        throw new GradleException("Download miniSig error: Unsupported OS: " + System.getProperty("os.name"))
-    }
-    inputs.files(layout.projectDirectory.file("gradle.properties"))
-    outputs.files(miniSignExe)
-    ext.miniSignExe = miniSignExe
-    doLast {
-        miniSignDir.asFile.mkdirs()
-        download.run {
-            src miniSignUrl
-            dest miniSignZip
-            overwrite false
-        }
-        copy{
-            if(miniSignZip.asFile.name.endsWith("zip")){
-                from zipTree(miniSignZip)
-            }else if(miniSignZip.asFile.name.endsWith("tar.gz")){
-                from tarTree(miniSignZip)
-            }
-            into miniSignDir
-        }
-    }
-}
-
-// Zig Release: https://ziglang.org/download/
-tasks.register('downloadZig') {
-    group = "build setup"
-    description = "Download Zig compiler"
-    dependsOn "downloadMiniSign"
-    def os = DefaultNativePlatform.currentOperatingSystem
-    def arch = DefaultNativePlatform.currentArchitecture
-    def zigDir = layout.buildDirectory.dir("zig").get()
-    String osName
-    String archName
-    RegularFile zigExe
-    if (arch.amd64) {
-        archName = "x86_64"
-    } else if(arch.arm64) {
-        archName = "aarch64"
-    } else {
-        throw new GradleException("Boostrap error: Unsupported supported build host arch: " + System.getProperty("os.arch"))
-    }
-    if (os.windows) {
-        osName = "windows"
-        zigExe =  zigDir.file("zig-$osName-$archName-${zigVersion}/zig.exe")
-    } else if(os.macOsX) {
-        osName = "macos"
-        zigExe = zigDir.file("zig-$osName-$archName-${zigVersion}/zig")
-    } else if(os.linux) {
-        osName = "linux"
-        zigExe =  zigDir.file("zig-$osName-$archName-${zigVersion}/zig")
-    } else {
-        throw new GradleException("Boostrap error: Unsupported build host OS: " + System.getProperty("os.name"))
-    }
-    def zigZip =zigDir.file("zig-$osName-$archName-${zigVersion}.zip")
-    def zigSignature = zigDir.file("zig-$osName-$archName-${zigVersion}.zip.minisig")
-    def zigZipUrl = "https://ziglang.org/download/$zigVersion/zig-$osName-$archName-${zigVersion}.zip"
-    def signatureUrl = "${zigZipUrl}.minisig"
-    inputs.files(layout.projectDirectory.file("gradle.properties"))
-    outputs.files(zigSignature, zigExe)
-    ext.zigExe = zigExe
-    doLast {
-        def miniSignExe = downloadMiniSign.miniSignExe
-        mkdir(zigDir)
-        download.run {
-            src zigZipUrl
-            dest zigZip
-            overwrite false
-        }
-        download.run {
-            src signatureUrl
-            dest zigSignature
-            overwrite false
-        }
-        def zipVerified = exec {
-            ignoreExitValue true
-            workingDir zigDir
-            commandLine miniSignExe, "-qVm", zigZip, "-P", zigPubKey
-        }
-        if(!zipVerified) {
-            throw new GradleException("Boostrap error: $zigZip signature does not match!")
-        }
-        copy {
-            from zipTree(zigZip)
-            into zigDir
-        }
-    }
-}
-
-tasks.register("bootstrap") {
-    group = "build setup"
-    description = "Bootstrap JNI cross compiling environment"
-    dependsOn "downloadZig"
+tasks.register('downloadZig', DownloadZigTask){
+    miniSignExe = downloadMiniSign.miniSignExe
+    dependsOn downloadMiniSign
 }
 
 tasks.register("gen", GenTask) {
     group = "build setup"
     description = "Generate sub project for tree sitter parser"
-}
-
-tasks.register("printSubProjectAsMarkdown") {
-    doLast {
-
-        projectDir.eachFile(groovy.io.FileType.DIRECTORIES, { dir -> {
-            if(dir.name.startsWith("tree-sitter-") && dir.name != "tree-sitter-demo"){
-                def name = dir.name
-                File settingsFile = new File(dir, "gradle.properties")
-                String content = new FileReader(settingsFile).readLine()
-                String version = content.replace("libVersion=", "")
-                println "| `io.github.bonede:$name:$version`  | ![Maven Central](https://img.shields.io/maven-central/v/io.github.bonede/$name) |"
-            }
-        }})
-    }
 }

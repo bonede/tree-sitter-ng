@@ -24,7 +24,7 @@ class DownloadSourceTask extends DefaultTask{
 
     @Input
     String getLibVersion(){
-        return project.property("libVersion")
+        return project.property("version")
     }
 
     @Input

@@ -2,7 +2,6 @@
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -11,7 +10,6 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.TaskAction
 import org.treesitter.build.Utils
@@ -30,6 +28,12 @@ class BuildNativeTask extends DefaultTask{
         }
     }
 
+    @InputFiles
+    FileCollection additionalCFiles = project.files()
+
+    @InputFiles
+    List<Directory> additionalIncludeDirs = []
+
     @InputFile
     RegularFile zigExe
 
@@ -46,7 +50,7 @@ class BuildNativeTask extends DefaultTask{
 
     @Input
     String getLibVersion(){
-        return project.property("libVersion")
+        return project.property("version")
     }
 
     @InputDirectory
@@ -163,12 +167,18 @@ class BuildNativeTask extends DefaultTask{
                     "-shared",
                     "-target", target,
                     "-I", srcDir,
+                    "-I", srcDir.dir("lib/include"),
                     "-I", jniIncludeDir,
                     "-I", jniMdIncludeDir,
                     "-o", jniOutFile
             ]
+            additionalIncludeDirs.forEach { f ->
+                cmd.add("-I")
+                cmd.add(f)
+            }
             cmd.addAll(jniCFiles)
             cmd.addAll(parserCFiles)
+            cmd.addAll(additionalCFiles)
             project.exec{
                 workingDir jniCDir
                 commandLine(cmd)

@@ -4,7 +4,101 @@ import org.treesitter.build.GenTask
 plugins {
     alias(libs.plugins.download)
     alias(libs.plugins.nexus.staging)
+    id 'base'
 }
+
+allprojects {
+    group = 'io.github.bonede'
+    repositories {
+        mavenCentral()
+    }
+}
+
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'signing'
+    apply plugin: 'maven-publish'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        testImplementation platform(libs.junit.bom)
+        testImplementation 'org.junit.jupiter:junit-jupiter'
+        implementation project(":tree-sitter")
+    }
+
+    publishing {
+        repositories {
+            maven {
+                name = "MavenCentral"
+                def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+                def snapshotsRepoUrl =  "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+                credentials {
+                    username = ossrhUsername
+                    password = ossrhPassword
+                }
+                url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            }
+        }
+        publications {
+            maven(MavenPublication) {
+                from components.java
+                pom {
+                    name = project.name
+                    url = 'https://github.com/bonede/tree-sitter-ng'
+                    description = "Next generation Tree Sitter Java binding"
+                    licenses {
+                        license {
+                            name = 'MIT'
+                        }
+                    }
+                    scm {
+                        connection = 'scm:git:https://github.com/bonede/tree-sitter-ng.git'
+                        developerConnection = 'scm:git:https://github.com/bonede/tree-sitter-ng.git'
+                        url = 'https://github.com/bonede/tree-sitter-ng'
+                    }
+                    developers {
+                        developer {
+                            id = 'bonede'
+                            name = 'Wang Liang'
+                            email = 'bonede@qq.com'
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    signing {
+        sign configurations.archives
+        sign publishing.publications
+    }
+
+    java {
+        withJavadocJar()
+        withSourcesJar()
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+
+    tasks.register('downloadSource', DownloadSourceTask)
+
+    tasks.register('buildNative', BuildNativeTask) {
+        zigExe = rootProject.downloadZig.zigExe
+        dependsOn downloadSource, rootProject.downloadZig
+    }
+
+    tasks.withType(Javadoc) {
+        options.locale = 'en_US'
+        options.JFlags = ["-Duser.language=en_US"]
+    }
+}
+
 
 nexusStaging {
     serverUrl = "https://s01.oss.sonatype.org/service/local/"

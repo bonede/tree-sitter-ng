@@ -11,7 +11,7 @@ repositories {
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.11.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'
-    implementation project(":tree-sitter-scala")
+    testImplementation project(":tree-sitter-scala")
     implementation project(":tree-sitter")
 }
 

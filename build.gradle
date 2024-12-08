@@ -28,6 +28,7 @@ subprojects {
         testImplementation platform(libs.junit.bom)
         testImplementation 'org.junit.jupiter:junit-jupiter'
         if(project.name != 'tree-sitter'){
+            testImplementation project(":tree-sitter-tests")
             implementation project(":tree-sitter")
         }
     }

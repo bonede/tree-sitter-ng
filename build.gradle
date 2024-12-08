@@ -27,7 +27,9 @@ subprojects {
     dependencies {
         testImplementation platform(libs.junit.bom)
         testImplementation 'org.junit.jupiter:junit-jupiter'
-        implementation project(":tree-sitter")
+        if(project.name != 'tree-sitter'){
+            implementation project(":tree-sitter")
+        }
     }
 
     publishing {

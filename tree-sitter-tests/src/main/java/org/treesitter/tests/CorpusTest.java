@@ -274,8 +274,8 @@ public class CorpusTest {
         try (FileInputStream input = new FileInputStream("gradle.properties")) {
             Properties properties = new Properties();
             properties.load(input);
-            String libVersion = (String) properties.get("libVersion");
-            String corpusFolder = "build/tree-sitter-scala/tree-sitter-" + projectName + "-" + libVersion + "/test/corpus";
+            String libVersion = (String) properties.get("version");
+            String corpusFolder = "build/tree-sitter-" + projectName + "/tree-sitter-" + projectName + "-" + libVersion + "/test/corpus";
             CorpusTest.runAllTestsInFolder(corpusFolder, language);
         }
     }

@@ -1,6 +1,9 @@
 package org.treesitter.utils;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.Path;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
@@ -92,7 +95,9 @@ public abstract class NativeUtils {
     }
 
     /**
-     * Load native lib from class path by name convention.
+     * Load native lib from class path by name convention. <br>
+     *
+     * This action is process safe.
      *
      * <p>Name convention: <code>arch-os-name.ext</code>
      * <p><code>arch</code>
@@ -118,17 +123,36 @@ public abstract class NativeUtils {
         }else{
            shouldOverwrite = true;
         }
-        if(shouldOverwrite){
-            if(newFileBytes == null){
-                newFileBytes = readLib(libName);
-            }
-            try(
-                FileOutputStream outputStream =  new FileOutputStream(file)
+        if(!shouldOverwrite){
+            System.load(file.getAbsolutePath());
+            return;
+        }
+        if(newFileBytes == null){
+            newFileBytes = readLib(libName);
+        }
+
+        try(
+            RandomAccessFile raf = new RandomAccessFile(file, "rw");
+            FileChannel channel = raf.getChannel();
+            InputStream inputStream = new ByteArrayInputStream(newFileBytes);
+        ){
+            try (
+                FileLock fileLock = channel.lock();
             ){
-                new ByteArrayInputStream(newFileBytes).transferTo(outputStream);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+                if(file.exists() && file.length() > 0){
+                    System.load(file.getAbsolutePath());
+                    return;
+                }
+                ByteBuffer buffer = ByteBuffer.allocate(1024 * 4);
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer.array())) != -1) {
+                    buffer.limit(bytesRead);
+                    channel.write(buffer);
+                    buffer.clear();
+                }
             }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         System.load(file.getAbsolutePath());
     }

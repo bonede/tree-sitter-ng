@@ -1882,3 +1882,13 @@ JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1timeout_
   (JNIEnv *env, jclass clz, jlong ts_query_ptr){
     return ts_query_cursor_timeout_micros((TSQueryCursor *) ts_query_ptr);
 }
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_language_delete
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1language_1delete
+  (JNIEnv *env, jclass clz, jlong ts_lang_ptr){
+    ts_language_delete((TSLanguage *) ts_lang_ptr);
+}

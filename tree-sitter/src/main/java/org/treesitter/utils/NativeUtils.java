@@ -139,17 +139,16 @@ public abstract class NativeUtils {
             try (
                 FileLock fileLock = channel.lock();
             ){
-                if(file.exists() && file.length() > 0){
-                    System.load(file.getAbsolutePath());
-                    return;
+                if(!file.exists() || file.length() == 0){
+                    ByteBuffer buffer = ByteBuffer.allocate(1024 * 4);
+                    int bytesRead;
+                    while ((bytesRead = inputStream.read(buffer.array())) != -1) {
+                        buffer.limit(bytesRead);
+                        channel.write(buffer);
+                        buffer.clear();
+                    }
                 }
-                ByteBuffer buffer = ByteBuffer.allocate(1024 * 4);
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer.array())) != -1) {
-                    buffer.limit(bytesRead);
-                    channel.write(buffer);
-                    buffer.clear();
-                }
+
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

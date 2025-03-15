@@ -11,6 +11,7 @@ public class TSQueryCursor {
 
     private final long ptr;
     private boolean executed = false;
+    private TSNode node;
 
     private static class TSQueryCursorCleanAction implements Runnable {
         private final long ptr;
@@ -65,6 +66,7 @@ public class TSQueryCursor {
      */
     public void exec(TSQuery query, TSNode node){
         executed = true;
+        this.node = node;
         ts_query_cursor_exec(ptr, query.getPtr(), node);
     }
 
@@ -132,7 +134,9 @@ public class TSQueryCursor {
      */
     public boolean nextMatch(TSQueryMatch match){
         assertExecuted();
-        return ts_query_cursor_next_match(ptr, match);
+        boolean ret = ts_query_cursor_next_match(ptr, match);
+        addTsTreeRef(match);
+        return ret;
     }
 
 
@@ -158,7 +162,19 @@ public class TSQueryCursor {
     @SuppressWarnings("deprecation")
     public boolean nextCapture(TSQueryMatch match){
         assertExecuted();
-        return ts_query_cursor_next_capture(ptr, match);
+        boolean ret = ts_query_cursor_next_capture(ptr, match);
+        addTsTreeRef(match);
+        return ret;
+    }
+
+    private void addTsTreeRef(TSQueryMatch match){
+        if(match.getCaptures() != null){
+            for (TSQueryCapture capture : match.getCaptures()) {
+                if(capture.getNode() != null){
+                    capture.getNode().setTree(this.node.getTree());
+                }
+            }
+        }
     }
 
     private void assertExecuted(){
@@ -200,6 +216,7 @@ public class TSQueryCursor {
             TSQueryMatch match = new TSQueryMatch();
             boolean ret = nextFunction.apply(ptr, match);
             if(ret){
+                addTsTreeRef(match);
                 return match;
             }else{
                 return null;

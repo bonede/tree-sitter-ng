@@ -120,6 +120,7 @@ class TSNodeTest {
     @Test
     void getParent() {
         assertTrue(rootNode.getParent().isNull());
+        assertNotNull(rootNode.getParent().getTree());
     }
 
     @Test

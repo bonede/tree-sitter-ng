@@ -62,7 +62,9 @@ public class TSNode {
      */
     public TSNode getNamedChild(int index) {
         asserNotNull();
-        return ts_node_named_child(this, index);
+        TSNode ret = ts_node_named_child(this, index);
+        ret.setTree(tree);
+        return ret;
     }
     /**
      * Get the node's type as a string.
@@ -228,7 +230,9 @@ public class TSNode {
      */
     public TSNode getParent(){
         asserNotNull();
-        return ts_node_parent(this);
+        TSNode node = ts_node_parent(this);
+        node.setTree(tree);
+        return node;
     }
 
     /**
@@ -241,7 +245,9 @@ public class TSNode {
     @Deprecated
     public TSNode getChildContainingDescendant(TSNode descendant){
         asserNotNull();
-        return TSParser.ts_node_child_containing_descendant(this, descendant);
+        TSNode ret = ts_node_child_containing_descendant(this, descendant);
+        ret.setTree(tree);
+        return ret;
     }
 
     /**
@@ -255,7 +261,9 @@ public class TSNode {
      */
     public TSNode getChildWithDescendant(TSNode descendant){
         asserNotNull();
-        return TSParser.ts_node_child_with_descendant(this, descendant);
+        TSNode ret = ts_node_child_with_descendant(this, descendant);
+        setTree(this.getTree());
+        return ret;
     }
 
     /**
@@ -268,7 +276,9 @@ public class TSNode {
      */
     public TSNode getChild(int index){
         asserNotNull();
-        return ts_node_child(this, index);
+        TSNode ret = ts_node_child(this, index);
+        ret.setTree(tree);
+        return ret;
     }
 
     /**
@@ -303,7 +313,9 @@ public class TSNode {
      */
     public TSNode getNextNamedSibling(){
         asserNotNull();
-        return ts_node_next_named_sibling(this);
+        TSNode ret = ts_node_next_named_sibling(this);
+        ret.setTree(tree);
+        return ret;
     }
 
     /**
@@ -313,7 +325,9 @@ public class TSNode {
      */
     public TSNode getPrevNamedSibling(){
         asserNotNull();
-        return ts_node_prev_named_sibling(this);
+        TSNode ret = ts_node_prev_named_sibling(this);
+        ret.setTree(tree);
+        return ret;
     }
 
     /**
@@ -323,7 +337,9 @@ public class TSNode {
      */
     public TSNode getNextSibling(){
         asserNotNull();
-        return ts_node_next_sibling(this);
+        TSNode ret = ts_node_next_sibling(this);
+        ret.setTree(tree);
+        return ret;
     }
 
     /**
@@ -333,7 +349,9 @@ public class TSNode {
      */
     public TSNode getPrevSibling(){
         asserNotNull();
-        return ts_node_prev_sibling(this);
+        TSNode ret = ts_node_prev_sibling(this);
+        ret.setTree(tree);
+        return ret;
     }
 
     /**
@@ -345,7 +363,9 @@ public class TSNode {
      */
     public TSNode getChildByFieldName(String fieldName){
         asserNotNull();
-        return ts_node_child_by_field_name(this, fieldName);
+        TSNode ret = ts_node_child_by_field_name(this, fieldName);
+        ret.setTree(tree);
+        return ret;
     }
 
     /**
@@ -360,7 +380,9 @@ public class TSNode {
      */
     public TSNode getChildByFieldId(int fieldId){
         asserNotNull();
-        return ts_node_child_by_field_id(this, fieldId);
+        TSNode ret = ts_node_child_by_field_id(this, fieldId);
+        ret.setTree(tree);
+        return ret;
     }
 
     /**
@@ -372,7 +394,9 @@ public class TSNode {
      */
     public TSNode getFirstChildForByte(int startByte){
         asserNotNull();
-        return ts_node_first_child_for_byte(this, startByte);
+        TSNode ret = ts_node_first_child_for_byte(this, startByte);
+        ret.setTree(tree);
+        return ret;
     }
 
     /**
@@ -384,7 +408,9 @@ public class TSNode {
      */
     public TSNode getFirstNamedChildForByte(int startByte){
         asserNotNull();
-        return ts_node_first_named_child_for_byte(this, startByte);
+        TSNode ret = ts_node_first_named_child_for_byte(this, startByte);
+        ret.setTree(tree);
+        return ret;
     }
 
     /**
@@ -397,7 +423,9 @@ public class TSNode {
      */
     public TSNode getDescendantForByteRange(int startByte, int endByte){
         asserNotNull();
-        return ts_node_descendant_for_byte_range(this, startByte, endByte);
+        TSNode ret = ts_node_descendant_for_byte_range(this, startByte, endByte);
+        ret.setTree(tree);
+        return ret;
     }
 
 
@@ -411,7 +439,9 @@ public class TSNode {
      */
     public TSNode getDescendantForPointRange(TSPoint startPoint, TSPoint endPoint){
         asserNotNull();
-        return ts_node_descendant_for_point_range(this, startPoint, endPoint);
+        TSNode ret = ts_node_descendant_for_point_range(this, startPoint, endPoint);
+        ret.setTree(tree);
+        return ret;
     }
 
 
@@ -426,7 +456,9 @@ public class TSNode {
      */
     public TSNode getNamedDescendantForByteRange(int startByte, int endByte){
         asserNotNull();
-        return ts_node_named_descendant_for_byte_range(this, startByte, endByte);
+        TSNode ret = ts_node_named_descendant_for_byte_range(this, startByte, endByte);
+        ret.setTree(tree);
+        return ret;
     }
 
     /**
@@ -439,7 +471,9 @@ public class TSNode {
      */
     public TSNode getNamedDescendantForPointRange(TSPoint startPoint, TSPoint endPoint){
         asserNotNull();
-        return ts_node_named_descendant_for_point_range(this, startPoint, endPoint);
+        TSNode ret = ts_node_named_descendant_for_point_range(this, startPoint, endPoint);
+        ret.setTree(tree);
+        return ret;
     }
 
     /**

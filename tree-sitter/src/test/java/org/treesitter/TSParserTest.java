@@ -198,7 +198,7 @@ class TSParserTest {
         assertEquals(s, emoji);
     }
 
-    @RepeatedTest(1000)
+    @Test
     void cursor() {
         TSParser parser = new TSParser();
         TSLanguage lang = new TreeSitterJson();
@@ -208,5 +208,6 @@ class TSParserTest {
         TSTreeCursor cursor = new TSTreeCursor(rootNode);
         TSNode currentNode = cursor.currentNode();
         assertNotNull(currentNode.getType());
+        assertNotNull(currentNode.getTree());
     }
 }

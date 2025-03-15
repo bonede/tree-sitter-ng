@@ -147,4 +147,15 @@ class TSTreeTest {
         tree.printDotGraphs(dotFile);
         assertTrue(dotFile.length() > 0);
     }
+
+    @Test
+    void testTreeGC() throws InterruptedException {
+        TSTree tree1 = tree.copy();
+        TSNode node = tree1.getRootNode().getChild(0);
+        tree1 = null;
+        System.gc();
+        Thread.sleep(1000);
+        assertNull(tree1);
+        assertEquals(tree.getRootNode().getChildCount(), node.getParent().getChildCount());
+    }
 }

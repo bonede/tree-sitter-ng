@@ -110,4 +110,16 @@ class TSQueryCursorTest {
             assertTrue(TSNode.eq(rootNode, match.getCaptures()[0].getNode()));
         }
     }
+
+    @Test
+    void setTimeoutMicros() {
+        cursor.setTimeoutMicros(1000l);
+    }
+
+    @Test
+    void getTimeoutMicros() {
+        long timeout = 1000l;
+        cursor.setTimeoutMicros(timeout);
+        assertEquals(timeout, cursor.getTimeoutMicros());;
+    }
 }

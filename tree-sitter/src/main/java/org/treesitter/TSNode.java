@@ -224,7 +224,8 @@ public class TSNode {
     }
 
     /**
-     * Get the node's immediate parent.
+     * Get the node's immediate parent. <br>
+     * Prefer {@link #getChildWithDescendant(TSNode)} for iterating over the node's ancestors.
      *
      * @return The node's parent.
      */
@@ -236,25 +237,9 @@ public class TSNode {
     }
 
     /**
-     * Get the node's child that contains `descendant`.
-     *
-     * @param descendant the descendant to search.
-     * @return child that contains `descendant`.
-     * @deprecated use {@link TSNode#getChildWithDescendant(TSNode)} instead, this will be removed in 0.25
-     */
-    @Deprecated
-    public TSNode getChildContainingDescendant(TSNode descendant){
-        asserNotNull();
-        TSNode ret = ts_node_child_containing_descendant(this, descendant);
-        ret.setTree(tree);
-        return ret;
-    }
-
-    /**
      * Get the node that contains `descendant`.<br>
      *
-     * Note that this can return `descendant` itself, unlike the deprecated function
-     * {@link TSNode#getChildContainingDescendant(TSNode)}
+     * Note that this can return `descendant` itself.
      *
      * @param descendant the descendant to search.
      * @return child that contains `descendant`.
@@ -386,7 +371,7 @@ public class TSNode {
     }
 
     /**
-     * Get the node's first child that extends beyond the given byte offset.
+     * Get the node's first child that contains or starts after the given byte offset.
      *
      * @param startByte The byte offset to search.
      *
@@ -400,7 +385,7 @@ public class TSNode {
     }
 
     /**
-     * Get the node's first named child that extends beyond the given byte offset.
+     * Get the node's first named child that contains or starts after the given byte offset.
      *
      * @param startByte The byte offset to search.
      *

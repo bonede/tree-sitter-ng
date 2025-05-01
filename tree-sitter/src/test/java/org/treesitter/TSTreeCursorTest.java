@@ -58,6 +58,11 @@ class TSTreeCursorTest {
     }
 
     @Test
+    void gotoPreviousSibling() {
+        assertFalse(rootCursor.gotoPreviousSibling());
+    }
+
+    @Test
     void gotoFirstChild() {
         assertTrue(rootCursor.gotoFirstChild());
         assertEquals("array", rootCursor.currentNode().getType());

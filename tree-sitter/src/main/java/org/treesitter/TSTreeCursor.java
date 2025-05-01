@@ -28,7 +28,10 @@ public class TSTreeCursor {
      *
      * A tree cursor allows you to walk a syntax tree more efficiently than is
      * possible using the {@link TSNode} functions. It is a mutable object that is always
-     * on a certain syntax node, and can be moved imperatively to different nodes.
+     * on a certain syntax node, and can be moved imperatively to different nodes. <br>
+     *
+     * Note that the given node is considered the root of the cursor,
+     * and the cursor cannot walk outside this node.
      *
      * @param node The node to start the cursor at.
      */
@@ -87,7 +90,10 @@ public class TSTreeCursor {
      * Move the cursor to the parent of its current node.<br>
      *
      * This returns <code>true</code> if the cursor successfully moved, and returns <code>false</code>
-     * if there was no parent node (the cursor was already on the root node).
+     * if there was no parent node (the cursor was already on the root node). <br>
+     *
+     * Note that the node the cursor was constructed with is considered the root
+     * of the cursor, and the cursor cannot walk outside this node.
      *
      * @return Whether the cursor successfully moved to the parent.
      */
@@ -98,13 +104,31 @@ public class TSTreeCursor {
     /**
      * Move the cursor to the next sibling of its current node. <br>
      *
-     * This returns <code>true</code> if the cursor successfully moved, and returns <code>false</code>
-     * if there was no next sibling node.
+     * Note that the node the cursor was constructed with is considered the root
+     * of the cursor, and the cursor cannot walk outside this node.
      *
-     * @return Whether the cursor successfully moved to the next sibling.
+     * @return <code>true</code> if the cursor successfully moved, and returns <code>false</code>
+     * if there was no next sibling node.<br>
      */
     public boolean gotoNextSibling(){
         return ts_tree_cursor_goto_next_sibling(ptr);
+    }
+
+    /**
+     * Move the cursor to the previous sibling of its current node.<br>
+     *
+     * Note, that this function may be slower than
+     * {@link #gotoNextSibling()} due to how node positions are stored. In
+     * the worst case, this will need to iterate through all the children up to the
+     * previous sibling node to recalculate its position. Also note that the node the cursor
+     * was constructed with is considered the root of the cursor, and the cursor cannot
+     * walk outside this node.
+     *
+     * @return <code>true</code> if the cursor successfully moved, and returns <code>false</code> if
+     * there was no previous sibling node.<br>
+     */
+    public boolean gotoPreviousSibling(){
+        return ts_tree_cursor_goto_previous_sibling(ptr);
     }
 
     /**
@@ -120,7 +144,7 @@ public class TSTreeCursor {
     }
 
     /**
-     * Move the cursor to the first child of its current node that extends beyond
+     * Move the cursor to the first child of its current node that contains or starts after
      * the given byte offset.<br>
      *
      * @param startByte The byte offset.
@@ -132,7 +156,7 @@ public class TSTreeCursor {
     }
 
     /**
-     * Move the cursor to the first child of its current node that extends beyond
+     * Move the cursor to the first child of its current node that contains or starts after
      * the given byte point.<br>
      *
      * @param startPoint The point offset.

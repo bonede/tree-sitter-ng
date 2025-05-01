@@ -2,8 +2,7 @@ package org.treesitter;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 class TSLanguageTest {
     private final TSLanguage json = new TreeSitterJson();
@@ -61,6 +60,31 @@ class TSLanguageTest {
     @Test
     void nextState(){
         assertEquals(0, json.nextState(0, 15));
+    }
+
+    @Test
+    void abiVersion(){
+        assertTrue( json.abiVersion() > 0);
+    }
+
+    @Test
+    void metadata(){
+        assertNull(json.metadata());
+    }
+
+    @Test
+    void supertypes(){
+        assertArrayEquals(new int[] {}, json.supertypes());
+    }
+
+    @Test
+    void subtype(){
+        assertArrayEquals(new int[] {}, json.subtypes(0));
+    }
+
+    @Test
+    void name(){
+        assertNull(json.name());
     }
 
 }

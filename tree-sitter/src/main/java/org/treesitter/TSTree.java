@@ -117,6 +117,13 @@ public class TSTree {
      * You need to pass the old tree that was passed to parse, as well as the new
      * tree that was returned from that function.<br>
      *
+     * The returned ranges indicate areas where the hierarchical structure of syntax
+     * nodes (from root to leaf) has changed between the old and new trees. Characters
+     * outside these ranges have identical ancestor nodes in both trees.<br>
+     *
+     * Note that the returned ranges may be slightly larger than the exact changed areas,
+     * but Tree-sitter attempts to make them as small as possible.
+     *
      * @param oldTree The old syntax tree
      * @param newTree The new syntax tree
      * @return The changed ranges.

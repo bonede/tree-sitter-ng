@@ -34,7 +34,8 @@ public class TSParser {
     private static native long ts_parser_language(long ts_parser_ptr);
     private static native boolean ts_parser_set_included_ranges(long ts_parser_ptr, TSRange[] ranges);
     private static native TSRange[] ts_parser_included_ranges(long ts_parser_ptr);
-    private static native long ts_parser_parse(long ts_parser_ptr,  byte[] buf, long ts_tree_ptr,TSReader reader, int tsInputEncoding);
+    private static native long ts_parser_parse_with_options(long ts_parser_ptr, long ts_tree_ptr, byte[] buf, TSReader reader, int tsInputEncoding, TSParserProgress progress);
+    private static native long ts_parser_parse(long ts_parser_ptr,  byte[] buf, long ts_tree_ptr, TSReader reader, int tsInputEncoding);
     private static native long ts_parser_parse_string(long ts_parser_ptr, long ts_tree_ptr, String input);
     private static native long ts_parser_parse_string_encoding(long ts_parser_ptr, long ts_tree_ptr, String input, int tsInputEncoding);
     private static native void ts_parser_reset(long ts_parser_ptr);
@@ -76,7 +77,6 @@ public class TSParser {
     protected static native int ts_node_parse_state(TSNode node);
     protected static native int ts_node_next_parse_state(TSNode node);
     protected static native TSNode ts_node_parent(TSNode node);
-    protected static native TSNode ts_node_child_containing_descendant(TSNode node, TSNode descendant);
     protected static native TSNode ts_node_child(TSNode node, int index);
     protected static native String ts_node_field_name_for_child(TSNode node, int index);
     protected static native int ts_node_child_count(TSNode node);
@@ -105,6 +105,7 @@ public class TSParser {
     protected static native int ts_tree_cursor_current_field_id(long cursor_ptr);
     protected static native boolean ts_tree_cursor_goto_parent(long cursor_ptr);
     protected static native boolean ts_tree_cursor_goto_next_sibling(long cursor_ptr);
+    protected static native boolean ts_tree_cursor_goto_previous_sibling(long cursor_ptr);
     protected static native boolean ts_tree_cursor_goto_first_child(long cursor_ptr);
     protected static native int ts_tree_cursor_goto_first_child_for_byte(long cursor_ptr, int startByte);
     protected static native int ts_tree_cursor_goto_first_child_for_point(long cursor_ptr, TSPoint startPoint);
@@ -127,12 +128,15 @@ public class TSParser {
     protected static native void ts_query_disable_pattern(long ts_query_ptr, int patter_index);
     protected static native long ts_query_cursor_new();
     protected static native void ts_query_cursor_delete(long ts_query_cursor_ptr);
+    protected static native long ts_query_cursor_options_new();
+    protected static native void ts_query_cursor_options_delete(long ts_query_cursor_options_ptr);
     protected static native void ts_query_cursor_exec(long ts_query_cursor_ptr, long ts_query_ptr, TSNode node);
+    protected static native void ts_query_cursor_exec_with_options(long ts_query_cursor_ptr, long ts_query_ptr, TSNode node, TSQueryProgress progress, long progressPayloadPtr);
     protected static native boolean ts_query_cursor_did_exceed_match_limit(long ts_query_cursor_ptr);
     protected static native int ts_query_cursor_match_limit(long ts_query_cursor_ptr);
     protected static native void ts_query_cursor_set_match_limit(long ts_query_cursor_ptr, int limit);
-    protected static native void ts_query_cursor_set_byte_range(long ts_query_cursor_ptr, int start_byte, int end_byte);
-    protected static native void ts_query_cursor_set_point_range(long ts_query_cursor_ptr, TSPoint start_point, TSPoint end_point);
+    protected static native boolean ts_query_cursor_set_byte_range(long ts_query_cursor_ptr, int start_byte, int end_byte);
+    protected static native boolean ts_query_cursor_set_point_range(long ts_query_cursor_ptr, TSPoint start_point, TSPoint end_point);
     protected static native boolean ts_query_cursor_next_match(long ts_query_cursor_ptr, TSQueryMatch match);
     protected static native void ts_query_cursor_remove_match(long ts_query_cursor_ptr, int match_id);
     protected static native boolean ts_query_cursor_next_capture(long ts_query_cursor_ptr, TSQueryMatch match);
@@ -151,6 +155,11 @@ public class TSParser {
     protected static native String ts_language_symbol_name(long ts_language_ptr, int ts_symbol);
     protected static native int ts_language_symbol_for_name(long ts_language_ptr, String name, boolean is_named);
     protected static native int ts_language_version(long ts_language_ptr);
+    protected static native int ts_language_abi_version(long ts_language_ptr);
+    protected static native TSLanguageMetadata ts_language_metadata(long ts_language_ptr);
+    protected static native int[] ts_language_supertypes(long ts_language_ptr);
+    protected static native int[] ts_language_subtypes(long ts_language_ptr, int supertype);
+    protected static native String ts_language_name(long ts_language_ptr);
 
     protected static native long ts_lookahead_iterator_new(long ts_language_ptr, int ts_state_id);
     protected static native void ts_lookahead_iterator_delete(long ts_lookahead_iterator_ptr);
@@ -311,6 +320,26 @@ public class TSParser {
     public TSTree parse(byte[] buf, TSTree oldTree, TSReader reader, TSInputEncoding encoding){
         long oldTreePtr = oldTree == null ? 0 : oldTree.getPtr();
         long treePtr = ts_parser_parse(ptr, buf, oldTreePtr, reader, encoding.ordinal());
+        if(treePtr == 0){
+            return null;
+        }
+        return new TSTree(treePtr, language);
+    }
+
+    /**
+     * Use the parser to parse some source code and create a syntax tree, with some options.
+     *
+     * @see #parse(byte[], TSTree, TSReader, TSInputEncoding)
+     * @param buf Buffer to use while reading from reader.
+     * @param oldTree The old tree to use. If any.
+     * @param reader The reader to read source code from.
+     * @param encoding The encoding of the source code.
+     * @param progress Progress callback.
+     * @return {@link TSTree} if success, <code>null</code> otherwise.
+     */
+    public TSTree parseWithOptions(byte[] buf, TSTree oldTree, TSReader reader, TSInputEncoding encoding, TSParserProgress progress){
+        long oldTreePtr = oldTree == null ? 0 : oldTree.getPtr();
+        long treePtr = ts_parser_parse_with_options(ptr, oldTreePtr, buf, reader, encoding.ordinal(), progress);
         if(treePtr == 0){
             return null;
         }

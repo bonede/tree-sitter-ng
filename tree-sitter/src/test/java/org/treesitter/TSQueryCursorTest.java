@@ -32,6 +32,155 @@ class TSQueryCursorTest {
     }
 
     @Test
+    void execWithOptions(){
+        parser.reset();
+        tree = parser.parseString(null, "{\n" +
+                "  \"users\": [\n" +
+                "    {\n" +
+                "      \"id\": 1001,\n" +
+                "      \"name\": \"Alice\",\n" +
+                "      \"email\": \"alice@example.com\",\n" +
+                "      \"age\": 30,\n" +
+                "      \"isActive\": true,\n" +
+                "      \"roles\": [\"admin\", \"editor\"],\n" +
+                "      \"profile\": {\n" +
+                "        \"bio\": \"Loves programming and cats.\",\n" +
+                "        \"location\": \"San Francisco\",\n" +
+                "        \"website\": \"https://alice.dev\"\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"id\": 1002,\n" +
+                "      \"name\": \"Bob\",\n" +
+                "      \"email\": \"bob@example.com\",\n" +
+                "      \"age\": 28,\n" +
+                "      \"isActive\": false,\n" +
+                "      \"roles\": [\"user\"],\n" +
+                "      \"profile\": {\n" +
+                "        \"bio\": \"Enjoys hiking and photography.\",\n" +
+                "        \"location\": \"New York\",\n" +
+                "        \"website\": \"https://bobpics.com\"\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"id\": 1003,\n" +
+                "      \"name\": \"Charlie\",\n" +
+                "      \"email\": \"charlie@example.com\",\n" +
+                "      \"age\": 35,\n" +
+                "      \"isActive\": true,\n" +
+                "      \"roles\": [\"editor\"],\n" +
+                "      \"profile\": {\n" +
+                "        \"bio\": \"Tech enthusiast and blogger.\",\n" +
+                "        \"location\": \"Seattle\",\n" +
+                "        \"website\": \"https://charlietech.blog\"\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"id\": 1004,\n" +
+                "      \"name\": \"Diana\",\n" +
+                "      \"email\": \"diana@example.com\",\n" +
+                "      \"age\": 26,\n" +
+                "      \"isActive\": true,\n" +
+                "      \"roles\": [\"user\", \"moderator\"],\n" +
+                "      \"profile\": {\n" +
+                "        \"bio\": \"Passionate about UI/UX design.\",\n" +
+                "        \"location\": \"Los Angeles\",\n" +
+                "        \"website\": \"https://dianadesigns.io\"\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"id\": 1005,\n" +
+                "      \"name\": \"Ethan\",\n" +
+                "      \"email\": \"ethan@example.com\",\n" +
+                "      \"age\": 40,\n" +
+                "      \"isActive\": false,\n" +
+                "      \"roles\": [\"user\"],\n" +
+                "      \"profile\": {\n" +
+                "        \"bio\": \"Backend engineer, coffee lover.\",\n" +
+                "        \"location\": \"Chicago\",\n" +
+                "        \"website\": \"https://ethancode.dev\"\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"id\": 1006,\n" +
+                "      \"name\": \"Fiona\",\n" +
+                "      \"email\": \"fiona@example.com\",\n" +
+                "      \"age\": 33,\n" +
+                "      \"isActive\": true,\n" +
+                "      \"roles\": [\"admin\"],\n" +
+                "      \"profile\": {\n" +
+                "        \"bio\": \"Scrum master and agile coach.\",\n" +
+                "        \"location\": \"Austin\",\n" +
+                "        \"website\": \"https://fionaagile.com\"\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"id\": 1007,\n" +
+                "      \"name\": \"George\",\n" +
+                "      \"email\": \"george@example.com\",\n" +
+                "      \"age\": 29,\n" +
+                "      \"isActive\": true,\n" +
+                "      \"roles\": [\"user\", \"reviewer\"],\n" +
+                "      \"profile\": {\n" +
+                "        \"bio\": \"Writes about tech gadgets.\",\n" +
+                "        \"location\": \"Boston\",\n" +
+                "        \"website\": \"https://georgegadgets.blog\"\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"id\": 1008,\n" +
+                "      \"name\": \"Hannah\",\n" +
+                "      \"email\": \"hannah@example.com\",\n" +
+                "      \"age\": 24,\n" +
+                "      \"isActive\": false,\n" +
+                "      \"roles\": [\"user\"],\n" +
+                "      \"profile\": {\n" +
+                "        \"bio\": \"New developer learning JavaScript.\",\n" +
+                "        \"location\": \"Denver\",\n" +
+                "        \"website\": \"https://hannahlearns.dev\"\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"id\": 1009,\n" +
+                "      \"name\": \"Ian\",\n" +
+                "      \"email\": \"ian@example.com\",\n" +
+                "      \"age\": 38,\n" +
+                "      \"isActive\": true,\n" +
+                "      \"roles\": [\"manager\"],\n" +
+                "      \"profile\": {\n" +
+                "        \"bio\": \"Leading product teams since 2010.\",\n" +
+                "        \"location\": \"San Diego\",\n" +
+                "        \"website\": \"https://ianpm.com\"\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"id\": 1010,\n" +
+                "      \"name\": \"Julia\",\n" +
+                "      \"email\": \"julia@example.com\",\n" +
+                "      \"age\": 31,\n" +
+                "      \"isActive\": true,\n" +
+                "      \"roles\": [\"designer\", \"editor\"],\n" +
+                "      \"profile\": {\n" +
+                "        \"bio\": \"Illustrator and UI artist.\",\n" +
+                "        \"location\": \"Portland\",\n" +
+                "        \"website\": \"https://juliaart.io\"\n" +
+                "      }\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}");
+        query = new TSQuery(json, "(string)");
+        cursor.execWithOptions(query, tree.getRootNode(), (state) -> {
+            assertTrue(state.getCurrentByteOffset() > 0);
+            return false;
+        });
+
+        TSQueryMatch match = new TSQueryMatch();
+        while (cursor.nextMatch(match)){
+            assertTrue(match.getId() >= 0);
+        }
+    }
+
+    @Test
     void didExceedMatchLimit() {
         assertFalse(cursor.didExceedMatchLimit());
     }
@@ -49,12 +198,12 @@ class TSQueryCursorTest {
 
     @Test
     void setByteRange() {
-        cursor.setByteRange(0, 5);
+        assertTrue(cursor.setByteRange(0, 5));
     }
 
     @Test
     void setPointRange() {
-        cursor.setPointRange(new TSPoint(0, 0), new TSPoint(0, 10));
+        assertTrue(cursor.setPointRange(new TSPoint(0, 0), new TSPoint(0, 10)));
     }
 
     @Test

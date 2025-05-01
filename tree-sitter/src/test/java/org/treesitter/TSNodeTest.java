@@ -124,13 +124,6 @@ class TSNodeTest {
     }
 
     @Test
-    void getChildContainingDescendant(){
-        TSNode child = rootNode.getChild(0);
-        TSNode descendant = rootNode.getChild(0).getChild(0);
-        assertEquals(child.toString(), rootNode.getChildContainingDescendant(descendant).toString());
-    }
-
-    @Test
     void getChild() {
         assertEquals("array", rootNode.getChild(0).getType());
     }

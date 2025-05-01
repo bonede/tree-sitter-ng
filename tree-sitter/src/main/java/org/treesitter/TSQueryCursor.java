@@ -10,25 +10,31 @@ import static org.treesitter.TSParser.ts_query_cursor_next_match;
 public class TSQueryCursor {
 
     private final long ptr;
+    private final long progressPayloadPtr;
     private boolean executed = false;
+
     private TSNode node;
 
     private static class TSQueryCursorCleanAction implements Runnable {
         private final long ptr;
+        private final long optionsPtr;
 
-        public TSQueryCursorCleanAction(long ptr) {
+        public TSQueryCursorCleanAction(long ptr, long optionsPtr) {
             this.ptr = ptr;
+            this.optionsPtr = optionsPtr;
         }
 
         @Override
         public void run() {
             ts_query_cursor_delete(ptr);
+            ts_query_cursor_options_delete(optionsPtr);
         }
     }
 
-    private TSQueryCursor(long ptr) {
+    private TSQueryCursor(long ptr, long progressPayloadPtr) {
         this.ptr = ptr;
-        CleanerRunner.register(this, new TSQueryCursorCleanAction(ptr));
+        this.progressPayloadPtr = progressPayloadPtr;
+        CleanerRunner.register(this, new TSQueryCursorCleanAction(ptr, progressPayloadPtr));
     }
 
     /**
@@ -55,7 +61,7 @@ public class TSQueryCursor {
      *  {@link #exec(TSQuery, TSNode) exec()} again.
      */
     public TSQueryCursor() {
-        this(TSParser.ts_query_cursor_new());
+        this(TSParser.ts_query_cursor_new(), TSParser.ts_query_cursor_options_new());
     }
 
     /**
@@ -68,6 +74,20 @@ public class TSQueryCursor {
         executed = true;
         this.node = node;
         ts_query_cursor_exec(ptr, query.getPtr(), node);
+    }
+
+    /**
+     * Start running a given query on a given node, with some options.
+     *
+     * @see #exec(TSQuery, TSNode)
+     * @param query The query to run.
+     * @param node The node to run the query on.
+     * @param progress The progress callback.
+     */
+    public void execWithOptions(TSQuery query, TSNode node, TSQueryProgress progress){
+        executed = true;
+        this.node = node;
+        ts_query_cursor_exec_with_options(ptr, query.getPtr(), node, progress, progressPayloadPtr);
     }
 
 
@@ -107,7 +127,9 @@ public class TSQueryCursor {
      * @see TSQueryCursor#getCaptures()
      *
      * @param timeoutMicros Timeout in micro seconds.
+     * @deprecated  use {@link #execWithOptions(TSQuery, TSNode, TSQueryProgress)} and pass in a callback instead, this will be removed in 0.26.
      */
+    @Deprecated
     public void setTimeoutMicros(long timeoutMicros){
         TSParser.ts_query_cursor_set_timeout_micros(ptr, timeoutMicros);
     }
@@ -118,31 +140,55 @@ public class TSQueryCursor {
      * This is set via {@link TSQueryCursor#setTimeoutMicros(long)}
      *
      * @return Timeout in micro seconds.
+     * @deprecated  use {@link #execWithOptions(TSQuery, TSNode, TSQueryProgress)} and pass in a callback instead, this will be removed in 0.26.
      */
+    @Deprecated
     public long getTimeoutMicros(){
         return TSParser.ts_query_cursor_timeout_micros(ptr);
     }
 
     /**
-     * Set the range of bytes in which the query
-     * will be executed.
+     * Set the range of bytes in which the query will be executed.<br>
+     *
+     * The query cursor will return matches that intersect with the given point range.
+     * This means that a match may be returned even if some of its captures fall
+     * outside the specified range, as long as at least part of the match
+     * overlaps with the range.<br>
+     *
+     * For example, if a query pattern matches a node that spans a larger area
+     * than the specified range, but part of that node intersects with the range,
+     * the entire match will be returned.<br>
+     *
      *
      * @param startByte  The index of the start byte in the range.
      * @param endByte    The index of the end byte in the range.
+     * @return <code>false</code> if the start byte is greater than the end byte, otherwise it will return <code>true</code>.
      */
-    public void setByteRange(int startByte, int endByte){
-        ts_query_cursor_set_byte_range(ptr, startByte, endByte);
+    public boolean setByteRange(int startByte, int endByte){
+        return ts_query_cursor_set_byte_range(ptr, startByte, endByte);
     }
 
     /**
-     * Set the (row, column) positions in which the query
-     * will be executed.
+     * Set the range of (row, column) positions in which the query will be executed.<br>
+     *
+     * The query cursor will return matches that intersect with the given point range.
+     * This means that a match may be returned even if some of its captures fall
+     * outside the specified range, as long as at least part of the match
+     * overlaps with the range.<br>
+     *
+     * For example, if a query pattern matches a node that spans a larger area
+     * than the specified range, but part of that node intersects with the range,
+     * the entire match will be returned.<br>
+     *
+     * This will return `false` if the start point is greater than the end point, otherwise
+     * it will return `true`.
      *
      * @param startPoint  The start point of the range.
      * @param endPoint    The end point of the range.
+     * @return <code>false</code> if the start point is greater than the end point, otherwise it will return <code>true</code>.
      */
-    public void setPointRange(TSPoint startPoint, TSPoint endPoint){
-        ts_query_cursor_set_point_range(ptr, startPoint, endPoint);
+    public boolean setPointRange(TSPoint startPoint, TSPoint endPoint){
+        return ts_query_cursor_set_point_range(ptr, startPoint, endPoint);
     }
 
     /**

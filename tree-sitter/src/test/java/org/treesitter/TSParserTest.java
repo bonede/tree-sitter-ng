@@ -58,6 +58,43 @@ class TSParserTest {
     }
 
     @Test
+    public void  parseWithOptions(){
+        parser.reset();
+        byte[] buffer = new byte[1024];
+        String input = "{\n" +
+                "  \"id\": 12345,\n" +
+                "  \"name\": \"Alice\",\n" +
+                "  \"email\": \"alice@example.com\",\n" +
+                "  \"age\": 30,\n" +
+                "  \"isActive\": true,\n" +
+                "  \"roles\": [\"admin\", \"editor\"],\n" +
+                "  \"profile\": {\n" +
+                "    \"bio\": \"Loves programming and cats.\",\n" +
+                "    \"location\": \"San Francisco\",\n" +
+                "    \"website\": \"https://alice.dev\"\n" +
+                "  }\n" +
+                "}";
+        TSReader reader = (buf, offset, position) -> {
+            if(offset >= input.length()){
+                return 0;
+            }
+            ByteBuffer charBuffer = ByteBuffer.wrap(buf);
+            charBuffer.put(input.getBytes());
+            return input.length();
+        };
+        TSTree tree = parser.parseWithOptions(buffer, null, reader, TSInputEncoding.TSInputEncodingUTF8, (parserState) -> {
+            assertTrue(parserState.getCurrentByteOffset() > 0);
+            return parserState.hasError();
+        });
+        TSNode rootNode = tree.getRootNode();
+        TSNode arrayNode = rootNode.getNamedChild(0);
+        TSNode numberNode = arrayNode.getNamedChild(0);
+        assertEquals("document", rootNode.getType());
+        assertEquals("object", arrayNode.getType());
+        assertEquals("pair", numberNode.getType());
+    }
+
+    @Test
     public void parseRange(){
         TSParser parser = new TSParser();
         TSLanguage json = new TreeSitterJson();

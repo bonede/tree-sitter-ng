@@ -17,6 +17,8 @@
 #define TS_LOG_TYPE_CLASS_NAME "org/treesitter/TSLogType"
 #define TS_LOG_TYPE_SIGNATURE "Lorg/treesitter/TSLogType;"
 #define TS_READER_READ_METHOD_SIGNATURE "([BILorg/treesitter/TSPoint;)I"
+#define TS_PARSER_PROGRESS_METHOD_SIGNATURE "(Lorg/treesitter/TSParseState;)Z"
+#define TS_QUERY_PROGRESS_METHOD_SIGNATURE "(Lorg/treesitter/TSQueryCursorState;)Z"
 #define TS_LOGGER_LOG_METHOD_SIGNATURE "(Lorg/treesitter/TSLogType;Ljava/lang/String;)V"
 #define TS_QUERY_EXCEPTION_CLASS_NAME "org/treesitter/TSQueryException"
 #define TS_QUERY_PREDICATE_STEP_CLASS_NAME "org/treesitter/TSQueryPredicateStep"
@@ -24,6 +26,9 @@
 #define TS_QUERY_PREDICATE_STEP_TYPE_SIGNATURE "Lorg/treesitter/TSQueryPredicateStepType;"
 #define TS_QUERY_QUERY_CAPTURE_CLASS_NAME "org/treesitter/TSQueryCapture"
 #define TS_QUERY_QUERY_CAPTURE_ARRAY_SIGNATURE "[Lorg/treesitter/TSQueryCapture;"
+#define TS_PARSER_STATE_CLASS_NAME "org/treesitter/TSParseState"
+#define TS_QUERY_STATE_CLASS_NAME "org/treesitter/TSQueryCursorState"
+#define TS_LANG_METADATA_CLASS_NAME "org/treesitter/TSLanguageMetadata"
 
 jclass ts_jni_find_class(JNIEnv *env, const char *class_name){
     return (*env)->FindClass(env, class_name);
@@ -722,9 +727,9 @@ JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1set_1matc
  * Method:    ts_query_cursor_set_byte_range
  * Signature: (JII)V
  */
-JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1set_1byte_1range
+JNIEXPORT jboolean JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1set_1byte_1range
   (JNIEnv *env, jclass clz, jlong query_cursor_ptr, jint start_byte, jint end_byte){
-    ts_query_cursor_set_byte_range((TSQueryCursor *) query_cursor_ptr, start_byte, end_byte);
+    return ts_query_cursor_set_byte_range((TSQueryCursor *) query_cursor_ptr, start_byte, end_byte);
 }
 
 /*
@@ -732,9 +737,9 @@ JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1set_1byte
  * Method:    ts_query_cursor_set_point_range
  * Signature: (JLorg/treesitter/TSPoint;Lorg/treesitter/TSPoint;)V
  */
-JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1set_1point_1range
+JNIEXPORT jboolean JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1set_1point_1range
   (JNIEnv *env, jclass clz, jlong query_cursor_ptr, jobject start_point, jobject end_point){
-      ts_query_cursor_set_point_range(
+      return ts_query_cursor_set_point_range(
          (TSQueryCursor *) query_cursor_ptr,
          ts_point_from_obj(env, start_point),
          ts_point_from_obj(env, end_point)
@@ -844,6 +849,7 @@ JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1parser_1parse
     ts_input.payload = (void *) &payload;
     ts_input.encoding = ts_encoding;
     ts_input.read = ts_read;
+    ts_input.decode = NULL;
 
     TSTree *ts_tree = ts_parser_parse(
       (TSParser *) parser_ptr,
@@ -1099,19 +1105,6 @@ JNIEXPORT jobject JNICALL Java_org_treesitter_TSParser_ts_1node_1parent
     TSNode ts_node = ts_node_from_obj(env, ts_node_object);
     TSNode parent_node = ts_node_parent(ts_node);
     return ts_node_to_obj(env, parent_node);
-}
-
-/*
- * Class:     org_treesitter_TSParser
- * Method:    ts_node_child_containing_descendant
- * Signature: (Lorg/treesitter/TSNode;Lorg/treesitter/TSNode;)Lorg/treesitter/TSNode;
- */
-JNIEXPORT jobject JNICALL Java_org_treesitter_TSParser_ts_1node_1child_1containing_1descendant
-  (JNIEnv *env, jclass clz, jobject ts_node_object, jobject descendant_object){
-    TSNode ts_node = ts_node_from_obj(env, ts_node_object);
-    TSNode descendant = ts_node_from_obj(env, descendant_object);
-    TSNode child = ts_node_child_containing_descendant(ts_node, descendant);
-    return ts_node_to_obj(env, child);
 }
 
 /*
@@ -1432,6 +1425,16 @@ JNIEXPORT jboolean JNICALL Java_org_treesitter_TSParser_ts_1tree_1cursor_1goto_1
 JNIEXPORT jboolean JNICALL Java_org_treesitter_TSParser_ts_1tree_1cursor_1goto_1next_1sibling
   (JNIEnv *env, jclass clz, jlong ts_tree_cursor_ptr){
     return ts_tree_cursor_goto_next_sibling((TSTreeCursor *) ts_tree_cursor_ptr);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_tree_cursor_goto_previous_sibling
+ * Signature: (J)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_treesitter_TSParser_ts_1tree_1cursor_1goto_1previous_1sibling
+  (JNIEnv *env, jclass clz, jlong ts_tree_cursor_ptr){
+    return ts_tree_cursor_goto_previous_sibling((TSTreeCursor *) ts_tree_cursor_ptr);
 }
 
 /*
@@ -1891,4 +1894,210 @@ JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1timeout_
 JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1language_1delete
   (JNIEnv *env, jclass clz, jlong ts_lang_ptr){
     ts_language_delete((TSLanguage *) ts_lang_ptr);
+}
+
+
+struct parse_options_payload{
+    jobject ts_progress_object;
+    JNIEnv *env;
+};
+
+bool ts_parser_progress_callback(TSParseState *state){
+    struct parse_options_payload *options_payload = (struct parse_options_payload*) state->payload;
+    JNIEnv *env = options_payload->env;
+    jobject ts_progress_object = options_payload->ts_progress_object;
+    (*env)->GetObjectClass(env, ts_progress_object);
+    jclass ts_progress_class = (*env)->GetObjectClass(env, ts_progress_object);
+    jmethodID progress_method = (*env)->GetMethodID(env, ts_progress_class, "progress", TS_PARSER_PROGRESS_METHOD_SIGNATURE);
+
+    jclass ts_parser_state_class = ts_jni_find_class(env, TS_PARSER_STATE_CLASS_NAME);
+    jobject ts_parser_state_object = (*env)->AllocObject(env, ts_parser_state_class);
+    (*env)->SetIntField(env, ts_parser_state_object, ts_jni_get_field_id(env, ts_parser_state_class, "currentByteOffset", "I"), state->current_byte_offset);
+    (*env)->SetBooleanField(env, ts_parser_state_object, ts_jni_get_field_id(env, ts_parser_state_class, "isError", "Z"), state->has_error);
+    return (*env)->CallBooleanMethod(env, ts_progress_object, progress_method, ts_parser_state_object);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_parser_parse_with_options
+ * Signature: (JJ[BLorg/treesitter/TSReader;ILorg/treesitter/TSParserProgress;)J
+ */
+JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1parser_1parse_1with_1options
+  (JNIEnv *env, jclass clz, jlong ts_parser_ptr, jlong old_tree_ptr, jbyteArray buf, jobject ts_reader_object, jint ts_encoding, jobject ts_progress_object){
+    struct read_payload payload;
+    jint buf_len = (*env)->GetArrayLength(env, buf);
+    payload.ts_reader_object = ts_reader_object;
+    payload.env = env;
+    payload.buffer = buf;
+    payload.str_buf = (jbyte *) malloc(buf_len);
+    TSInput ts_input;
+    ts_input.payload = (void *) &payload;
+    ts_input.encoding = ts_encoding;
+    ts_input.read = ts_read;
+    ts_input.decode = NULL;
+
+
+    struct parse_options_payload options_payload;
+    options_payload.env = env;
+    options_payload.ts_progress_object = ts_progress_object;
+    TSParseOptions parse_options;
+    parse_options.payload = &options_payload;
+    parse_options.progress_callback = ts_parser_progress_callback;
+
+    TSTree *ts_tree = ts_parser_parse_with_options(
+      (TSParser *) ts_parser_ptr,
+      (TSTree *) old_tree_ptr,
+      ts_input,
+      parse_options
+    );
+
+
+    free(payload.str_buf);
+    return (jlong) ts_tree;
+
+}
+
+
+struct query_options_payload{
+    jobject ts_progress_object;
+    JNIEnv *env;
+};
+
+bool ts_query_progress_callback(TSQueryCursorState *state){
+    struct query_options_payload *options_payload = (struct query_options_payload*) state->payload;
+    JNIEnv *env = options_payload->env;
+    jobject ts_progress_object = options_payload->ts_progress_object;
+    jclass ts_progress_class = (*env)->GetObjectClass(env, ts_progress_object);
+    jmethodID progress_method = (*env)->GetMethodID(env, ts_progress_class, "progress", TS_QUERY_PROGRESS_METHOD_SIGNATURE);
+
+    jclass ts_query_state_class = ts_jni_find_class(env, TS_QUERY_STATE_CLASS_NAME);
+    jobject ts_query_state_object = (*env)->AllocObject(env, ts_query_state_class);
+    (*env)->SetIntField(env, ts_query_state_object, ts_jni_get_field_id(env, ts_query_state_class, "currentByteOffset", "I"), state->current_byte_offset);
+
+
+    return (*env)->CallBooleanMethod(env, ts_progress_object, progress_method, ts_query_state_object);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_query_cursor_exec_with_options
+ * Signature: (JJLorg/treesitter/TSNode;Lorg/treesitter/TSQueryProgress;)V
+ */
+JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1exec_1with_1options
+  (JNIEnv *env, jclass clz, jlong query_cursor_ptr, jlong query_ptr, jobject ts_node_object, jobject ts_progress_object, jlong ts_options_ptr){
+    TSQueryCursorOptions *query_options = (TSQueryCursorOptions *)ts_options_ptr;
+    struct query_options_payload *options_payload = (struct query_options_payload *) ts_options_ptr;
+    struct query_options_payload *payload = (struct query_options_payload *) query_options->payload;
+    payload->env = env;
+    payload->ts_progress_object = (*env)->NewGlobalRef(env, ts_progress_object);
+    query_options->progress_callback = ts_query_progress_callback;
+    ts_query_cursor_exec_with_options(
+      (TSQueryCursor *) query_cursor_ptr,
+      (TSQuery *) query_ptr,
+      ts_node_from_obj(env, ts_node_object),
+      query_options
+    );
+
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_query_cursor_options_new
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1options_1new
+  (JNIEnv *env, jclass clz){
+    TSQueryCursorOptions *options = (TSQueryCursorOptions *) malloc(sizeof(TSQueryCursorOptions));
+    struct query_options_payload *payload = (struct query_options_payload *) malloc(sizeof(struct query_options_payload));
+    options->payload = payload;
+    return (jlong) options;
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_query_cursor_options_delete
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1options_1delete
+  (JNIEnv *env, jclass clz, jlong query_options_ptr){
+    TSQueryCursorOptions *options = (TSQueryCursorOptions *) query_options_ptr;
+    free(options->payload);
+    free(options);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_language_abi_version
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_org_treesitter_TSParser_ts_1language_1abi_1version
+  (JNIEnv *env, jclass clz, jlong lang_ptr){
+    return ts_language_abi_version((TSLanguage *) lang_ptr);
+}
+
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_language_metadata
+ * Signature: (J)Lorg/treesitter/TSLanguageMetadata;
+ */
+JNIEXPORT jobject JNICALL Java_org_treesitter_TSParser_ts_1language_1metadata
+  (JNIEnv *env, jclass clz, jlong lang_ptr){
+    const TSLanguageMetadata *metadata = ts_language_metadata((TSLanguage *) lang_ptr);
+    if(metadata == NULL){
+        return NULL;
+    }
+    jclass metadata_class = ts_jni_find_class(env, TS_LANG_METADATA_CLASS_NAME);
+    jobject metadata_object = (*env)->AllocObject(env, metadata_class);
+    (*env)->SetIntField(env, metadata_object, ts_jni_get_field_id(env, metadata_class, "majorVersion", "I"), metadata->major_version);
+    (*env)->SetIntField(env, metadata_object, ts_jni_get_field_id(env, metadata_class, "minorVersion", "I"), metadata->minor_version);
+    (*env)->SetIntField(env, metadata_object, ts_jni_get_field_id(env, metadata_class, "patchVersion", "I"), metadata->patch_version);
+    return metadata_object;
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_language_supertypes
+ * Signature: (J)[I
+ */
+JNIEXPORT jintArray JNICALL Java_org_treesitter_TSParser_ts_1language_1supertypes
+  (JNIEnv *env, jclass clz, jlong lang_ptr){
+    uint32_t len = 0;
+    const TSSymbol *symbol = ts_language_supertypes((TSLanguage *) lang_ptr, &len);
+    jintArray symbols = (*env)->NewIntArray(env, len);
+    jint *elements = (*env)->GetIntArrayElements(env, symbols, NULL);
+    for(int i = 0; i < len; i++){
+       elements[i] = symbol[i];
+    }
+    (*env)->ReleaseIntArrayElements(env, symbols, elements, 0);
+    return symbols;
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_language_subtypes
+ * Signature: (JI)[I
+ */
+JNIEXPORT jintArray JNICALL Java_org_treesitter_TSParser_ts_1language_1subtypes
+  (JNIEnv *env, jclass clz, jlong lang_ptr, jint supertype){
+    uint32_t len = 0;
+    const TSSymbol *symbol = ts_language_subtypes((TSLanguage *) lang_ptr, supertype, &len);
+    jintArray symbols = (*env)->NewIntArray(env, len);
+    jint *elements = (*env)->GetIntArrayElements(env, symbols, NULL);
+    for(int i = 0; i < len; i++){
+       elements[i] = symbol[i];
+    }
+    (*env)->ReleaseIntArrayElements(env, symbols, elements, 0);
+    return symbols;
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_language_name
+ * Signature: (J)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_org_treesitter_TSParser_ts_1language_1name
+  (JNIEnv *env, jclass clz, jlong lang_ptr){
+    const char *name = ts_language_name((TSLanguage *) lang_ptr);
+    return (*env)->NewStringUTF(env, name);
 }

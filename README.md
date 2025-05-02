@@ -11,7 +11,7 @@ Add dependencies to your `build.gradle` or `pom.xml`.
 // Gradle
 dependencies {
     // add tree sitter
-    implementation 'io.github.bonede:tree-sitter:0.24.4'
+    implementation 'io.github.bonede:tree-sitter:0.25.3'
     // add json parser
     implementation 'io.github.bonede:tree-sitter-json:0.24.8'
 }
@@ -24,7 +24,7 @@ dependencies {
     <dependency>
         <groupId>io.github.bonede</groupId>
         <artifactId>tree-sitter</artifactId>
-        <version>0.24.4</version>
+        <version>0.25.3</version>
     </dependency>
     <!-- add json parser -->
     <dependency>

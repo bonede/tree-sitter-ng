@@ -43,8 +43,10 @@ subprojects {
                 def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
                 def snapshotsRepoUrl =  "https://s01.oss.sonatype.org/content/repositories/snapshots/"
                 credentials {
-                    username = ossrhUsername
-                    password = ossrhPassword
+                    if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
+                        username = ossrhUsername
+                        password = ossrhPassword
+                    }
                 }
                 url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
             }
@@ -79,8 +81,10 @@ subprojects {
     }
 
     signing {
-        sign configurations.archives
-        sign publishing.publications
+        if (project.hasProperty('signing.keyId')) {
+            sign configurations.archives
+            sign publishing.publications
+        }
     }
 
     java {
@@ -109,8 +113,10 @@ subprojects {
 nexusStaging {
     serverUrl = "https://s01.oss.sonatype.org/service/local/"
     packageGroup = "io.github.bonede"
-    username = ossrhUsername
-    password = ossrhPassword
+    if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
+        username = ossrhUsername
+        password = ossrhPassword
+    }
 }
 
 tasks.register('downloadMiniSign', DownloadMiniSignTask)

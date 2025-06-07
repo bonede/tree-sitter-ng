@@ -62,13 +62,7 @@ class DownloadMiniSignTask extends DefaultTask {
         def url = "https://github.com/jedisct1/minisign/releases/download/$miniSignVersion/${miniSignArchive.asFile.name}"
         Utils.downloadFile(url, miniSignArchive.asFile)
         def archive = miniSignArchive.asFile
-        if(archive.name.endsWith(".zip")){
-            Utils.unzipFile(archive, miniSignDir.asFile)
-        }else if(archive.name.endsWith(".tar.gz") || archive.name.endsWith(".tgz")){
-            Utils.unzipTar(archive, miniSignDir.asFile)
-        }else{
-            throw new GradleException("Unsupported archive: " + archive.name)
-        }
-
+        Utils.unzipArchive(archive, miniSignDir.asFile)
+        miniSignExe.asFile.setExecutable(true, true)
     }
 }

@@ -40,6 +40,17 @@ class DownloadZigTask extends DefaultTask{
         }
     }
 
+    @Internal
+    String getArchiveExt(){
+        if (os.windows) {
+            return ".zip"
+        } else if(os.macOsX || os.linux) {
+            return ".tar.xz"
+        } else {
+            throw new GradleException("Unsupported OS: " + os.name)
+        }
+    }
+
     @OutputFile
     RegularFile getZigExe(){
         if (os.windows) {
@@ -74,7 +85,7 @@ class DownloadZigTask extends DefaultTask{
 
     @OutputFile
     RegularFile getZigZipFile(){
-        zigDir.file("zig-$osName-$archName-${zigVersion}.zip")
+        zigDir.file("zig-$osName-$archName-${zigVersion}${archiveExt}")
     }
 
     @OutputFile
@@ -84,7 +95,7 @@ class DownloadZigTask extends DefaultTask{
 
     @Internal
     String getZigZipUrl(){
-        "https://ziglang.org/download/$zigVersion/zig-$osName-$archName-${zigVersion}.zip"
+        "https://ziglang.org/download/$zigVersion/zig-$osName-$archName-${zigVersion}${archiveExt}"
     }
 
     @Internal
@@ -101,7 +112,7 @@ class DownloadZigTask extends DefaultTask{
     downloadZig(){
         Utils.downloadFile(zigZipUrl, zigZipFile.asFile)
         Utils.downloadFile(zigSignatureUrl, zigSignatureFile.asFile)
-
+        miniSignExe.asFile.setExecutable(true, true)
         def zipVerified = project.exec {
             ignoreExitValue = true
             workingDir zigDir.asFile
@@ -114,6 +125,7 @@ class DownloadZigTask extends DefaultTask{
         if(!zipVerified) {
             throw new GradleException("$zigZipFile signature does not match!")
         }
-        Utils.unzipFile(zigZipFile.asFile, zigDir.asFile)
+        Utils.unzipArchive(zigZipFile.asFile, zigDir.asFile)
+        zigExe.asFile.setExecutable(true, true)
     }
 }

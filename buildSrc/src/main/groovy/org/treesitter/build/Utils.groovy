@@ -3,6 +3,7 @@ package org.treesitter.build
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
+import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
@@ -179,10 +180,19 @@ abstract class Utils {
         zipInputStream.close()
     }
 
-    static unzipTar(File tgzFile, File outputDir){
-        FileInputStream fileInputStream = new FileInputStream(tgzFile)
-        GzipCompressorInputStream gzipInputStream = new GzipCompressorInputStream(fileInputStream)
-        TarArchiveInputStream tarInputStream = new TarArchiveInputStream(gzipInputStream)
+    static unzipTar(File tarFile, File outputDir){
+        String name = tarFile.name.toLowerCase()
+        FileInputStream fileInputStream = new FileInputStream(tarFile)
+        InputStream compressorInputStream
+        if (name.endsWith(".tar.gz") || name.endsWith(".tgz")) {
+            compressorInputStream = new GzipCompressorInputStream(fileInputStream)
+        } else if (name.endsWith(".tar.xz")) {
+            compressorInputStream = new XZCompressorInputStream(fileInputStream)
+        } else {
+            fileInputStream.close()
+            throw new GradleException("Only .tar.gz, .tgz, and .tar.xz files are supported")
+        }
+        TarArchiveInputStream tarInputStream = new TarArchiveInputStream(compressorInputStream)
         TarArchiveEntry entry
         while ((entry = tarInputStream.nextEntry) != null) {
             File outputFile = new File(outputDir, entry.name)
@@ -195,5 +205,15 @@ abstract class Utils {
             }
         }
         tarInputStream.close()
+    }
+
+    static unzipArchive(File archive, File outputDir) {
+        if (archive.name.endsWith(".zip")) {
+            unzipFile(archive, outputDir)
+        } else if (archive.name.endsWith(".tar.gz") || archive.name.endsWith(".tgz") || archive.name.endsWith(".tar.xz")) {
+            unzipTar(archive, outputDir)
+        } else {
+            throw new GradleException("Unsupported archive format: ${archive.name}")
+        }
     }
 }

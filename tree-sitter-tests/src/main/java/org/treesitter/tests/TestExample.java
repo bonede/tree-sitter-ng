@@ -54,4 +54,10 @@ public class TestExample {
     public TestAttributes getAttributes() {
         return attributes;
     }
+
+    public boolean isExampleFor(String lang){
+        return attributes == null ||
+                attributes.getLanguages() == null ||
+                attributes.getLanguages().contains(lang);
+    }
 }

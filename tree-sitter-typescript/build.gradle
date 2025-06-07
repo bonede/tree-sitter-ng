@@ -1,3 +1,10 @@
 tasks.named('downloadSource') {
     url = "https://github.com/tree-sitter/tree-sitter-typescript/archive/refs/tags/v${version}.zip"
 }
+tasks.named("buildNative") {
+    def newSrcDir = srcDir.dir("typescript/src")
+    additionalCFiles = newSrcDir.asFileTree.matching {
+        include("**/*.c")
+    }
+    additionalIncludeDirs = [newSrcDir]
+}

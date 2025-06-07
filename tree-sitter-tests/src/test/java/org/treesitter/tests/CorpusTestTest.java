@@ -26,13 +26,13 @@ class CorpusTestTest {
     void runTest() throws IOException {
         CorpusTest corpusTest = loadTest("test/corpus/definitions.txt");
         TSLanguage lang = new TreeSitterScala();
-        corpusTest.runTest(lang);
+        corpusTest.runTest(lang, "scala");
     }
 
     @Test
     void runAllTestInFolder() throws IOException {
         TSLanguage lang = new TreeSitterScala();
-        CorpusTest.runAllTestsInFolder("src/test/resources/test/corpus", lang);
+        CorpusTest.runAllTestsInFolder("src/test/resources/test/corpus", lang, "scala");
     }
 
 }

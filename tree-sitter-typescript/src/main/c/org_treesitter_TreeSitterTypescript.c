@@ -1,6 +1,6 @@
 
 #include <jni.h>
-void *tree_sitter_tsx();
+void *tree_sitter_typescript();
 /*
  * Class:     org_treesitter_TreeSitterTypescript
  * Method:    tree_sitter_tsx
@@ -8,5 +8,5 @@ void *tree_sitter_tsx();
  */
 JNIEXPORT jlong JNICALL Java_org_treesitter_TreeSitterTypescript_tree_1sitter_1typescript
   (JNIEnv *env, jclass clz){
-   return (jlong) tree_sitter_tsx();
+   return (jlong) tree_sitter_typescript();
 }

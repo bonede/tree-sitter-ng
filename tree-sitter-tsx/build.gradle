@@ -1,0 +1,3 @@
+tasks.named('downloadSource') {
+    url = "https://github.com/tree-sitter/tree-sitter-typescript/archive/refs/tags/v${version}.zip"
+}

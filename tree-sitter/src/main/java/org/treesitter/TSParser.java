@@ -15,7 +15,7 @@ public class TSParser {
      * The Tree-sitter library is generally backwards-compatible with languages
      * generated using older CLI versions, but is not forwards-compatible.
      */
-    public static final int TREE_SITTER_LANGUAGE_VERSION = 14;
+    public static final int TREE_SITTER_LANGUAGE_VERSION = 15;
 
     /**
      * The earliest ABI version that is supported by the current version of the
@@ -39,14 +39,6 @@ public class TSParser {
     private static native long ts_parser_parse_string(long ts_parser_ptr, long ts_tree_ptr, String input);
     private static native long ts_parser_parse_string_encoding(long ts_parser_ptr, long ts_tree_ptr, String input, int tsInputEncoding);
     private static native void ts_parser_reset(long ts_parser_ptr);
-    private static native void ts_parser_set_timeout_micros(long ts_parser_ptr, long timeout);
-    private static native long ts_parser_timeout_micros(long ts_parser_ptr);
-    private static native void ts_parser_set_cancellation_flag(long ts_parser_ptr, long flag_ptr);
-    private static native long ts_parser_cancellation_flag(long ts_parser_ptr);
-    private static native long alloc_cancellation_flag();
-    private static native long get_cancellation_flag_value(long flag_ptr);
-    private static native void free_cancellation_flag(long flag_ptr);
-    private static native void write_cancellation_flag(long flag_ptr, long value);
     private static native void ts_parser_set_logger(long ts_parser_ptr, TSLogger logger);
     private static native void free_logger(long ts_parser_ptr);
     private static native void ts_parser_print_dot_graphs(long ts_parser_ptr, FileDescriptor fileDescriptor);
@@ -137,6 +129,8 @@ public class TSParser {
     protected static native void ts_query_cursor_set_match_limit(long ts_query_cursor_ptr, int limit);
     protected static native boolean ts_query_cursor_set_byte_range(long ts_query_cursor_ptr, int start_byte, int end_byte);
     protected static native boolean ts_query_cursor_set_point_range(long ts_query_cursor_ptr, TSPoint start_point, TSPoint end_point);
+    protected static native boolean ts_query_cursor_set_containing_byte_range(long ts_query_cursor_ptr, int startByte, int endByte);
+    protected static native boolean ts_query_cursor_set_containing_point_range(long ts_query_cursor_ptr, TSPoint startPoint, TSPoint endPoint);
     protected static native boolean ts_query_cursor_next_match(long ts_query_cursor_ptr, TSQueryMatch match);
     protected static native void ts_query_cursor_remove_match(long ts_query_cursor_ptr, int match_id);
     protected static native boolean ts_query_cursor_next_capture(long ts_query_cursor_ptr, TSQueryMatch match);
@@ -154,7 +148,6 @@ public class TSParser {
     protected static native int ts_language_symbol_count(long ts_language_ptr);
     protected static native String ts_language_symbol_name(long ts_language_ptr, int ts_symbol);
     protected static native int ts_language_symbol_for_name(long ts_language_ptr, String name, boolean is_named);
-    protected static native int ts_language_version(long ts_language_ptr);
     protected static native int ts_language_abi_version(long ts_language_ptr);
     protected static native TSLanguageMetadata ts_language_metadata(long ts_language_ptr);
     protected static native int[] ts_language_supertypes(long ts_language_ptr);
@@ -173,8 +166,6 @@ public class TSParser {
 
     protected static native TSNode ts_node_child_with_descendant(TSNode node, TSNode descendant);
     protected static native String ts_node_field_name_for_named_child(TSNode node, long namedChildIndex);
-    protected static native void ts_query_cursor_set_timeout_micros(long ts_query_ptr, long timeout_micros);
-    protected static native long ts_query_cursor_timeout_micros(long ts_query_ptr);
 
 
     private final long ptr;
@@ -188,10 +179,6 @@ public class TSParser {
 
         @Override
         public void run() {
-            long flagPtr = ts_parser_cancellation_flag(this.ptr);
-            if(flagPtr != 0){
-                free_cancellation_flag(flagPtr);
-            }
             free_logger(ptr);
             ts_parser_delete(ptr);
         }
@@ -204,9 +191,6 @@ public class TSParser {
      */
     public TSParser() {
         this.ptr = ts_parser_new();
-        long cancellationFlagPtr = alloc_cancellation_flag();
-        write_cancellation_flag(cancellationFlagPtr, 0);
-        ts_parser_set_cancellation_flag(ptr, cancellationFlagPtr);
         CleanerRunner.register(this, new TSParserCleanAction(this.ptr));
     }
     /**
@@ -317,6 +301,31 @@ public class TSParser {
      *
      * @return {@link TSTree} if success, <code>null</code> otherwise.
      */
+    /**
+     * Use the parser to parse some source code and create a syntax tree.<br>
+     *
+     * If you are parsing this document for the first time, pass `NULL` for the
+     * `old_tree` parameter. Otherwise, if you have already parsed an earlier
+     * version of this document and the document has since been edited, pass the
+     * previous syntax tree so that the unchanged parts of it can be reused.
+     * This will save time and memory. For this to work correctly, you must have
+     * already edited the old syntax tree using the {@link TSTree#edit(TSInputEdit)} method in a
+     * way that exactly matches the source code changes.<br>
+     *
+     * This method returns a syntax tree on success, and `NULL` on failure. There
+     * are four possible reasons for failure:<br>
+     * 1. The parser does not have a language assigned. Check for this using the
+     * {@link TSParser#getLanguage()} method.<br>
+     * 2. Parsing was cancelled due to the progress callback returning true. This callback
+     *    is passed in {@link #parseWithOptions(byte[], TSTree, TSReader, TSInputEncoding, TSParserProgress)}.<br>
+     *
+     * @param buf Buffer to use while reading from reader.
+     * @param oldTree The old tree to use. If any.
+     * @param reader The reader to read source code from.
+     * @param encoding The encoding of the source code.
+     *
+     * @return {@link TSTree} if success, <code>null</code> otherwise.
+     */
     public TSTree parse(byte[] buf, TSTree oldTree, TSReader reader, TSInputEncoding encoding){
         long oldTreePtr = oldTree == null ? 0 : oldTree.getPtr();
         long treePtr = ts_parser_parse(ptr, buf, oldTreePtr, reader, encoding.ordinal());
@@ -403,49 +412,6 @@ public class TSParser {
      */
     public void reset(){
         ts_parser_reset(ptr);
-    }
-    /**
-     * Set the maximum duration in microseconds that parsing should be allowed to
-     * take before halting.<br>
-     *
-     * If parsing takes longer than this, it will halt early, returning <code>null</code>.
-     * See {@link #parse(byte[], TSTree, TSReader, TSInputEncoding) parse()} for more information.
-     *
-     * @param timeoutMicros The maximum duration in microseconds.
-     */
-    public void setTimeoutMicros(long timeoutMicros){
-        ts_parser_set_timeout_micros(ptr, timeoutMicros);
-    }
-
-    /**
-     * Get the duration in microseconds that parsing is allowed to take.
-     *
-     * @return The maximum duration in microseconds.
-     */
-    public long getTimeoutMicros(){
-        return ts_parser_timeout_micros(ptr);
-    }
-
-    /**
-     * Set the parser's current cancellation flag.<br>
-     *
-     * If a non-zero value is assigned, then the parser will periodically read
-     * from this pointer during parsing. If it reads a non-zero value, it will
-     * halt early, returning <code>null</code>. See {@link #parse(byte[], TSTree, TSReader, TSInputEncoding) parse()} for more information.
-     *
-     * @param flag The cancellation flag.
-     */
-    public void setCancellationFlag(long flag){
-        write_cancellation_flag(ts_parser_cancellation_flag(ptr), flag);
-    }
-
-    /**
-     * Get the parser's current cancellation flag.
-     *
-     * @return The cancellation flag.
-     */
-    public long getCancellationFlag(){
-        return get_cancellation_flag_value(ts_parser_cancellation_flag(ptr));
     }
 
     /**

@@ -189,16 +189,6 @@ JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1parser_1set_1language
     ts_parser_set_language((TSParser *) parser, (TSLanguage *) lang_ptr);
 }
 
-/*
- * Class:     org_treesitter_TSParser
- * Method:    ts_language_version
- * Signature: (J)I
- */
-JNIEXPORT jint JNICALL Java_org_treesitter_TSParser_ts_1language_1version
-  (JNIEnv *env, jclass clz, jlong lang_ptr){
-    return ts_language_version((TSLanguage *) lang_ptr);
-}
-
 #include <stdio.h>
 
 
@@ -261,86 +251,6 @@ JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1parser_1parse_1string_1
 JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1parser_1reset
   (JNIEnv *env, jclass clz, jlong parser_ptr){
     ts_parser_reset((TSParser *) parser_ptr);
-}
-
-/*
- * Class:     org_treesitter_TSParser
- * Method:    ts_parser_set_timeout_micros
- * Signature: (JJ)V
- */
-JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1parser_1set_1timeout_1micros
-  (JNIEnv *env, jclass clz, jlong parser_ptr, jlong timeout){
-    ts_parser_set_timeout_micros((TSParser *) parser_ptr, timeout);
-}
-
-/*
- * Class:     org_treesitter_TSParser
- * Method:    ts_parser_timeout_micros
- * Signature: (J)J
- */
-JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1parser_1timeout_1micros
-  (JNIEnv *env, jclass clz, jlong parser_ptr){
-    return ts_parser_timeout_micros((TSParser *) parser_ptr);
-}
-
-/*
- * Class:     org_treesitter_TSParser
- * Method:    ts_parser_set_cancellation_flag
- * Signature: (JJ)J
- */
-JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1parser_1set_1cancellation_1flag
-  (JNIEnv *env, jclass clz, jlong parser_ptr, jlong flag_ptr){
-    ts_parser_set_cancellation_flag((TSParser *) parser_ptr, (size_t *) flag_ptr);
-}
-
-/*
- * Class:     org_treesitter_TSParser
- * Method:    ts_parser_cancellation_flag
- * Signature: (J)J
- */
-JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1parser_1cancellation_1flag
-  (JNIEnv *env, jclass clz, jlong parser_ptr){
-    return (jlong) ts_parser_cancellation_flag((TSParser *) parser_ptr);
-}
-
-/*
- * Class:     org_treesitter_TSParser
- * Method:    alloc_cancellation_flag
- * Signature: ()J
- */
-JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_alloc_1cancellation_1flag
-  (JNIEnv *env, jclass clz){
-    return (jlong) malloc(sizeof(size_t));
-}
-
-/*
- * Class:     org_treesitter_TSParser
- * Method:    get_cancellation_flag_value
- * Signature: (J)J
- */
-JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_get_1cancellation_1flag_1value
-  (JNIEnv *env, jclass clz, jlong flag_ptr){
-  return (jlong) *((size_t *) flag_ptr);
-}
-
-/*
- * Class:     org_treesitter_TSParser
- * Method:    free_cancellation_flag
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL Java_org_treesitter_TSParser_free_1cancellation_1flag
-  (JNIEnv *env, jclass clz, jlong flag_ptr){
-    free((size_t *) flag_ptr);
-}
-
-/*
- * Class:     org_treesitter_TSParser
- * Method:    write_cancellation_flag
- * Signature: (JJ)V
- */
-JNIEXPORT void JNICALL Java_org_treesitter_TSParser_write_1cancellation_1flag
-  (JNIEnv *env, jclass clz, jlong flag_ptr, jlong value){
-    *((size_t *) flag_ptr) = value;
 }
 
 void ts_log(void *payload, TSLogType logType, const char *str){
@@ -1868,26 +1778,6 @@ JNIEXPORT jstring JNICALL Java_org_treesitter_TSParser_ts_1node_1field_1name_1fo
 
 /*
  * Class:     org_treesitter_TSParser
- * Method:    ts_query_cursor_set_timeout_micros
- * Signature: (JJ)V
- */
-JNIEXPORT void JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1set_1timeout_1micros
-  (JNIEnv *env, jclass clz, jlong ts_query_ptr, jlong timeout_micros){
-    ts_query_cursor_set_timeout_micros((TSQueryCursor *) ts_query_ptr, timeout_micros);
-}
-
-/*
- * Class:     org_treesitter_TSParser
- * Method:    ts_query_cursor_timeout_micros
- * Signature: (J)J
- */
-JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1timeout_1micros
-  (JNIEnv *env, jclass clz, jlong ts_query_ptr){
-    return ts_query_cursor_timeout_micros((TSQueryCursor *) ts_query_ptr);
-}
-
-/*
- * Class:     org_treesitter_TSParser
  * Method:    ts_language_delete
  * Signature: (J)V
  */
@@ -2100,4 +1990,27 @@ JNIEXPORT jstring JNICALL Java_org_treesitter_TSParser_ts_1language_1name
   (JNIEnv *env, jclass clz, jlong lang_ptr){
     const char *name = ts_language_name((TSLanguage *) lang_ptr);
     return (*env)->NewStringUTF(env, name);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_query_cursor_set_containing_byte_range
+ * Signature: (JII)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1set_1containing_1byte_1range
+  (JNIEnv *env, jclass clz, jlong ts_query_cursor_ptr, jint start_byte, jint end_byte){
+    return ts_query_cursor_set_containing_byte_range((TSQueryCursor *)ts_query_cursor_ptr, start_byte, end_byte);
+}
+
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_query_cursor_set_containing_point_range
+ * Signature: (JLorg/treesitter/TSPoint;Lorg/treesitter/TSPoint;)Z
+ */
+JNIEXPORT jboolean JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1set_1containing_1point_1range
+  (JNIEnv *env, jclass clz, jlong ts_query_cursor_ptr, jobject start_point, jobject end_point){
+    return ts_query_cursor_set_containing_point_range(
+        (TSQueryCursor *)ts_query_cursor_ptr,
+        ts_point_from_obj(env, start_point),
+        ts_point_from_obj(env, end_point));
 }

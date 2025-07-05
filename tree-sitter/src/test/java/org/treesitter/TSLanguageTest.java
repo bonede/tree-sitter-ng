@@ -8,11 +8,6 @@ class TSLanguageTest {
     private final TSLanguage json = new TreeSitterJson();
 
     @Test
-    void version() {
-        assertEquals(14, json.version());
-    }
-
-    @Test
     void fieldCount() {
         assertEquals(2, json.fieldCount());
     }

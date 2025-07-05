@@ -121,32 +121,6 @@ class TSParserTest {
     }
 
     @Test
-    void setTimeoutMicros() {
-        TSParser parser = new TSParser();
-        parser.setTimeoutMicros(100l);
-    }
-
-    @Test
-    void getTimeoutMicros() {
-        TSParser parser = new TSParser();
-        parser.setTimeoutMicros(100l);
-        assertEquals(100l, parser.getTimeoutMicros());
-    }
-
-    @Test
-    void setCancellationFlag() {
-        TSParser parser = new TSParser();
-        parser.setTimeoutMicros(1);
-    }
-
-    @Test
-    void getCancellationFlag() {
-        TSParser parser = new TSParser();
-        parser.setCancellationFlag(1);
-        assertEquals(1, parser.getCancellationFlag());
-    }
-
-    @Test
     void setLogger() {
         TSParser parser = new TSParser();
         TSLanguage json = new TreeSitterJson();

@@ -4,6 +4,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
@@ -130,21 +131,14 @@ public abstract class NativeUtils {
         if(newFileBytes == null){
             newFileBytes = readLib(libName);
         }
-
-        try(
-            RandomAccessFile raf = new RandomAccessFile(file, "rw");
-            FileChannel channel = raf.getChannel();
-            InputStream inputStream = new ByteArrayInputStream(newFileBytes);
-            FileLock fileLock = channel.lock();
-        ){
-            ByteBuffer buffer = ByteBuffer.allocate(1024 * 4);
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer.array())) != -1) {
-                buffer.limit(bytesRead);
-                channel.write(buffer);
-                buffer.clear();
+        try {
+            File tempLibFile = File.createTempFile(file.getName(), "");
+            Files.write(tempLibFile.toPath(), newFileBytes);
+            boolean ret = tempLibFile.renameTo(file);
+            if(!ret){
+                System.out.println("Failed to move lib file: " + tempLibFile.getName());
             }
-        } catch (IOException e) {
+        }catch (IOException e){
             throw new RuntimeException(e);
         }
         System.load(file.getAbsolutePath());

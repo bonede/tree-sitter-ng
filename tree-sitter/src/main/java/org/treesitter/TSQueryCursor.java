@@ -116,37 +116,6 @@ public class TSQueryCursor {
         ts_query_cursor_set_match_limit(ptr, limit);
     }
 
-
-    /**
-     * Set the maximum duration in microseconds that query execution should be allowed to
-     * take before halting.<br>
-     *
-     * If query execution takes longer than this, it will halt early, returning null.<br>
-     *
-     * @see TSQueryCursor#getMatches()
-     * @see TSQueryCursor#getCaptures()
-     *
-     * @param timeoutMicros Timeout in micro seconds.
-     * @deprecated  use {@link #execWithOptions(TSQuery, TSNode, TSQueryProgress)} and pass in a callback instead, this will be removed in 0.26.
-     */
-    @Deprecated
-    public void setTimeoutMicros(long timeoutMicros){
-        TSParser.ts_query_cursor_set_timeout_micros(ptr, timeoutMicros);
-    }
-
-    /**
-     * Get the duration in microseconds that query execution is allowed to take.<br>
-     *
-     * This is set via {@link TSQueryCursor#setTimeoutMicros(long)}
-     *
-     * @return Timeout in micro seconds.
-     * @deprecated  use {@link #execWithOptions(TSQuery, TSNode, TSQueryProgress)} and pass in a callback instead, this will be removed in 0.26.
-     */
-    @Deprecated
-    public long getTimeoutMicros(){
-        return TSParser.ts_query_cursor_timeout_micros(ptr);
-    }
-
     /**
      * Set the range of bytes in which the query will be executed.<br>
      *
@@ -189,6 +158,38 @@ public class TSQueryCursor {
      */
     public boolean setPointRange(TSPoint startPoint, TSPoint endPoint){
         return ts_query_cursor_set_point_range(ptr, startPoint, endPoint);
+    }
+
+    /**
+     * Set the byte range within which all matches must be fully contained. <br>
+     *
+     * Set the range of bytes in which matches will be searched for. In contrast to
+     * {@link #setByteRange(int, int)}, this will restrict the query cursor to only return
+     * matches where _all_ nodes are _fully_ contained within the given range. Both functions
+     * can be used together, e.g. to search for any matches that intersect line 5000, as
+     * long as they are fully contained within lines 4500-5500
+     *
+     * @param startByte The start byte of the containing range.
+     * @param  endByte The end byte of the containing range.
+     */
+    public boolean setContainingByteRange(int startByte, int endByte){
+        return ts_query_cursor_set_containing_byte_range(ptr, startByte, endByte);
+    }
+
+    /**
+     * Set the point range within which all matches must be fully contained.<br>
+     *
+     * Set the range of bytes in which matches will be searched for. In contrast to
+     * {@link #setPointRange(TSPoint, TSPoint)}, this will restrict the query cursor to only return
+     * matches where _all_ nodes are _fully_ contained within the given range. Both functions
+     * can be used together, e.g. to search for any matches that intersect line 5000, as
+     * long as they are fully contained within lines 4500-5500
+     *
+     * @param startPoint The start point of the containing range.
+     * @param endPoint The end point of the containing range.
+     */
+    public boolean setContainingPointRange(TSPoint startPoint, TSPoint endPoint){
+        return ts_query_cursor_set_containing_point_range(ptr, startPoint, endPoint);
     }
 
     /**

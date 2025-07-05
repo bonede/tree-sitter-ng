@@ -260,15 +260,14 @@ class TSQueryCursorTest {
         }
     }
 
+
     @Test
-    void setTimeoutMicros() {
-        cursor.setTimeoutMicros(1000l);
+    void setContainingByteRange() {
+        assertTrue(cursor.setContainingByteRange(1000000000, 1000000001));
     }
 
     @Test
-    void getTimeoutMicros() {
-        long timeout = 1000l;
-        cursor.setTimeoutMicros(timeout);
-        assertEquals(timeout, cursor.getTimeoutMicros());;
+    void setContainingPointRange(){
+        assertTrue(cursor.setContainingPointRange(new TSPoint(0, 0), new TSPoint(0, 10)));
     }
 }

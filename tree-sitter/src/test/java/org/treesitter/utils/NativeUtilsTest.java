@@ -8,6 +8,11 @@ class NativeUtilsTest {
 
     @Test
     void loadLib() {
-        NativeUtils.loadLib("lib/tree-sitter");
+        for (int i = 1; i <= 10; i++) {
+            Thread thread = new Thread(() -> {
+                NativeUtils.loadLib("lib/tree-sitter");
+            });
+            thread.start();
+        }
     }
 }

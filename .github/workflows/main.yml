@@ -20,6 +20,6 @@ jobs:
         java-version: '11'
         distribution: 'corretto'
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4.2.1
+      uses: gradle/actions/setup-gradle@v5.0.0
     - name: Test with Gradle
       run: ./gradlew test

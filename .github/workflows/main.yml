@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-2022, macos-13, macos-14]
+        os: [ubuntu-22.04, windows-2022, macos-15-intel, macos-14]
     env:
       ORG_GRADLE_PROJECT_ossrhUsername: na
       ORG_GRADLE_PROJECT_ossrhPassword: na

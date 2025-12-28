@@ -244,4 +244,11 @@ class TSNodeTest {
         assertEquals(child.toString(), rootNode.getChildWithDescendant(descendant).toString());
         assertNotNull(rootNode.getChildWithDescendant(descendant));
     }
+
+    @Test
+    void traversingEquals() {
+        TSNode child = rootNode.getChild(0);
+        assertNotEquals(child, rootNode);
+        assertEquals(child.getParent(), rootNode);
+    }
 }

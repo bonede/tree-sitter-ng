@@ -1,5 +1,8 @@
 
 import org.treesitter.build.GenTask
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
 
 plugins {
     alias(libs.plugins.download)
@@ -40,8 +43,8 @@ subprojects {
         repositories {
             maven {
                 name = "MavenCentral"
-                def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-                def snapshotsRepoUrl =  "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+                def releasesRepoUrl = "https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/"
+                def snapshotsRepoUrl =  "https://ossrh-staging-api.central.sonatype.com/content/repositories/snapshots/"
                 credentials {
                     if (project.hasProperty('ossrhUsername') && project.hasProperty('ossrhPassword')) {
                         username = ossrhUsername
@@ -129,4 +132,27 @@ tasks.register('downloadZig', DownloadZigTask){
 tasks.register("gen", GenTask) {
     group = "build setup"
     description = "Generate sub project for tree sitter parser"
+}
+
+tasks.register("publishPortal") {
+    // Use this task after :publish to mask package to be visible in Portal
+    // Reference https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#ensuring-deployment-visibility-in-the-central-publisher-portal
+    doLast {
+        def url = "https://ossrh-staging-api.central.sonatype.com/22manual/upload/defaultRepository/io.github.bonede"
+        def token = Base64.encoder.encodeToString("$ossrhUsername:$ossrhPassword".getBytes())
+        def client = HttpClient.newHttpClient()
+        def req = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Authorization", "Bearer $token")
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build()
+        def resp = client.send(req, HttpResponse.BodyHandlers.ofString())
+        def code = resp.statusCode();
+        if(resp.statusCode() != 200){
+            def msg = "HTTP request failed with status $code"
+            System.err.println(msg)
+            throw new GradleException(msg)
+        }
+        println "Publish to Portal response code: ${resp.statusCode()} body:\n${resp.body()}"
+    }
 }

@@ -170,7 +170,8 @@ public class TSQueryCursor {
      * long as they are fully contained within lines 4500-5500
      *
      * @param startByte The start byte of the containing range.
-     * @param  endByte The end byte of the containing range.
+     * @param endByte The end byte of the containing range.
+     * @return <code>false</code> if the start byte is greater than the end byte, otherwise it will return <code>true</code>.
      */
     public boolean setContainingByteRange(int startByte, int endByte){
         return ts_query_cursor_set_containing_byte_range(ptr, startByte, endByte);
@@ -187,6 +188,7 @@ public class TSQueryCursor {
      *
      * @param startPoint The start point of the containing range.
      * @param endPoint The end point of the containing range.
+     * @return <code>false</code> if the start point is greater than the end point, otherwise it will return <code>true</code>.
      */
     public boolean setContainingPointRange(TSPoint startPoint, TSPoint endPoint){
         return ts_query_cursor_set_containing_point_range(ptr, startPoint, endPoint);

@@ -263,11 +263,13 @@ class TSQueryCursorTest {
 
     @Test
     void setContainingByteRange() {
-        assertTrue(cursor.setContainingByteRange(1000000000, 1000000001));
+        assertTrue(cursor.setContainingByteRange(0, 1));
+        assertFalse(cursor.setContainingByteRange(2, 1));
     }
 
     @Test
     void setContainingPointRange(){
         assertTrue(cursor.setContainingPointRange(new TSPoint(0, 0), new TSPoint(0, 10)));
+        assertFalse(cursor.setContainingPointRange(new TSPoint(0, 10), new TSPoint(0, 1)));
     }
 }

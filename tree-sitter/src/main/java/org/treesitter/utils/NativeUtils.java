@@ -4,8 +4,10 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
@@ -134,10 +136,7 @@ public abstract class NativeUtils {
         try {
             File tempLibFile = File.createTempFile(file.getName(), "");
             Files.write(tempLibFile.toPath(), newFileBytes);
-            boolean ret = tempLibFile.renameTo(file);
-            if(!ret){
-                System.out.println("Failed to move lib file: " + tempLibFile.getName());
-            }
+            Files.move(tempLibFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         }catch (IOException e){
             throw new RuntimeException(e);
         }

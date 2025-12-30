@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://github.com/antosha417/tree-sitter-hocon/archive/refs/heads/master.zip"
-}

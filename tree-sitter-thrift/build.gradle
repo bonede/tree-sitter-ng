@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://github.com/duskmoon314/tree-sitter-thrift/archive/refs/tags/v${version}.zip"
-}

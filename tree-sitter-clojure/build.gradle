@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://github.com/sogaiu/tree-sitter-clojure/archive/refs/tags/v${version}.zip"
-}

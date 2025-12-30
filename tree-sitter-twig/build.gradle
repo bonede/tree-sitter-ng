@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://github.com/gbprod/tree-sitter-twig/archive/refs/tags/v${version}.zip"
-}

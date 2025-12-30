@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://github.com/camdencheek/tree-sitter-dockerfile/archive/refs/tags/v${version}.zip"
-}

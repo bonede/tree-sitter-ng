@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://codeload.github.com/UserNobody14/tree-sitter-dart/zip/refs/heads/master"
-}

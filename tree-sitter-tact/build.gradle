@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://codeload.github.com/tact-lang/tree-sitter-tact/zip/refs/heads/main"
-}

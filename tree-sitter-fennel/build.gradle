@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://codeload.github.com/TravonteD/tree-sitter-fennel/zip/refs/heads/master"
-}

@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://codeload.github.com/tree-sitter-perl/tree-sitter-pod/zip/refs/heads/release"
-}

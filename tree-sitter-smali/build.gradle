@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://github.com/amaanq/tree-sitter-smali/archive/refs/tags/v${version}.zip"
-}

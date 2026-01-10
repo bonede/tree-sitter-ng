@@ -14,6 +14,7 @@ public class TSQueryCursor {
     private boolean executed = false;
 
     private TSNode node;
+    private TSQuery query;
 
     private static class TSQueryCursorCleanAction implements Runnable {
         private final long ptr;
@@ -73,6 +74,7 @@ public class TSQueryCursor {
     public void exec(TSQuery query, TSNode node){
         executed = true;
         this.node = node;
+        this.query = query;
         ts_query_cursor_exec(ptr, query.getPtr(), node);
     }
 
@@ -87,6 +89,7 @@ public class TSQueryCursor {
     public void execWithOptions(TSQuery query, TSNode node, TSQueryProgress progress){
         executed = true;
         this.node = node;
+        this.query = query;
         ts_query_cursor_exec_with_options(ptr, query.getPtr(), node, progress, progressPayloadPtr);
     }
 
@@ -235,7 +238,6 @@ public class TSQueryCursor {
      * @throws TSException if the query has not been executed yet.
      *
      */
-    @SuppressWarnings("deprecation")
     public boolean nextCapture(TSQueryMatch match){
         assertExecuted();
         boolean ret = ts_query_cursor_next_capture(ptr, match);

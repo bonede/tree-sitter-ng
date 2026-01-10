@@ -4,6 +4,7 @@ import static org.treesitter.TSParser.*;
 
 public class TSQuery {
     private final long ptr;
+    private TSLanguage lang;
 
     private static class TSQueryCleanRunner implements Runnable {
         private final long ptr;
@@ -38,6 +39,7 @@ public class TSQuery {
      */
     public TSQuery(TSLanguage language, String query){
         this(ts_query_new(language.getPtr(), query));
+        this.lang = language;
     }
 
     protected long getPtr() {

@@ -4,8 +4,10 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
@@ -112,7 +114,10 @@ public abstract class NativeUtils {
         String fullLibName = getFullLibName(libName);
         Path filePath = getLibStorePath().resolve(fullLibName);
         File file = filePath.toFile();
-        file.getParentFile().mkdirs();
+        File parentDir = file.getParentFile();
+        if (!parentDir.exists() && !parentDir.mkdirs()) {
+            throw new RuntimeException("Failed to create directory: " + parentDir);
+        }
         boolean shouldOverwrite = false;
         byte[] newFileBytes = null;
         if(file.exists()){
@@ -131,15 +136,34 @@ public abstract class NativeUtils {
         if(newFileBytes == null){
             newFileBytes = readLib(libName);
         }
+        File tempLibFile = null;
         try {
-            File tempLibFile = File.createTempFile(file.getName(), "");
+            tempLibFile = File.createTempFile(
+                    "lib_" + System.currentTimeMillis() + "_",
+                    ".tmp",
+                    parentDir
+            );
             Files.write(tempLibFile.toPath(), newFileBytes);
-            boolean ret = tempLibFile.renameTo(file);
-            if(!ret){
-                System.out.println("Failed to move lib file: " + tempLibFile.getName());
+            try {
+                Files.move(
+                    tempLibFile.toPath(),
+                    file.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING,
+                    StandardCopyOption.ATOMIC_MOVE
+                );
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(
+                    tempLibFile.toPath(),
+                    file.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING
+                );
             }
         }catch (IOException e){
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to write library file: " + file, e);
+        }finally {
+            if (tempLibFile != null && tempLibFile.exists()) {
+                tempLibFile.delete();
+            }
         }
         System.load(file.getAbsolutePath());
     }

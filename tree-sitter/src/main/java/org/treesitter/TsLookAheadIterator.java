@@ -2,6 +2,7 @@ package org.treesitter;
 
 public class TsLookAheadIterator {
     private long ptr;
+    private TSLanguage lang;
     /**
      * Create a new lookahead iterator for the given language and parse state. <br>
      *
@@ -25,6 +26,7 @@ public class TsLookAheadIterator {
         if(this.ptr == 0){
             throw new TSException("State is invalid.");
         }
+        this.lang = language;
         CleanerRunner.register(this, new TsLookAheadIteratorCleanAction(ptr));
     }
 

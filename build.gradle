@@ -135,7 +135,7 @@ tasks.register("gen", GenTask) {
 }
 
 tasks.register("publishPortal") {
-    // Use this task after :publish to mask package to be visible in Portal
+    // Use this task after :publish to make package visible in Portal
     // Reference https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#ensuring-deployment-visibility-in-the-central-publisher-portal
     doLast {
         def url = "https://ossrh-staging-api.central.sonatype.com/22manual/upload/defaultRepository/io.github.bonede"
@@ -153,6 +153,6 @@ tasks.register("publishPortal") {
             System.err.println(msg)
             throw new GradleException(msg)
         }
-        println "Publish to Portal response code: ${resp.statusCode()} body:\n${resp.body()}"
+        println "Published to Portal with response body:\n${resp.body()}"
     }
 }

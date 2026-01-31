@@ -24,6 +24,9 @@ class DownloadSourceTask extends DefaultTask{
 
     @Input
     String getLibVersion(){
+        if(project.property("libVersion") != null){
+            return project.property("libVersion")
+        }
         return project.property("version")
     }
 

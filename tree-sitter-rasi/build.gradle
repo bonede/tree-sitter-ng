@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://github.com/Fymyte/tree-sitter-rasi/archive/refs/tags/v${version}.zip"
-}

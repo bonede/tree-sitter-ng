@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://codeload.github.com/flurie/tree-sitter-jq/zip/refs/heads/main"
-}

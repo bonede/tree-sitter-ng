@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://codeload.github.com/DerekStride/tree-sitter-sql/zip/refs/heads/gh-pages"
-}

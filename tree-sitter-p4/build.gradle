@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://codeload.github.com/ace-design/tree-sitter-p4/zip/refs/heads/main"
-}

@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://codeload.github.com/wasm-lsp/tree-sitter-wasm/zip/refs/heads/main"
-}

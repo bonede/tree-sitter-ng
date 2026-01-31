@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://gitlab.com/joncoole/tree-sitter-nginx/-/archive/main/tree-sitter-nginx-main.zip"
-}

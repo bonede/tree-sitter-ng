@@ -1,3 +1,0 @@
-tasks.named('downloadSource') {
-    url = "https://codeload.github.com/Flakebi/tree-sitter-tablegen/zip/refs/heads/master"
-}

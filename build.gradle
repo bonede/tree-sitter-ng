@@ -138,7 +138,7 @@ tasks.register("publishPortal") {
     // Use this task after :publish to make package visible in Portal
     // Reference https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#ensuring-deployment-visibility-in-the-central-publisher-portal
     doLast {
-        def url = "https://ossrh-staging-api.central.sonatype.com/22manual/upload/defaultRepository/io.github.bonede"
+        def url = "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/io.github.bonede"
         def token = Base64.encoder.encodeToString("$ossrhUsername:$ossrhPassword".getBytes())
         def client = HttpClient.newHttpClient()
         def req = HttpRequest.newBuilder()

@@ -155,6 +155,14 @@ abstract class Utils {
             }
         }
     }
+    
+    static String fetchUrl(URL url){
+        return url.openConnection().with { conn ->
+            conn.inputStream.withCloseable { input ->
+                return input.text
+            }
+        }
+    }
 
     static void downloadFile(String url, File dest){
         downloadFile(new URL(url), dest)

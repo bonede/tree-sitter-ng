@@ -275,4 +275,14 @@ public class CorpusTest {
             CorpusTest.runAllTestsInFolder(corpusFolder, language, langName);
         }
     }
+
+    public static void runAllTestsInDefaultFolderSecondaryLang(TSLanguage language, String langName, String secondaryLang) throws IOException {
+        try (FileInputStream input = new FileInputStream("gradle.properties")) {
+            Properties properties = new Properties();
+            properties.load(input);
+            String libVersion = (String) properties.get("version");
+            String corpusFolder = "build/tree-sitter-" + langName + "/tree-sitter-" + langName + "-" + libVersion + "/test/corpus";
+            CorpusTest.runAllTestsInFolder(corpusFolder, language, secondaryLang);
+        }
+    }
 }

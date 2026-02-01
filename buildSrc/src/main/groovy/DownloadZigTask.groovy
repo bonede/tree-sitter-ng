@@ -4,12 +4,9 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.gradle.nativeplatform.platform.Architecture
-import org.gradle.nativeplatform.platform.internal.ArchitectureInternal
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.gradle.nativeplatform.platform.internal.DefaultOperatingSystem
 import org.treesitter.build.Utils
@@ -98,8 +95,48 @@ class DownloadZigTask extends DefaultTask{
         "https://ziglang.org/download/$zigVersion/zig-$osName-$archName-${zigVersion}${archiveExt}"
     }
 
-    @Internal
-    String getZigSignatureUrl(){
+    static long testMirrorResponseTime(String mirrorUrl, int timeout = 1000){
+        try{
+            long startTime = System.currentTimeMillis()
+            HttpURLConnection conn = new URL(mirrorUrl).openConnection() as HttpURLConnection
+            conn.setRequestMethod("HEAD")
+            conn.setConnectTimeout(timeout)
+            conn.setReadTimeout(timeout)
+            conn.connect()
+            int responseCode = conn.responseCode
+            conn.disconnect()
+            long endTime = System.currentTimeMillis()
+            if(responseCode == 200){
+                return endTime - startTime
+            }
+            return Long.MAX_VALUE
+        }catch(Exception ignored){
+            return Long.MAX_VALUE
+        }
+    }
+
+    List<String> mirrorUrls(){
+        String mirrorUrl = "https://ziglang.org/download/community-mirrors.txt"
+        List<String> urls = Utils.fetchUrl(new URL(mirrorUrl))
+                .split("\n")
+                .findAll { it.trim() }
+        def timeout = 1000
+        logger.lifecycle("Testing {} mirrors response time with timeout {}ms...", urls.size(), timeout)
+        def urlsWithTime = urls.collectEntries { url ->
+            long responseTime = testMirrorResponseTime(url, timeout)
+            if(responseTime < Long.MAX_VALUE){
+                logger.lifecycle("{} response time: {} ms", url, responseTime)
+            } else {
+                logger.lifecycle("{} timeout", url)
+            }
+            [(url): responseTime]
+        }
+        return urlsWithTime.sort { it.value }
+                .keySet()
+                .toList()
+    }
+
+    static String zigSignatureUrl(String zigZipUrl){
         "${zigZipUrl}.minisig"
     }
 
@@ -108,10 +145,25 @@ class DownloadZigTask extends DefaultTask{
         project.rootProject.property("zigPubKey")
     }
 
+    void downloadZigFromMirrors(List<String> mirrorUrls, File zigZipDest, File zigSignatureFileDest){
+        for(String mirrorUrl : mirrorUrls){
+            try{
+                def zigZipUrl = new URL("$mirrorUrl/$zigZipFile.asFile.name")
+                logger.lifecycle("Downloading Zig from mirror: $zigZipUrl")
+                Utils.downloadFile(zigZipUrl, zigZipDest)
+                Utils.downloadFile(new URL(zigSignatureUrl(zigZipUrl.toString())), zigSignatureFileDest)
+                return
+            }catch(Exception e){
+                logger.error("Failed to download Zig from mirror: $zigZipUrl", e)
+            }
+        }
+        throw new GradleException("Failed to download Zig from any mirror")
+    }
+
     @TaskAction
     downloadZig(){
-        Utils.downloadFile(zigZipUrl, zigZipFile.asFile)
-        Utils.downloadFile(zigSignatureUrl, zigSignatureFile.asFile)
+        def mirrorUrls = mirrorUrls()
+        downloadZigFromMirrors(mirrorUrls, zigZipFile.asFile, zigSignatureFile.asFile)
         miniSignExe.asFile.setExecutable(true, true)
         def zipVerified = project.exec {
             ignoreExitValue = true

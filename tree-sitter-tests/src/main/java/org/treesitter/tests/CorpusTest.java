@@ -281,7 +281,7 @@ public class CorpusTest {
             Properties properties = new Properties();
             properties.load(input);
             String libVersion = (String) properties.get("version");
-            String corpusFolder = "build/tree-sitter-" + langName + "/tree-sitter-" + langName + "-" + libVersion + "/test/corpus";
+            String corpusFolder = "build/tree-sitter-" + secondaryLang + "/tree-sitter-" + langName + "-" + libVersion + "/test/corpus";
             CorpusTest.runAllTestsInFolder(corpusFolder, language, secondaryLang);
         }
     }

@@ -1,5 +1,5 @@
 [versions]
-download = "5.6.0"
+download = "5.7.0"
 junit = "5.11.4"
 nexus-staging-version = "0.30.0"
 

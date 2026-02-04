@@ -1,6 +1,6 @@
 [versions]
 download = "5.6.0"
-junit = "5.11.4"
+junit = "6.0.2"
 nexus-staging-version = "0.30.0"
 
 [libraries]

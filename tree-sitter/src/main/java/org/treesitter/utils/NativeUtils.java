@@ -1,5 +1,7 @@
 package org.treesitter.utils;
 
+import org.treesitter.TSParser;
+
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -97,6 +99,12 @@ public abstract class NativeUtils {
         return readInputStream(inputStream);
     }
 
+    public static File libFile(String libName){
+        String fullLibName = getFullLibName(libName);
+        Path filePath = getLibStorePath().resolve(fullLibName);
+        return filePath.toFile();
+    }
+
     /**
      * Load native lib from class path by name convention. <br>
      *
@@ -111,9 +119,7 @@ public abstract class NativeUtils {
      * @param libName Canonical name of the library. e.g. 'lib/foo', 'bar'
      */
     public static void loadLib(String libName){
-        String fullLibName = getFullLibName(libName);
-        Path filePath = getLibStorePath().resolve(fullLibName);
-        File file = filePath.toFile();
+        File file = libFile(libName);
         File parentDir = file.getParentFile();
         if (!parentDir.exists() && !parentDir.mkdirs()) {
             throw new RuntimeException("Failed to create directory: " + parentDir);

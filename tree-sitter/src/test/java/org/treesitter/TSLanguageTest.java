@@ -1,6 +1,7 @@
 package org.treesitter;
 
 import org.junit.jupiter.api.Test;
+import org.treesitter.utils.NativeUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -80,6 +81,13 @@ class TSLanguageTest {
     @Test
     void name(){
         assertNull(json.name());
+    }
+
+    @Test
+    void load(){
+        String langPath = NativeUtils.libFile("lib/" + "tree-sitter-json").toString();
+        TSLanguage lang = TSLanguage.load(langPath, "tree_sitter_json");
+        assertNull(lang.name());
     }
 
 }

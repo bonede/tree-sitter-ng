@@ -166,6 +166,9 @@ public class TSParser {
 
     protected static native TSNode ts_node_child_with_descendant(TSNode node, TSNode descendant);
     protected static native String ts_node_field_name_for_named_child(TSNode node, long namedChildIndex);
+    protected static native long ts_load_lang(String path, String lang);
+
+
 
 
     private final long ptr;

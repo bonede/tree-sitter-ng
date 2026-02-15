@@ -2014,3 +2014,40 @@ JNIEXPORT jboolean JNICALL Java_org_treesitter_TSParser_ts_1query_1cursor_1set_1
         ts_point_from_obj(env, start_point),
         ts_point_from_obj(env, end_point));
 }
+
+#ifdef _WIN32
+    #include <windows.h>
+    #define LOAD_LIBRARY(path) LoadLibraryA(path)
+    #define GET_SYMBOL(handle, name) GetProcAddress((HMODULE)(handle), name)
+    #define LIB_HANDLE HMODULE
+#else
+    #include <dlfcn.h>
+    #define LOAD_LIBRARY(path) dlopen(path, RTLD_LAZY | RTLD_LOCAL)
+    #define GET_SYMBOL(handle, name) dlsym(handle, name)
+    #define LIB_HANDLE void*
+#endif
+
+
+// Tree-sitter 的 language 函数签名
+typedef const TSLanguage * (*ts_language_fn)(void);
+/*
+ * Class:     org_treesitter_TSParser
+ * Method:    ts_load_lang
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)J
+ */
+JNIEXPORT jlong JNICALL Java_org_treesitter_TSParser_ts_1load_1lang
+  (JNIEnv *env, jclass clz, jstring path, jstring lang){
+
+    const char *lib_path = (*env)->GetStringUTFChars(env, path, NULL);
+    LIB_HANDLE handle = LOAD_LIBRARY(lib_path);
+    (*env)->ReleaseStringUTFChars(env, path, lib_path);
+    if (handle == NULL) return 0;
+
+    const char *symbol_name = (*env)->GetStringUTFChars(env, lang, NULL);
+    ts_language_fn lang_fn = (ts_language_fn) GET_SYMBOL(handle, symbol_name);
+    (*env)->ReleaseStringUTFChars(env, lang, symbol_name);
+    if(lang_fn == NULL) return 0;
+
+    const TSLanguage *ts_lang = lang_fn();
+    return (jlong) ts_lang;
+}

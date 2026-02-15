@@ -50,7 +50,7 @@ class BuildNativeTask extends DefaultTask{
 
     @Input
     String getLibVersion(){
-        return project.property("version")
+        return project.property("libVersion")
     }
 
     @InputDirectory

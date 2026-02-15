@@ -1,10 +1,20 @@
 package org.treesitter;
 
+import org.treesitter.utils.NativeUtils;
+
 public abstract class TSLanguage {
     private long ptr;
     protected TSLanguage(long ptr){
         this.ptr = ptr;
         CleanerRunner.register(this, new TSLanguageCleanAction(ptr));
+    }
+
+    public static TSLanguage load(String libFilePath, String lang){
+        long ptr = TSParser.ts_load_lang(libFilePath, lang);
+        if(ptr == 0){
+            throw new RuntimeException("Cannot find symbol for: " + lang + " in: " + libFilePath);
+        }
+        return new AnonymousLanguage(ptr);
     }
     protected long getPtr(){
         return this.ptr;

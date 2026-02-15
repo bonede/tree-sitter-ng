@@ -268,7 +268,7 @@ public class TSQueryCursor {
      *
      */
     public TSMatchIterator getMatches(){
-        return new TSMatchIterator(TSParser::ts_query_cursor_next_match);
+        return new TSMatchIterator(this, false);
     }
 
     /**
@@ -278,54 +278,48 @@ public class TSQueryCursor {
      *
      */
     public TSMatchIterator getCaptures(){
-        return new TSMatchIterator(TSParser::ts_query_cursor_next_capture);
+        return new TSMatchIterator(this, true);
     }
 
-    public class TSMatchIterator implements Iterator<TSQueryMatch>{
-        private TSQueryMatch tempMatch = null;
+    public static class TSMatchIterator implements Iterator<TSQueryMatch>{
         private TSQueryMatch lastMatch = null;
-        private BiFunction<Long, TSQueryMatch, Boolean> nextFunction;
-        public TSMatchIterator(BiFunction<Long, TSQueryMatch, Boolean> nextFunction) {
-            this.nextFunction = nextFunction;
-        }
-
-        private TSQueryMatch nextMatch(){
-            assertExecuted();
-            TSQueryMatch match = new TSQueryMatch();
-            boolean ret = nextFunction.apply(ptr, match);
-            if(ret){
-                addTsTreeRef(match);
-                return match;
-            }else{
-                return null;
-            }
+        private TSQueryMatch hasNextTempMatch = null;
+        private final TSQueryCursor cursor;
+        private final boolean isCapture;
+        public TSMatchIterator(TSQueryCursor cursor, boolean isCapture) {
+            this.cursor = cursor;
+            this.isCapture = isCapture;
         }
 
         @Override
         public boolean hasNext() {
-            TSQueryMatch match = nextMatch();
-            if(match != null){
-                tempMatch = match;
+            if(hasNextTempMatch != null){
                 return true;
-            }else{
-                return false;
             }
+            cursor.assertExecuted();
+            TSQueryMatch match = new TSQueryMatch();
+            boolean hasNext = isCapture ? cursor.nextCapture(match) : cursor.nextMatch(match);
+            if(hasNext){
+                hasNextTempMatch = match;
+            }
+            return hasNext;
         }
 
         @Override
         public TSQueryMatch next() {
-            if(tempMatch != null){
-                TSQueryMatch newMatch = tempMatch;
-                tempMatch = null;
-                return newMatch;
-            }else{
-                TSQueryMatch match = nextMatch();
-                if(match != null){
-                    lastMatch = match;
-                    return match;
-                }else{
-                    throw new NoSuchElementException();
-                }
+            if(hasNextTempMatch != null){
+                TSQueryMatch lastMatch = hasNextTempMatch;
+                hasNextTempMatch = null;
+                return lastMatch;
+            }
+            cursor.assertExecuted();
+            TSQueryMatch match = new TSQueryMatch();
+            boolean hasNext = isCapture ? cursor.nextCapture(match) : cursor.nextMatch(match);
+            if(hasNext){
+                lastMatch = match;
+                return match;
+            }else {
+                throw new NoSuchElementException();
             }
         }
 
@@ -334,7 +328,7 @@ public class TSQueryCursor {
             if(lastMatch == null){
                 throw new IllegalStateException();
             }
-            ts_query_cursor_remove_match(ptr, tempMatch.getId());
+            ts_query_cursor_remove_match(cursor.ptr, lastMatch.getId());
         }
     }
 

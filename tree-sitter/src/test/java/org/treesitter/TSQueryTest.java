@@ -20,7 +20,6 @@ class TSQueryTest {
         tree = parser.parseString(null, JSON_SRC);
         query = new TSQuery(json, "((document) @root (#eq? @root \"foo\"))");
     }
-
     @Test
     void newQuery(){
         assertThrows(TSQueryException.class, () -> new TSQuery(json, "invalid query"));

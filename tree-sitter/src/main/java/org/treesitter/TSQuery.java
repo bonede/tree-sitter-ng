@@ -2,11 +2,15 @@ package org.treesitter;
 
 import java.lang.ref.Cleaner.Cleanable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.treesitter.TSParser.*;
 
 public class TSQuery implements AutoCloseable {
     private final long ptr;
     private TSLanguage lang;
+    private List<List<TSQueryPredicate>> predicates;
     private final Cleanable cleanable;
     private boolean closed = false;
 
@@ -56,6 +60,7 @@ public class TSQuery implements AutoCloseable {
     public TSQuery(TSLanguage language, String query){
         this(ts_query_new(language.getPtr(), query));
         this.lang = language;
+        this.predicates = parsePredicates();
     }
 
     protected long getPtr() {
@@ -210,6 +215,121 @@ public class TSQuery implements AutoCloseable {
     }
 
     /**
+     * Get the predicates for the given pattern.
+     *
+     * @param patternIndex The index of the pattern.
+     * @return The list of predicates for the pattern.
+     * @throws IndexOutOfBoundsException if the pattern index is out of bounds.
+     */
+    public List<TSQueryPredicate> getPredicatesForPattern(int patternIndex) {
+        if (patternIndex < 0 || patternIndex >= predicates.size()) {
+            throw new IndexOutOfBoundsException("Pattern index " + patternIndex + " is out of bounds");
+        }
+        return predicates.get(patternIndex);
+    }
+
+    private List<List<TSQueryPredicate>> parsePredicates() {
+        int patternCount = getPatternCount();
+        List<List<TSQueryPredicate>> result = new ArrayList<>(patternCount);
+        for (int i = 0; i < patternCount; i++) {
+            TSQueryPredicateStep[] steps = getPredicateForPattern(i);
+            List<TSQueryPredicate> patternPredicates = new ArrayList<>();
+            if (steps == null) {
+                result.add(patternPredicates);
+                continue;
+            }
+            int stepIndex = 0;
+            while (stepIndex < steps.length) {
+                // Find the number of arguments until Done sentinel
+                int nargs = 0;
+                while (stepIndex + nargs < steps.length &&
+                        steps[stepIndex + nargs].getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeDone) {
+                    nargs++;
+                }
+
+                if (nargs > 0) {
+                    TSQueryPredicateStep firstStep = steps[stepIndex];
+                    if (firstStep.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeString) {
+                        throw new TSQueryException("Predicate must begin with a string");
+                    }
+                    String name = getStringValueForId(firstStep.getValueId());
+
+                    if (TSQueryPredicate.TSQueryPredicateEq.NAMES.contains(name)) {
+                        patternPredicates.add(handleEq(name, steps, stepIndex, nargs));
+                    } else if (TSQueryPredicate.TSQueryPredicateMatch.NAMES.contains(name)) {
+                        patternPredicates.add(handleMatch(name, steps, stepIndex, nargs));
+                    } else if (TSQueryPredicate.TSQueryPredicateAnyOf.NAMES.contains(name)) {
+                        patternPredicates.add(handleAnyOf(name, steps, stepIndex, nargs));
+                    } else {
+                        patternPredicates.add(new TSQueryPredicate.TSQueryPredicateGeneric(name));
+                    }
+                }
+                stepIndex += nargs + 1; // Move past arguments and the Done sentinel
+            }
+            result.add(patternPredicates);
+        }
+        return result;
+    }
+
+    private TSQueryPredicate handleEq(String name, TSQueryPredicateStep[] steps, int start, int nargs) {
+        if (nargs != 3) {
+            throw new TSQueryException(String.format("Predicate #%s expects 2 arguments, got %d", name, nargs - 1));
+        }
+        TSQueryPredicateStep arg1 = steps[start + 1];
+        if (arg1.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeCapture) {
+            throw new TSQueryException(String.format("First argument to #%s must be a capture name", name));
+        }
+        String capture = getCaptureNameForId(arg1.getValueId());
+
+        TSQueryPredicateStep arg2 = steps[start + 2];
+        boolean isCapture = arg2.getType() == TSQueryPredicateStepType.TSQueryPredicateStepTypeCapture;
+        String value = isCapture ? getCaptureNameForId(arg2.getValueId()) : getStringValueForId(arg2.getValueId());
+
+        return new TSQueryPredicate.TSQueryPredicateEq(name, capture, value, isCapture, this);
+    }
+
+    private TSQueryPredicate handleMatch(String name, TSQueryPredicateStep[] steps, int start, int nargs) {
+        if (nargs != 3) {
+            throw new TSQueryException(String.format("Predicate #%s expects 2 arguments, got %d", name, nargs - 1));
+        }
+        TSQueryPredicateStep arg1 = steps[start + 1];
+        if (arg1.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeCapture) {
+            throw new TSQueryException(String.format("First argument to #%s must be a capture name", name));
+        }
+        String capture = getCaptureNameForId(arg1.getValueId());
+
+        TSQueryPredicateStep arg2 = steps[start + 2];
+        if (arg2.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeString) {
+            throw new TSQueryException(String.format("Second argument to #%s must be a string literal", name));
+        }
+        String pattern = getStringValueForId(arg2.getValueId());
+
+        return new TSQueryPredicate.TSQueryPredicateMatch(name, capture, pattern, this);
+    }
+
+    private TSQueryPredicate handleAnyOf(String name, TSQueryPredicateStep[] steps, int start, int nargs) {
+        if (nargs < 3) {
+            throw new TSQueryException(String.format("Predicate #%s expects at least 2 arguments, got %d", name, nargs - 1));
+        }
+        TSQueryPredicateStep arg1 = steps[start + 1];
+        if (arg1.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeCapture) {
+            throw new TSQueryException(String.format("First argument to #%s must be a capture name", name));
+        }
+        String capture = getCaptureNameForId(arg1.getValueId());
+
+        List<String> values = new ArrayList<>(nargs - 2);
+        for (int i = 2; i < nargs; i++) {
+            TSQueryPredicateStep arg = steps[start + i];
+            if (arg.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeString) {
+                throw new TSQueryException(String.format("Arguments to #%s must be string literals", name));
+            }
+            values.add(getStringValueForId(arg.getValueId()));
+        }
+
+        return new TSQueryPredicate.TSQueryPredicateAnyOf(name, capture, values, this);
+    }
+
+    /**
      * Get the quantifier of the query's captures. Each capture is * associated
      * with a numeric id based on the order that it appeared in the query's source.
      *
@@ -235,7 +355,12 @@ public class TSQuery implements AutoCloseable {
      * Get TSQueryPredicateStepTypeString by id. See {@link #getPredicateForPattern(int)}
      * @param id the <code>valueId</code> got from {@link #getPredicateForPattern(int)}.
      * @return the literal string value.
-     * @throws TSQueryException if the id is invalid.
+     * @throws TSException if the id is invalid.
+     */
+    /**
+     * Get the string value for the given id.
+     * @param id the string id.
+     * @return the string value.
      */
     public String getStringValueForId(int id) {
         ensureOpen();

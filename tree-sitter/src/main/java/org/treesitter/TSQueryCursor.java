@@ -1,9 +1,10 @@
 package org.treesitter;
 
 import java.lang.ref.Cleaner.Cleanable;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.function.BiFunction;
+import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
 
 import static org.treesitter.TSParser.*;
 import static org.treesitter.TSParser.ts_query_cursor_next_match;
@@ -24,6 +25,7 @@ public class TSQueryCursor implements AutoCloseable {
 
     private TSNode node;
     private TSQuery query;
+    private CharSequence sourceText;
 
     private static class TSQueryCursorCleanAction implements Runnable {
         private final long ptr;
@@ -87,10 +89,22 @@ public class TSQueryCursor implements AutoCloseable {
      * @param node The node to run the query on.
      */
     public void exec(TSQuery query, TSNode node){
+        exec(query, node, null);
+    }
+
+    /**
+     * Start running a given query on a given node with source text for predicate filtering.
+     *
+     * @param query The query to run.
+     * @param node The node to run the query on.
+     * @param sourceText The source text used to resolve predicates like #eq?
+     */
+    public void exec(TSQuery query, TSNode node, CharSequence sourceText){
         ensureOpen();
         executed = true;
         this.node = node;
         this.query = query;
+        this.sourceText = sourceText;
         ts_query_cursor_exec(ptr, query.getPtr(), node);
     }
 
@@ -103,10 +117,24 @@ public class TSQueryCursor implements AutoCloseable {
      * @param progress The progress callback.
      */
     public void execWithOptions(TSQuery query, TSNode node, TSQueryProgress progress){
+        execWithOptions(query, node, null, progress);
+    }
+
+    /**
+     * Start running a given query on a given node, with some options and source text.
+     *
+     * @see #exec(TSQuery, TSNode, CharSequence)
+     * @param query The query to run.
+     * @param node The node to run the query on.
+     * @param sourceText The source text for predicates.
+     * @param progress The progress callback.
+     */
+    public void execWithOptions(TSQuery query, TSNode node, CharSequence sourceText, TSQueryProgress progress){
         ensureOpen();
         executed = true;
         this.node = node;
         this.query = query;
+        this.sourceText = sourceText;
         ts_query_cursor_exec_with_options(ptr, query.getPtr(), node, progress, progressPayloadPtr);
     }
 
@@ -238,9 +266,13 @@ public class TSQueryCursor implements AutoCloseable {
     public boolean nextMatch(TSQueryMatch match){
         ensureOpen();
         assertExecuted();
-        boolean ret = ts_query_cursor_next_match(ptr, match);
-        addTsTreeRef(match);
-        return ret;
+        while (ts_query_cursor_next_match(ptr, match)) {
+            addTsTreeRef(match);
+            if (satisfiesPredicates(match)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -267,9 +299,53 @@ public class TSQueryCursor implements AutoCloseable {
     public boolean nextCapture(TSQueryMatch match){
         ensureOpen();
         assertExecuted();
-        boolean ret = ts_query_cursor_next_capture(ptr, match);
-        addTsTreeRef(match);
-        return ret;
+        while (ts_query_cursor_next_capture(ptr, match)) {
+            addTsTreeRef(match);
+            if (satisfiesPredicates(match)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean satisfiesPredicates(TSQueryMatch match) {
+        if (query == null) return true;
+        List<TSQueryPredicate> patternPredicates = query.getPredicatesForPattern(match.getPatternIndex());
+        if (patternPredicates == null || patternPredicates.isEmpty()) {
+            return true;
+        }
+        if (sourceText == null) {
+            // If predicates exist but no source text is provided, we default to passing
+            // to maintain backward compatibility, but ideally users should provide text.
+            return true;
+        }
+
+        final int len = sourceText.length();
+        return patternPredicates.stream().allMatch(predicate ->
+            predicate.test(match, n -> {
+                if (n == null || n.isNull()) return "";
+                int start = n.getStartByte();
+                int end = n.getEndByte();
+
+                // IMPORTANT: Tree-sitter byte offsets do NOT map 1-to-1 with Java 'char' indices
+                // for multi-byte characters (UTF-16).
+                //
+                // Tree-sitter works with byte offsets (usually UTF-8), while Java CharSequence
+                // uses char indices (UTF-16). For non-ASCII characters, these indices will diverge.
+                //
+                // The current implementation assumes that byte offsets can be used directly as
+                // char indices, which is ONLY safe for ASCII text.
+                //
+                // TODO: To support multi-byte characters correctly, we must implement a mapping
+                // between byte offsets and character indices based on the encoding.
+                int charStart = Math.max(0, Math.min(len, start));
+                int charEnd = Math.max(0, Math.min(len, end));
+                if (charStart >= charEnd) {
+                    return "";
+                }
+                return sourceText.subSequence(charStart, charEnd).toString();
+            })
+        );
     }
 
     private void addTsTreeRef(TSQueryMatch match){

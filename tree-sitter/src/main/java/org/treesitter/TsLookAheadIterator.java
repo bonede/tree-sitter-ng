@@ -1,8 +1,9 @@
 package org.treesitter;
 
-public class TsLookAheadIterator {
+public class TsLookAheadIterator implements AutoCloseable {
     private long ptr;
     private TSLanguage lang;
+    private final java.lang.ref.Cleaner.Cleanable cleanable;
     /**
      * Create a new lookahead iterator for the given language and parse state. <br>
      *
@@ -27,7 +28,12 @@ public class TsLookAheadIterator {
             throw new TSException("State is invalid.");
         }
         this.lang = language;
-        CleanerRunner.register(this, new TsLookAheadIteratorCleanAction(ptr));
+        this.cleanable = CleanerRunner.register(this, new TsLookAheadIteratorCleanAction(ptr));
+    }
+
+    @Override
+    public void close() {
+        cleanable.clean();
     }
 
     /**

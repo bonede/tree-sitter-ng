@@ -1,11 +1,13 @@
 package org.treesitter;
 
+import java.lang.ref.Cleaner.Cleanable;
+
 import static org.treesitter.TSParser.*;
 
 public class TSTreeCursor implements AutoCloseable {
     private final long ptr;
     private TSNode node;
-    private final java.lang.ref.Cleaner.Cleanable cleanable;
+    private final Cleanable cleanable;
 
     private static class TSTreeCursorCleanAction implements Runnable {
         private final long ptr;

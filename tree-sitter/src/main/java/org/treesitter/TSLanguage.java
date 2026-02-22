@@ -2,9 +2,11 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
+import java.lang.ref.Cleaner.Cleanable;
+
 public abstract class TSLanguage implements AutoCloseable {
     private long ptr;
-    private final java.lang.ref.Cleaner.Cleanable cleanable;
+    private final Cleanable cleanable;
 
     protected TSLanguage(long ptr){
         this.ptr = ptr;

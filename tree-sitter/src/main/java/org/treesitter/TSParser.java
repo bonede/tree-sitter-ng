@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.ref.Cleaner.Cleanable;
 
 public class TSParser implements AutoCloseable {
     /**
@@ -172,7 +173,7 @@ public class TSParser implements AutoCloseable {
 
 
     private final long ptr;
-    private final java.lang.ref.Cleaner.Cleanable cleanable;
+    private final Cleanable cleanable;
 
     private static class TSParserCleanAction implements Runnable{
         private final long ptr;

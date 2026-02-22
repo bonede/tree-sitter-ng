@@ -3,6 +3,7 @@ package org.treesitter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.ref.Cleaner.Cleanable;
 
 import static org.treesitter.TSParser.*;
 
@@ -10,7 +11,7 @@ public class TSTree implements AutoCloseable {
 
     private final long ptr;
     private TSLanguage language;
-    private final java.lang.ref.Cleaner.Cleanable cleanable;
+    private final Cleanable cleanable;
 
     private static class TSTreeCleanAction implements Runnable {
         private final long ptr;

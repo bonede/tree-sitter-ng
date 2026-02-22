@@ -1,5 +1,6 @@
 package org.treesitter;
 
+import java.lang.ref.Cleaner.Cleanable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.BiFunction;
@@ -11,7 +12,7 @@ public class TSQueryCursor implements AutoCloseable {
 
     private final long ptr;
     private final long progressPayloadPtr;
-    private final java.lang.ref.Cleaner.Cleanable cleanable;
+    private final Cleanable cleanable;
     private boolean executed = false;
 
     private TSNode node;

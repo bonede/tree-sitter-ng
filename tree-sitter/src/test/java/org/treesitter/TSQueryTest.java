@@ -64,8 +64,8 @@ class TSQueryTest {
     }
 
     @Test
-    void isPatterNonLocal() {
-        assertFalse(query.isPatterNonLocal(0));
+    void isPatternNonLocal() {
+        assertFalse(query.isPatternNonLocal(0));
     }
 
     @Test

@@ -177,7 +177,7 @@ public class TSQuery implements AutoCloseable {
      *
      * @return True if the pattern is non-local, false otherwise.
      */
-    public boolean isPatterNonLocal(int patternIndex) {
+    public boolean isPatternNonLocal(int patternIndex) {
         ensureOpen();
         return ts_query_is_pattern_non_local(ptr, patternIndex);
     }
@@ -277,15 +277,16 @@ public class TSQuery implements AutoCloseable {
         }
         TSQueryPredicateStep arg1 = steps[start + 1];
         if (arg1.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeCapture) {
-            throw new TSQueryException(String.format("First argument to #%s must be a capture name", name));
+            throw new TSQueryException(String.format("First argument to #%s must be a capture", name));
         }
-        String capture = getCaptureNameForId(arg1.getValueId());
+        int captureId = arg1.getValueId();
 
         TSQueryPredicateStep arg2 = steps[start + 2];
         boolean isCapture = arg2.getType() == TSQueryPredicateStepType.TSQueryPredicateStepTypeCapture;
-        String value = isCapture ? getCaptureNameForId(arg2.getValueId()) : getStringValueForId(arg2.getValueId());
+        String literalValue = isCapture ? null : getStringValueForId(arg2.getValueId());
+        int valueId = isCapture ? arg2.getValueId() : -1;
 
-        return new TSQueryPredicate.TSQueryPredicateEq(name, capture, value, isCapture, this);
+        return new TSQueryPredicate.TSQueryPredicateEq(name, captureId, literalValue, valueId, isCapture);
     }
 
     private TSQueryPredicate handleMatch(String name, TSQueryPredicateStep[] steps, int start, int nargs) {
@@ -294,9 +295,9 @@ public class TSQuery implements AutoCloseable {
         }
         TSQueryPredicateStep arg1 = steps[start + 1];
         if (arg1.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeCapture) {
-            throw new TSQueryException(String.format("First argument to #%s must be a capture name", name));
+            throw new TSQueryException(String.format("First argument to #%s must be a capture", name));
         }
-        String capture = getCaptureNameForId(arg1.getValueId());
+        int captureId = arg1.getValueId();
 
         TSQueryPredicateStep arg2 = steps[start + 2];
         if (arg2.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeString) {
@@ -304,7 +305,7 @@ public class TSQuery implements AutoCloseable {
         }
         String pattern = getStringValueForId(arg2.getValueId());
 
-        return new TSQueryPredicate.TSQueryPredicateMatch(name, capture, pattern, this);
+        return new TSQueryPredicate.TSQueryPredicateMatch(name, captureId, pattern);
     }
 
     private TSQueryPredicate handleAnyOf(String name, TSQueryPredicateStep[] steps, int start, int nargs) {
@@ -313,9 +314,9 @@ public class TSQuery implements AutoCloseable {
         }
         TSQueryPredicateStep arg1 = steps[start + 1];
         if (arg1.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeCapture) {
-            throw new TSQueryException(String.format("First argument to #%s must be a capture name", name));
+            throw new TSQueryException(String.format("First argument to #%s must be a capture", name));
         }
-        String capture = getCaptureNameForId(arg1.getValueId());
+        int captureId = arg1.getValueId();
 
         List<String> values = new ArrayList<>(nargs - 2);
         for (int i = 2; i < nargs; i++) {
@@ -326,7 +327,7 @@ public class TSQuery implements AutoCloseable {
             values.add(getStringValueForId(arg.getValueId()));
         }
 
-        return new TSQueryPredicate.TSQueryPredicateAnyOf(name, capture, values, this);
+        return new TSQueryPredicate.TSQueryPredicateAnyOf(name, captureId, values);
     }
 
     /**

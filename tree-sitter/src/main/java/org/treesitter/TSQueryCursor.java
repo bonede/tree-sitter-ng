@@ -326,11 +326,10 @@ public class TSQueryCursor implements AutoCloseable {
         if (patternPredicates == null || patternPredicates.isEmpty()) {
             return true;
         }
-        if (sourceBytes == null) return true;
 
         return patternPredicates.stream().allMatch(predicate ->
             predicate.test(match, n -> {
-                if (n == null || n.isNull()) return "";
+                if (n == null || n.isNull() || sourceBytes == null) return "";
                 int start = n.getStartByte();
                 int end = n.getEndByte();
                 if (start < 0 || start > end || start >= sourceBytes.length) {

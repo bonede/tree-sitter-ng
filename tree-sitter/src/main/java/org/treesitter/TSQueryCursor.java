@@ -94,10 +94,14 @@ public class TSQueryCursor implements AutoCloseable {
 
     /**
      * Start running a given query on a given node with source text for predicate filtering.
+     * <p>
+     * Note: The {@code sourceText} is encoded as <b>UTF-8</b> to align with Tree-sitter's
+     * default byte offsets. If the tree was parsed with a different encoding (e.g. UTF-16),
+     * predicate results may be incorrect.
      *
      * @param query The query to run.
      * @param node The node to run the query on.
-     * @param sourceText The source text used to resolve predicates like #eq?
+     * @param sourceText The source text used to resolve predicates like {@code #eq?}.
      */
     public void exec(TSQuery query, TSNode node, CharSequence sourceText){
         ensureOpen();
@@ -123,6 +127,10 @@ public class TSQueryCursor implements AutoCloseable {
 
     /**
      * Start running a given query on a given node, with some options and source text.
+     * <p>
+     * Note: The {@code sourceText} is encoded as <b>UTF-8</b> to align with Tree-sitter's
+     * default byte offsets. If the tree was parsed with a different encoding (e.g. UTF-16),
+     * predicate results may be incorrect.
      *
      * @see #exec(TSQuery, TSNode, CharSequence)
      * @param query The query to run.

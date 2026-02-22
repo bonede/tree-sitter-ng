@@ -174,6 +174,13 @@ public class TSParser implements AutoCloseable {
 
     private final long ptr;
     private final Cleanable cleanable;
+    private boolean closed = false;
+
+    private void ensureOpen() {
+        if (closed) {
+            throw new IllegalStateException("Parser is closed");
+        }
+    }
 
     private static class TSParserCleanAction implements Runnable{
         private final long ptr;
@@ -201,6 +208,7 @@ public class TSParser implements AutoCloseable {
 
     @Override
     public void close() {
+        closed = true;
         cleanable.clean();
     }
     /**
@@ -218,6 +226,7 @@ public class TSParser implements AutoCloseable {
      *
      */
     public void setLogger(TSLogger logger) {
+        ensureOpen();
         this.logger = logger;
         ts_parser_set_logger(ptr, logger);
     }
@@ -237,6 +246,7 @@ public class TSParser implements AutoCloseable {
      * @return True if the language was successfully applied. False otherwise.
      */
     public boolean setLanguage(TSLanguage language) {
+        ensureOpen();
         boolean ret = ts_parser_set_language(ptr, language.getPtr());
         if(ret){
             this.language = language;
@@ -255,6 +265,7 @@ public class TSParser implements AutoCloseable {
      * @return {@link TSTree}
      */
     public TSTree parseString(TSTree oldTree, String input) {
+        ensureOpen();
         long oldTreePtr = oldTree == null ? 0 : oldTree.getPtr();
         long treePtr = ts_parser_parse_string(ptr, oldTreePtr, input);
         return new TSTree(treePtr, language);
@@ -273,6 +284,7 @@ public class TSParser implements AutoCloseable {
      * @return {@link TSTree}
      */
     public TSTree parseStringEncoding(TSTree oldTree, String input, TSInputEncoding encoding){
+        ensureOpen();
         long oldTreePtr = oldTree == null ? 0 : oldTree.getPtr();
         long treePtr = ts_parser_parse_string_encoding(ptr, oldTreePtr, input, encoding.ordinal());
         return new TSTree(treePtr, language);
@@ -337,6 +349,7 @@ public class TSParser implements AutoCloseable {
      * @return {@link TSTree} if success, <code>null</code> otherwise.
      */
     public TSTree parse(byte[] buf, TSTree oldTree, TSReader reader, TSInputEncoding encoding){
+        ensureOpen();
         long oldTreePtr = oldTree == null ? 0 : oldTree.getPtr();
         long treePtr = ts_parser_parse(ptr, buf, oldTreePtr, reader, encoding.ordinal());
         if(treePtr == 0){
@@ -357,6 +370,7 @@ public class TSParser implements AutoCloseable {
      * @return {@link TSTree} if success, <code>null</code> otherwise.
      */
     public TSTree parseWithOptions(byte[] buf, TSTree oldTree, TSReader reader, TSInputEncoding encoding, TSParserProgress progress){
+        ensureOpen();
         long oldTreePtr = oldTree == null ? 0 : oldTree.getPtr();
         long treePtr = ts_parser_parse_with_options(ptr, oldTreePtr, buf, reader, encoding.ordinal(), progress);
         if(treePtr == 0){
@@ -398,6 +412,7 @@ public class TSParser implements AutoCloseable {
      * @return <code>true</code> on success, <code>false</code> otherwise.
      */
     public boolean setIncludedRanges(TSRange[] ranges) {
+        ensureOpen();
         return ts_parser_set_included_ranges(ptr, ranges);
     }
 
@@ -408,6 +423,7 @@ public class TSParser implements AutoCloseable {
      *
      */
     public TSRange[] getIncludedRanges() {
+        ensureOpen();
         return ts_parser_included_ranges(ptr);
     }
 
@@ -421,6 +437,7 @@ public class TSParser implements AutoCloseable {
      * call {@link #reset()} first.
      */
     public void reset(){
+        ensureOpen();
         ts_parser_reset(ptr);
     }
 
@@ -436,6 +453,7 @@ public class TSParser implements AutoCloseable {
      * @throws IOException if the file cannot be written to.
      */
     public void printDotGraphs(File file) throws IOException {
+        ensureOpen();
         if(file == null) {
             ts_parser_print_dot_graphs(ptr, null);
             return;

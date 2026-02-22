@@ -9,6 +9,13 @@ public abstract class TSLanguage {
         CleanerRunner.register(this, new TSLanguageCleanAction(ptr));
     }
 
+    /**
+     * Load Tree Sitter native language library from disk and initialize it.
+     *
+     * @param libFilePath Path to language library, e.g. lib/tree-sitter-json.so.
+     * @param lang Name of the language. e.g. tree-sitter-json.
+     * @return
+     */
     public static TSLanguage load(String libFilePath, String lang){
         long ptr = TSParser.ts_load_lang(libFilePath, lang);
         if(ptr == 0){

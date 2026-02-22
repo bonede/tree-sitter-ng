@@ -335,18 +335,7 @@ public class TSQueryCursor implements AutoCloseable {
             return true;
         }
 
-        return patternPredicates.stream().allMatch(predicate ->
-            predicate.test(match, n -> {
-                if (n == null || n.isNull() || sourceBytes == null) return "";
-                int start = n.getStartByte();
-                int end = n.getEndByte();
-                if (start < 0 || start > end || start >= sourceBytes.length) {
-                    return "";
-                }
-                int length = Math.min(end, sourceBytes.length) - start;
-                return new String(sourceBytes, start, length, java.nio.charset.StandardCharsets.UTF_8);
-            })
-        );
+        return patternPredicates.stream().allMatch(predicate -> predicate.test(match, sourceBytes));
     }
 
     private void assertExecuted(){

@@ -7,10 +7,11 @@ import java.util.function.BiFunction;
 import static org.treesitter.TSParser.*;
 import static org.treesitter.TSParser.ts_query_cursor_next_match;
 
-public class TSQueryCursor {
+public class TSQueryCursor implements AutoCloseable {
 
     private final long ptr;
     private final long progressPayloadPtr;
+    private final java.lang.ref.Cleaner.Cleanable cleanable;
     private boolean executed = false;
 
     private TSNode node;
@@ -35,7 +36,12 @@ public class TSQueryCursor {
     private TSQueryCursor(long ptr, long progressPayloadPtr) {
         this.ptr = ptr;
         this.progressPayloadPtr = progressPayloadPtr;
-        CleanerRunner.register(this, new TSQueryCursorCleanAction(ptr, progressPayloadPtr));
+        this.cleanable = CleanerRunner.register(this, new TSQueryCursorCleanAction(ptr, progressPayloadPtr));
+    }
+
+    @Override
+    public void close() {
+        cleanable.clean();
     }
 
     /**

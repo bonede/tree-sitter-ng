@@ -2,9 +2,10 @@ package org.treesitter;
 
 import static org.treesitter.TSParser.*;
 
-public class TSQuery {
+public class TSQuery implements AutoCloseable {
     private final long ptr;
     private TSLanguage lang;
+    private final java.lang.ref.Cleaner.Cleanable cleanable;
 
     private static class TSQueryCleanRunner implements Runnable {
         private final long ptr;
@@ -21,7 +22,12 @@ public class TSQuery {
 
     private TSQuery(long ptr) {
         this.ptr = ptr;
-        CleanerRunner.register(this, new TSQueryCleanRunner(ptr));
+        this.cleanable = CleanerRunner.register(this, new TSQueryCleanRunner(ptr));
+    }
+
+    @Override
+    public void close() {
+        cleanable.clean();
     }
 
     /**

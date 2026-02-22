@@ -36,9 +36,13 @@ public abstract class TSQueryPredicate {
         TSQueryCapture[] captures = match.getCaptures();
         if (captures == null) return Collections.emptyList();
         List<TSNode> nodes = new ArrayList<>();
-        for (TSQueryCapture capture : captures) {
-            if (captureName.equals(query.getCaptureNameForId(capture.getIndex()))) {
-                nodes.add(capture.getNode());
+        for (int i = 0; i < captures.length; i++) {
+            TSQueryCapture capture = captures[i];
+            int captureId = capture.getIndex();
+            if (captureId >= 0) {
+                if (captureName.equals(query.getCaptureNameForId(captureId))) {
+                    nodes.add(capture.getNode());
+                }
             }
         }
         return nodes;

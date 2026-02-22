@@ -25,7 +25,7 @@ public class TSQueryCursor implements AutoCloseable {
 
     private TSNode node;
     private TSQuery query;
-    private CharSequence sourceText;
+    private byte[] sourceBytes;
 
     private static class TSQueryCursorCleanAction implements Runnable {
         private final long ptr;
@@ -104,7 +104,8 @@ public class TSQueryCursor implements AutoCloseable {
         executed = true;
         this.node = node;
         this.query = query;
-        this.sourceText = sourceText;
+        this.sourceBytes = sourceText == null ? null :
+                sourceText.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
         ts_query_cursor_exec(ptr, query.getPtr(), node);
     }
 
@@ -134,7 +135,8 @@ public class TSQueryCursor implements AutoCloseable {
         executed = true;
         this.node = node;
         this.query = query;
-        this.sourceText = sourceText;
+        this.sourceBytes = sourceText == null ? null :
+                sourceText.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
         ts_query_cursor_exec_with_options(ptr, query.getPtr(), node, progress, progressPayloadPtr);
     }
 
@@ -308,46 +310,6 @@ public class TSQueryCursor implements AutoCloseable {
         return false;
     }
 
-    private boolean satisfiesPredicates(TSQueryMatch match) {
-        if (query == null) return true;
-        List<TSQueryPredicate> patternPredicates = query.getPredicatesForPattern(match.getPatternIndex());
-        if (patternPredicates == null || patternPredicates.isEmpty()) {
-            return true;
-        }
-        if (sourceText == null) {
-            // If predicates exist but no source text is provided, we default to passing
-            // to maintain backward compatibility, but ideally users should provide text.
-            return true;
-        }
-
-        final int len = sourceText.length();
-        return patternPredicates.stream().allMatch(predicate ->
-            predicate.test(match, n -> {
-                if (n == null || n.isNull()) return "";
-                int start = n.getStartByte();
-                int end = n.getEndByte();
-
-                // IMPORTANT: Tree-sitter byte offsets do NOT map 1-to-1 with Java 'char' indices
-                // for multi-byte characters (UTF-16).
-                //
-                // Tree-sitter works with byte offsets (usually UTF-8), while Java CharSequence
-                // uses char indices (UTF-16). For non-ASCII characters, these indices will diverge.
-                //
-                // The current implementation assumes that byte offsets can be used directly as
-                // char indices, which is ONLY safe for ASCII text.
-                //
-                // TODO: To support multi-byte characters correctly, we must implement a mapping
-                // between byte offsets and character indices based on the encoding.
-                int charStart = Math.max(0, Math.min(len, start));
-                int charEnd = Math.max(0, Math.min(len, end));
-                if (charStart >= charEnd) {
-                    return "";
-                }
-                return sourceText.subSequence(charStart, charEnd).toString();
-            })
-        );
-    }
-
     private void addTsTreeRef(TSQueryMatch match){
         if(match.getCaptures() != null){
             for (TSQueryCapture capture : match.getCaptures()) {
@@ -356,6 +318,28 @@ public class TSQueryCursor implements AutoCloseable {
                 }
             }
         }
+    }
+
+    private boolean satisfiesPredicates(TSQueryMatch match) {
+        if (query == null) return true;
+        List<TSQueryPredicate> patternPredicates = query.getPredicatesForPattern(match.getPatternIndex());
+        if (patternPredicates == null || patternPredicates.isEmpty()) {
+            return true;
+        }
+        if (sourceBytes == null) return true;
+
+        return patternPredicates.stream().allMatch(predicate ->
+            predicate.test(match, n -> {
+                if (n == null || n.isNull()) return "";
+                int start = n.getStartByte();
+                int end = n.getEndByte();
+                if (start < 0 || start > end || start >= sourceBytes.length) {
+                    return "";
+                }
+                int length = Math.min(end, sourceBytes.length) - start;
+                return new String(sourceBytes, start, length, java.nio.charset.StandardCharsets.UTF_8);
+            })
+        );
     }
 
     private void assertExecuted(){

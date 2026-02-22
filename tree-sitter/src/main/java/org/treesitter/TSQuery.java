@@ -282,11 +282,11 @@ public class TSQuery implements AutoCloseable {
         int captureId = arg1.getValueId();
 
         TSQueryPredicateStep arg2 = steps[start + 2];
+        int arg2ValueId = arg2.getValueId();
         boolean isCapture = arg2.getType() == TSQueryPredicateStepType.TSQueryPredicateStepTypeCapture;
-        String literalValue = isCapture ? null : getStringValueForId(arg2.getValueId());
-        int valueId = isCapture ? arg2.getValueId() : -1;
+        String literalValue = isCapture ? null : getStringValueForId(arg2ValueId);
 
-        return new TSQueryPredicate.TSQueryPredicateEq(name, captureId, literalValue, valueId, isCapture);
+        return new TSQueryPredicate.TSQueryPredicateEq(name, captureId, literalValue, arg2ValueId, isCapture);
     }
 
     private TSQueryPredicate handleMatch(String name, TSQueryPredicateStep[] steps, int start, int nargs) {
@@ -303,9 +303,9 @@ public class TSQuery implements AutoCloseable {
         if (arg2.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeString) {
             throw new TSQueryException(String.format("Second argument to #%s must be a string literal", name));
         }
-        String pattern = getStringValueForId(arg2.getValueId());
+        String patternStr = getStringValueForId(arg2.getValueId());
 
-        return new TSQueryPredicate.TSQueryPredicateMatch(name, captureId, pattern);
+        return new TSQueryPredicate.TSQueryPredicateMatch(name, captureId, patternStr);
     }
 
     private TSQueryPredicate handleAnyOf(String name, TSQueryPredicateStep[] steps, int start, int nargs) {

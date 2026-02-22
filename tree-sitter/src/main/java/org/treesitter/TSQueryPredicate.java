@@ -37,10 +37,12 @@ public abstract class TSQueryPredicate {
         if (captures == null) return Collections.emptyList();
         List<TSNode> nodes = new ArrayList<>();
         for (TSQueryCapture capture : captures) {
+            // In tree-sitter, the capture index is the ID within the query.
             if (capture.getIndex() == captureId) {
                 nodes.add(capture.getNode());
             }
         }
+        nodes.removeIf(Objects::isNull);
         return nodes;
     }
 
@@ -73,14 +75,16 @@ public abstract class TSQueryPredicate {
         }
 
         private boolean testCapture(TSQueryMatch match, Function<TSNode, String> textProvider) {
-            java.util.stream.Stream<TSNode> nodes1 = findNodes(match, captureId).stream();
+            List<TSNode> nodes1 = findNodes(match, captureId);
             List<TSNode> nodes2 = findNodes(match, valueId);
+            if (nodes1.isEmpty() || nodes2.isEmpty()) return !isPositive;
+
             java.util.function.Predicate<TSNode> predicate = n1 -> {
                 String text1 = textProvider.apply(n1);
                 return nodes2.stream().anyMatch(n2 ->
-                        Objects.equals(text1, textProvider.apply(n2)) == isPositive);
+                        Objects.equals(text1, textProvider.apply(n2))) == isPositive;
             };
-            return isAny ? nodes1.anyMatch(predicate) : nodes1.allMatch(predicate);
+            return isAny ? nodes1.stream().anyMatch(predicate) : nodes1.stream().allMatch(predicate);
         }
 
         private boolean testLiteral(TSQueryMatch match, Function<TSNode, String> textProvider) {
@@ -144,10 +148,14 @@ public abstract class TSQueryPredicate {
 
         @Override
         public boolean test(TSQueryMatch match, Function<TSNode, String> textProvider) {
-            return findNodes(match, captureId).stream().noneMatch(node -> {
+            List<TSNode> nodes = findNodes(match, captureId);
+            if (nodes.isEmpty()) return !isPositive;
+            java.util.function.Predicate<TSNode> predicate = node -> {
                 String text = textProvider.apply(node);
-                return (text != null && values.contains(text)) != isPositive;
-            });
+                return (text != null && values.contains(text)) == isPositive;
+            };
+            // #any-of? is typically treated as a filter where all captured nodes must satisfy it
+            return nodes.stream().allMatch(predicate);
         }
     }
 

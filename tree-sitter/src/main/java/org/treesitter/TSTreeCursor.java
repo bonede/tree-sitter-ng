@@ -2,9 +2,10 @@ package org.treesitter;
 
 import static org.treesitter.TSParser.*;
 
-public class TSTreeCursor {
+public class TSTreeCursor implements AutoCloseable {
     private final long ptr;
     private TSNode node;
+    private final java.lang.ref.Cleaner.Cleanable cleanable;
 
     private static class TSTreeCursorCleanAction implements Runnable {
         private final long ptr;
@@ -21,7 +22,12 @@ public class TSTreeCursor {
 
     private TSTreeCursor(long ptr) {
         this.ptr = ptr;
-        CleanerRunner.register(this, new TSTreeCursorCleanAction(ptr));
+        this.cleanable = CleanerRunner.register(this, new TSTreeCursorCleanAction(ptr));
+    }
+
+    @Override
+    public void close() {
+        cleanable.clean();
     }
     /**
      * Create a new tree cursor starting from the given node.<br>

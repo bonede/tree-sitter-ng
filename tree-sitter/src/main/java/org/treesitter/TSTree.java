@@ -6,10 +6,11 @@ import java.io.IOException;
 
 import static org.treesitter.TSParser.*;
 
-public class TSTree {
+public class TSTree implements AutoCloseable {
 
     private final long ptr;
     private TSLanguage language;
+    private final java.lang.ref.Cleaner.Cleanable cleanable;
 
     private static class TSTreeCleanAction implements Runnable {
         private final long ptr;
@@ -27,7 +28,12 @@ public class TSTree {
     TSTree(long ptr, TSLanguage language) {
         this.ptr = ptr;
         this.language = language;
-        CleanerRunner.register(this, new TSTreeCleanAction(ptr));
+        this.cleanable = CleanerRunner.register(this, new TSTreeCleanAction(ptr));
+    }
+
+    @Override
+    public void close() {
+        cleanable.clean();
     }
 
     protected void setLanguage(TSLanguage language){

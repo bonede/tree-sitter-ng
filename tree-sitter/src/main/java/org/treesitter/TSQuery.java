@@ -177,7 +177,7 @@ public class TSQuery implements AutoCloseable {
      *
      * @return True if the pattern is non-local, false otherwise.
      */
-    public boolean isPatternNonLocal(int patternIndex) {
+    public boolean isPatterNonLocal(int patternIndex) {
         ensureOpen();
         return ts_query_is_pattern_non_local(ptr, patternIndex);
     }

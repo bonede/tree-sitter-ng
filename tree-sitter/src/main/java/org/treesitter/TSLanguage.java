@@ -2,11 +2,18 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public abstract class TSLanguage {
+public abstract class TSLanguage implements AutoCloseable {
     private long ptr;
+    private final java.lang.ref.Cleaner.Cleanable cleanable;
+
     protected TSLanguage(long ptr){
         this.ptr = ptr;
-        CleanerRunner.register(this, new TSLanguageCleanAction(ptr));
+        this.cleanable = CleanerRunner.register(this, new TSLanguageCleanAction(ptr));
+    }
+
+    @Override
+    public void close() {
+        cleanable.clean();
     }
 
     public static TSLanguage load(String libFilePath, String lang){

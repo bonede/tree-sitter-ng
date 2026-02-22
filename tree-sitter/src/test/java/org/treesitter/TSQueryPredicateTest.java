@@ -89,4 +89,44 @@ class TSQueryPredicateTest {
         assertEquals("\"beta\"", src.substring(match.getCaptures()[0].getNode().getStartByte(), match.getCaptures()[0].getNode().getEndByte()));
         assertFalse(cursor.nextMatch(match));
     }
+
+    @Test
+    void predicateWithMultiByteChars() {
+        // Test #eq? and #not-eq? with multi-byte characters (Emoji and CJK)
+        // [ "😊", "世界" ]
+        String src = "[ \"\uD83D\uDE0A\", \"\u4E16\u754C\" ]";
+        tree = parser.parseString(null, src);
+        TSNode root = tree.getRootNode();
+        TSQueryMatch match = new TSQueryMatch();
+
+        // 1. Positive test for Emoji
+        query = new TSQuery(json, "((string) @s (#eq? @s \"\\\"\uD83D\uDE0A\\\"\"))");
+        cursor.exec(query, root, src);
+        assertTrue(cursor.nextMatch(match), "Should match the emoji string");
+        assertFalse(cursor.nextMatch(match), "Should only match once");
+
+        // 2. Positive test for CJK
+        query = new TSQuery(json, "((string) @s (#eq? @s \"\\\"\u4E16\u754C\\\"\"))");
+        cursor.exec(query, root, src);
+        assertTrue(cursor.nextMatch(match), "Should match the CJK string");
+        assertFalse(cursor.nextMatch(match), "Should only match once");
+
+        // 3. Negative test using #not-eq?
+        query = new TSQuery(json, "((string) @s (#not-eq? @s \"\\\"\uD83D\uDE0A\\\"\"))");
+        cursor.exec(query, root, src);
+        assertTrue(cursor.nextMatch(match), "Should match '世界' because it is not '😊'");
+        // Verify it matched the second string, not the first
+        byte[] srcBytes = src.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        int start = match.getCaptures()[0].getNode().getStartByte();
+        int end = match.getCaptures()[0].getNode().getEndByte();
+        String matchedText = new String(srcBytes, start, end - start, java.nio.charset.StandardCharsets.UTF_8);
+        assertEquals("\"\u4E16\u754C\"", matchedText);
+        assertFalse(cursor.nextMatch(match), "Should not match the emoji string");
+
+        // 4. Regex test using #match?
+        query = new TSQuery(json, "((string) @s (#match? @s \"\u4E16\"))");
+        cursor.exec(query, root, src);
+        assertTrue(cursor.nextMatch(match), "Should match '世界' using partial regex");
+        assertFalse(cursor.nextMatch(match));
+    }
 }

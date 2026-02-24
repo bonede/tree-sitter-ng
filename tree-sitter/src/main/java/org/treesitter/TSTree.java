@@ -12,6 +12,7 @@ public class TSTree implements AutoCloseable {
     private final long ptr;
     private TSLanguage language;
     private final Cleanable cleanable;
+    private boolean closed = false;
 
     private static class TSTreeCleanAction implements Runnable {
         private final long ptr;
@@ -34,14 +35,23 @@ public class TSTree implements AutoCloseable {
 
     @Override
     public void close() {
+        closed = true;
         cleanable.clean();
     }
 
+    private void ensureOpen() {
+        if (closed) {
+            throw new IllegalStateException("Tree is closed");
+        }
+    }
+
     protected void setLanguage(TSLanguage language){
+        ensureOpen();
         this.language = language;
     }
 
     protected long getPtr(){
+        ensureOpen();
         return ptr;
     }
 
@@ -54,6 +64,7 @@ public class TSTree implements AutoCloseable {
      * @return A copy of the syntax tree.
      */
     public TSTree copy(){
+        ensureOpen();
         return new TSTree(ts_tree_copy(ptr), language);
     }
 
@@ -63,6 +74,7 @@ public class TSTree implements AutoCloseable {
      * @return The root node.
      */
     public TSNode getRootNode(){
+        ensureOpen();
         TSNode node = ts_tree_root_node(ptr);
         node.setTree(this);
         return node;
@@ -77,6 +89,7 @@ public class TSTree implements AutoCloseable {
      * @return The node
      */
     public TSNode getRootNodeWithOffset(int offsetBytes, TSPoint offsetPoint){
+        ensureOpen();
         TSNode node = ts_tree_root_node_with_offset(ptr, offsetBytes, offsetPoint);
         node.setTree(this);
         return node;
@@ -87,6 +100,7 @@ public class TSTree implements AutoCloseable {
      * @return The language
      */
     public TSLanguage getLanguage(){
+        ensureOpen();
         return language;
     }
 
@@ -98,6 +112,7 @@ public class TSTree implements AutoCloseable {
      * @return The included ranges.
      */
     public TSRange[] getIncludedRanges(){
+        ensureOpen();
         return ts_tree_included_ranges(ptr);
     }
 
@@ -111,6 +126,7 @@ public class TSTree implements AutoCloseable {
      * @param inputEdit The edit to apply
      */
     public void edit(TSInputEdit inputEdit){
+        ensureOpen();
         ts_tree_edit(ptr, inputEdit);
     }
 
@@ -148,6 +164,7 @@ public class TSTree implements AutoCloseable {
      * @throws IOException If the file could not be written to.
      */
     public void printDotGraphs(File file) throws IOException {
+        ensureOpen();
         FileOutputStream outputStream = new FileOutputStream(file);
         ts_tree_print_dot_graph(ptr, outputStream.getFD());
         outputStream.close();

@@ -1,7 +1,9 @@
 package org.treesitter;
 
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Tests for AutoCloseable implementation in Tree-sitter Java bindings.
@@ -46,6 +48,30 @@ class TSAutoCloseableTest {
         TSQueryCursor cursor = new TSQueryCursor();
         cursor.close();
         assertDoesNotThrow(cursor::close);
+    }
+
+    @Test
+    void testTreeUseAfterClose() {
+        TSTree tree = new TSTree(0, null);
+        tree.close();
+        assertThrows(IllegalStateException.class, tree::getRootNode);
+    }
+
+    @Test
+    void testLanguageUseAfterClose() {
+        class TestLanguage extends TSLanguage {
+            TestLanguage() {
+                super(0);
+            }
+
+            @Override
+            public TSLanguage copy() {
+                return null;
+            }
+        }
+        TSLanguage language = new TestLanguage();
+        language.close();
+        assertThrows(IllegalStateException.class, language::symbolCount);
     }
 
 }

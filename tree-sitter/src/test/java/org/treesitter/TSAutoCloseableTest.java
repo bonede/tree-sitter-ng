@@ -58,6 +58,15 @@ class TSAutoCloseableTest {
     }
 
     @Test
+    void testTreeGetChangedRangesAfterClose() {
+        TSTree tree1 = new TSTree(0, null);
+        TSTree tree2 = new TSTree(0, null);
+        tree1.close();
+        assertThrows(IllegalStateException.class, () -> TSTree.getChangedRanges(tree1, tree2));
+        assertThrows(IllegalStateException.class, () -> TSTree.getChangedRanges(tree2, tree1));
+    }
+
+    @Test
     void testLanguageUseAfterClose() {
         class TestLanguage extends TSLanguage {
             TestLanguage() {

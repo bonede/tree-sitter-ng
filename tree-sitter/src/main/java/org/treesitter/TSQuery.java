@@ -29,7 +29,9 @@ public class TSQuery implements AutoCloseable {
 
         @Override
         public void run() {
-            ts_query_delete(ptr);
+            if (ptr != 0) {
+                ts_query_delete(ptr);
+            }
         }
     }
 
@@ -59,6 +61,9 @@ public class TSQuery implements AutoCloseable {
      */
     public TSQuery(TSLanguage language, String query){
         this(ts_query_new(language.getPtr(), query));
+        if (ptr == 0) {
+            throw new TSQueryException("Syntax error in query: " + query);
+        }
         this.lang = language;
         this.predicates = parsePredicates();
     }

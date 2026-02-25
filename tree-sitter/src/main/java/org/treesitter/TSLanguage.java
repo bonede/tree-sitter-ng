@@ -2,11 +2,28 @@ package org.treesitter;
 
 import org.treesitter.utils.NativeUtils;
 
-public abstract class TSLanguage {
+import java.lang.ref.Cleaner.Cleanable;
+
+public abstract class TSLanguage implements AutoCloseable {
     private long ptr;
+    private final Cleanable cleanable;
+    private boolean closed = false;
+
     protected TSLanguage(long ptr){
         this.ptr = ptr;
-        CleanerRunner.register(this, new TSLanguageCleanAction(ptr));
+        this.cleanable = CleanerRunner.register(this, new TSLanguageCleanAction(ptr));
+    }
+
+    @Override
+    public void close() {
+        closed = true;
+        cleanable.clean();
+    }
+
+    private void ensureOpen() {
+        if (closed) {
+            throw new IllegalStateException("Language is closed");
+        }
     }
 
     /**
@@ -24,6 +41,7 @@ public abstract class TSLanguage {
         return new AnonymousLanguage(ptr);
     }
     protected long getPtr(){
+        ensureOpen();
         return this.ptr;
     }
 
@@ -34,6 +52,7 @@ public abstract class TSLanguage {
      * @return ABI version.
      */
     public int abiVersion(){
+        ensureOpen();
         return TSParser.ts_language_abi_version(this.getPtr());
     }
 
@@ -44,6 +63,7 @@ public abstract class TSLanguage {
      * @return Metadata of the language. Maybe <code>null</code>.
      */
     public TSLanguageMetadata metadata(){
+        ensureOpen();
         return TSParser.ts_language_metadata(this.getPtr());
     }
 
@@ -53,6 +73,7 @@ public abstract class TSLanguage {
      * @return Supertypes of the language.
      */
     public int[] supertypes(){
+        ensureOpen();
         return TSParser.ts_language_supertypes(this.getPtr());
     }
 
@@ -62,6 +83,7 @@ public abstract class TSLanguage {
      * @return Subtypes of the supertype.
      */
     public int[] subtypes(int supertype){
+        ensureOpen();
         return TSParser.ts_language_subtypes(this.getPtr(), supertype);
     }
 
@@ -71,6 +93,7 @@ public abstract class TSLanguage {
      * @return <code>NULL</code>in older parsers.
      */
     public String name(){
+        ensureOpen();
         return TSParser.ts_language_name(this.getPtr());
     }
 
@@ -82,6 +105,7 @@ public abstract class TSLanguage {
      * @return The number of fields.
      */
     public int fieldCount(){
+        ensureOpen();
         return TSParser.ts_language_field_count(this.getPtr());
     }
 
@@ -93,6 +117,7 @@ public abstract class TSLanguage {
      * @return The field name string.
      */
     public String fieldNameForId(int id){
+        ensureOpen();
         return TSParser.ts_language_field_name_for_id(this.getPtr(), id);
     }
 
@@ -104,6 +129,7 @@ public abstract class TSLanguage {
      * @return The field id.
      */
     public int fieldIdForName(String name){
+        ensureOpen();
         return TSParser.ts_language_field_id_for_name(this.getPtr(), name);
     }
 
@@ -118,6 +144,7 @@ public abstract class TSLanguage {
      * @return The symbol type.
      */
     public TSSymbolType symbolType(int symbol){
+        ensureOpen();
         int type = TSParser.ts_language_symbol_type(this.getPtr(), symbol);
         switch (type){
             case 0: return TSSymbolType.TSSymbolTypeRegular;
@@ -134,6 +161,7 @@ public abstract class TSLanguage {
      * @return the number of symbols.
      */
     public int symbolCount(){
+        ensureOpen();
         return TSParser.ts_language_symbol_count(this.getPtr());
     }
 
@@ -145,6 +173,7 @@ public abstract class TSLanguage {
      * @return the node type string.
      */
     public String symbolName(int symbol){
+        ensureOpen();
         return TSParser.ts_language_symbol_name(this.getPtr(), symbol);
     }
 
@@ -157,6 +186,7 @@ public abstract class TSLanguage {
      * @return the node type id.
      */
     public int symbolForName(String name, boolean isNamed){
+        ensureOpen();
         return TSParser.ts_language_symbol_for_name(this.getPtr(), name, isNamed);
     }
 
@@ -168,6 +198,7 @@ public abstract class TSLanguage {
     public abstract TSLanguage copy();
 
     protected long copyPtr(){
+        ensureOpen();
         return TSParser.ts_language_copy(getPtr());
     }
 
@@ -194,6 +225,7 @@ public abstract class TSLanguage {
      * @return Next state
      */
     public int nextState(int state, int symbol){
+        ensureOpen();
         return TSParser.ts_language_next_state(ptr, state, symbol);
     }
 
@@ -203,6 +235,7 @@ public abstract class TSLanguage {
      * @return Valid states counts
      */
     public int stateCount(){
+        ensureOpen();
         return TSParser.ts_language_state_count(ptr);
     }
 

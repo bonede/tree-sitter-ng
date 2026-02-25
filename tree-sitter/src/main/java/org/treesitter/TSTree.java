@@ -3,13 +3,16 @@ package org.treesitter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.ref.Cleaner.Cleanable;
 
 import static org.treesitter.TSParser.*;
 
-public class TSTree {
+public class TSTree implements AutoCloseable {
 
     private final long ptr;
     private TSLanguage language;
+    private final Cleanable cleanable;
+    private boolean closed = false;
 
     private static class TSTreeCleanAction implements Runnable {
         private final long ptr;
@@ -27,14 +30,28 @@ public class TSTree {
     TSTree(long ptr, TSLanguage language) {
         this.ptr = ptr;
         this.language = language;
-        CleanerRunner.register(this, new TSTreeCleanAction(ptr));
+        this.cleanable = CleanerRunner.register(this, new TSTreeCleanAction(ptr));
+    }
+
+    @Override
+    public void close() {
+        closed = true;
+        cleanable.clean();
+    }
+
+    private void ensureOpen() {
+        if (closed) {
+            throw new IllegalStateException("Tree is closed");
+        }
     }
 
     protected void setLanguage(TSLanguage language){
+        ensureOpen();
         this.language = language;
     }
 
     protected long getPtr(){
+        ensureOpen();
         return ptr;
     }
 
@@ -47,6 +64,7 @@ public class TSTree {
      * @return A copy of the syntax tree.
      */
     public TSTree copy(){
+        ensureOpen();
         return new TSTree(ts_tree_copy(ptr), language);
     }
 
@@ -56,6 +74,7 @@ public class TSTree {
      * @return The root node.
      */
     public TSNode getRootNode(){
+        ensureOpen();
         TSNode node = ts_tree_root_node(ptr);
         node.setTree(this);
         return node;
@@ -70,6 +89,7 @@ public class TSTree {
      * @return The node
      */
     public TSNode getRootNodeWithOffset(int offsetBytes, TSPoint offsetPoint){
+        ensureOpen();
         TSNode node = ts_tree_root_node_with_offset(ptr, offsetBytes, offsetPoint);
         node.setTree(this);
         return node;
@@ -80,6 +100,7 @@ public class TSTree {
      * @return The language
      */
     public TSLanguage getLanguage(){
+        ensureOpen();
         return language;
     }
 
@@ -91,6 +112,7 @@ public class TSTree {
      * @return The included ranges.
      */
     public TSRange[] getIncludedRanges(){
+        ensureOpen();
         return ts_tree_included_ranges(ptr);
     }
 
@@ -104,6 +126,7 @@ public class TSTree {
      * @param inputEdit The edit to apply
      */
     public void edit(TSInputEdit inputEdit){
+        ensureOpen();
         ts_tree_edit(ptr, inputEdit);
     }
 
@@ -141,6 +164,7 @@ public class TSTree {
      * @throws IOException If the file could not be written to.
      */
     public void printDotGraphs(File file) throws IOException {
+        ensureOpen();
         FileOutputStream outputStream = new FileOutputStream(file);
         ts_tree_print_dot_graph(ptr, outputStream.getFD());
         outputStream.close();

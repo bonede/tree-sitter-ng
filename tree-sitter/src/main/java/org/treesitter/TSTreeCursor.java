@@ -1,10 +1,20 @@
 package org.treesitter;
 
+import java.lang.ref.Cleaner.Cleanable;
+
 import static org.treesitter.TSParser.*;
 
-public class TSTreeCursor {
+public class TSTreeCursor implements AutoCloseable {
     private final long ptr;
     private TSNode node;
+    private final Cleanable cleanable;
+    private boolean closed = false;
+
+    private void ensureOpen() {
+        if (closed) {
+            throw new IllegalStateException("TreeCursor is closed");
+        }
+    }
 
     private static class TSTreeCursorCleanAction implements Runnable {
         private final long ptr;
@@ -21,7 +31,13 @@ public class TSTreeCursor {
 
     private TSTreeCursor(long ptr) {
         this.ptr = ptr;
-        CleanerRunner.register(this, new TSTreeCursorCleanAction(ptr));
+        this.cleanable = CleanerRunner.register(this, new TSTreeCursorCleanAction(ptr));
+    }
+
+    @Override
+    public void close() {
+        closed = true;
+        cleanable.clean();
     }
     /**
      * Create a new tree cursor starting from the given node.<br>
@@ -47,6 +63,7 @@ public class TSTreeCursor {
      * @param node The node to start the cursor at.
      */
     public void reset(TSNode node){
+        ensureOpen();
         ts_tree_cursor_reset(ptr, node);
         this.node = node;
     }
@@ -57,6 +74,7 @@ public class TSTreeCursor {
      * @return The current node.
      */
     public TSNode currentNode(){
+        ensureOpen();
         TSNode node = ts_tree_cursor_current_node(ptr);
         node.setTree(this.node.getTree());
         return node;
@@ -71,6 +89,7 @@ public class TSTreeCursor {
      * @return The field name of the current node.
      */
     public String currentFieldName(){
+        ensureOpen();
         return ts_tree_cursor_current_field_name(ptr);
     }
     
@@ -83,6 +102,7 @@ public class TSTreeCursor {
      * @return The field id of the current node.
      */
     public int currentFieldId(){
+        ensureOpen();
         return ts_tree_cursor_current_field_id(ptr);
     }
 
@@ -98,6 +118,7 @@ public class TSTreeCursor {
      * @return Whether the cursor successfully moved to the parent.
      */
     public boolean gotoParent(){
+        ensureOpen();
         return ts_tree_cursor_goto_parent(ptr);
     }
 
@@ -111,6 +132,7 @@ public class TSTreeCursor {
      * if there was no next sibling node.<br>
      */
     public boolean gotoNextSibling(){
+        ensureOpen();
         return ts_tree_cursor_goto_next_sibling(ptr);
     }
 
@@ -128,6 +150,7 @@ public class TSTreeCursor {
      * there was no previous sibling node.<br>
      */
     public boolean gotoPreviousSibling(){
+        ensureOpen();
         return ts_tree_cursor_goto_previous_sibling(ptr);
     }
 
@@ -140,6 +163,7 @@ public class TSTreeCursor {
      * @return Whether the cursor successfully moved to the first child.
      */
     public boolean gotoFirstChild(){
+        ensureOpen();
         return ts_tree_cursor_goto_first_child(ptr);
     }
 
@@ -152,6 +176,7 @@ public class TSTreeCursor {
      * @return The index of the child node if one was found, and returns -1 if no such child was found.
      */
     public int gotoFirstChildForByte(int startByte){
+        ensureOpen();
         return ts_tree_cursor_goto_first_child_for_byte(ptr, startByte);
     }
 
@@ -164,6 +189,7 @@ public class TSTreeCursor {
      * @return The index of the child node if one was found, and returns -1 if no such child was found.
      */
     public int gotoFirstChildForPoint(TSPoint startPoint){
+        ensureOpen();
         return ts_tree_cursor_goto_first_child_for_point(ptr, startPoint);
     }
 
@@ -173,6 +199,7 @@ public class TSTreeCursor {
     }
 
     public TSTreeCursor copy(){
+        ensureOpen();
         TSTreeCursor cursor = new TSTreeCursor(ts_tree_cursor_copy(ptr));
         cursor.setNode(node);
         return cursor;

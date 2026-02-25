@@ -1,10 +1,20 @@
 package org.treesitter;
 
+import java.lang.ref.Cleaner.Cleanable;
+
 import static org.treesitter.TSParser.*;
 
-public class TSQuery {
+public class TSQuery implements AutoCloseable {
     private final long ptr;
     private TSLanguage lang;
+    private final Cleanable cleanable;
+    private boolean closed = false;
+
+    private void ensureOpen() {
+        if (closed) {
+            throw new IllegalStateException("Query is closed");
+        }
+    }
 
     private static class TSQueryCleanRunner implements Runnable {
         private final long ptr;
@@ -21,7 +31,13 @@ public class TSQuery {
 
     private TSQuery(long ptr) {
         this.ptr = ptr;
-        CleanerRunner.register(this, new TSQueryCleanRunner(ptr));
+        this.cleanable = CleanerRunner.register(this, new TSQueryCleanRunner(ptr));
+    }
+
+    @Override
+    public void close() {
+        closed = true;
+        cleanable.clean();
     }
 
     /**
@@ -51,6 +67,7 @@ public class TSQuery {
      * @return The number of patterns.
      */
     public int getPatternCount(){
+        ensureOpen();
         return ts_query_pattern_count(ptr);
     }
 
@@ -60,6 +77,7 @@ public class TSQuery {
      * @return The number of captures.
      */
     public int getCaptureCount(){
+        ensureOpen();
         return ts_query_capture_count(ptr);
     }
 
@@ -69,6 +87,7 @@ public class TSQuery {
      * @return The number of strings.
      */
     public int getStringCount(){
+        ensureOpen();
         return ts_query_string_count(ptr);
     }
 
@@ -84,6 +103,7 @@ public class TSQuery {
      * @return The byte offset where the pattern starts.
      */
     public int getStartByteForPattern(int patternIndex) {
+        ensureOpen();
         return ts_query_start_byte_for_pattern(ptr, patternIndex);
     }
 
@@ -97,6 +117,7 @@ public class TSQuery {
      * @return The byte offset where the pattern ends.
      */
     public int getEndByteForPattern(int patternIndex) {
+        ensureOpen();
         return ts_query_end_byte_for_pattern(ptr, patternIndex);
     }
 
@@ -123,6 +144,7 @@ public class TSQuery {
      * @return The predicates for the pattern.
      */
     public TSQueryPredicateStep[] getPredicateForPattern(int patternIndex) {
+        ensureOpen();
         return ts_query_predicates_for_pattern(ptr, patternIndex);
     }
 
@@ -134,6 +156,7 @@ public class TSQuery {
      * @return True if the pattern has a single root node, false otherwise.
      */
     public boolean isPatternRooted(int patternIndex) {
+        ensureOpen();
         return ts_query_is_pattern_rooted(ptr, patternIndex);
     }
 
@@ -150,6 +173,7 @@ public class TSQuery {
      * @return True if the pattern is non-local, false otherwise.
      */
     public boolean isPatterNonLocal(int patternIndex) {
+        ensureOpen();
         return ts_query_is_pattern_non_local(ptr, patternIndex);
     }
 
@@ -162,6 +186,7 @@ public class TSQuery {
      * @return True if the pattern is guaranteed to match once the step is reached,
      */
     public boolean isPatternGuaranteedAtStep(int byteOffset) {
+        ensureOpen();
         return ts_query_is_pattern_guaranteed_at_step(ptr, byteOffset);
     }
 
@@ -176,6 +201,7 @@ public class TSQuery {
      * @return The name of the capture.
      */
     public String getCaptureNameForId(int captureId) {
+        ensureOpen();
         int captureCount = getCaptureCount();
         if(captureId >= captureCount){
             throw new TSException("Invalid capture id: " + captureId);
@@ -193,6 +219,7 @@ public class TSQuery {
      * @return The quantifier of the capture.
      */
     public TSQuantifier getCaptureQuantifierForId(int patternId, int captureId) {
+        ensureOpen();
         int quantifier = ts_query_capture_quantifier_for_id(ptr, patternId, captureId);
         switch (quantifier){
             case 0: return TSQuantifier.TSQuantifierZero;
@@ -211,6 +238,7 @@ public class TSQuery {
      * @throws TSQueryException if the id is invalid.
      */
     public String getStringValueForId(int id) {
+        ensureOpen();
         int patternCount = getPatternCount();
         for(int i = 0; i < patternCount; i++){
             TSQueryPredicateStep[] predicates = getPredicateForPattern(i);
@@ -234,6 +262,7 @@ public class TSQuery {
      * @param name The name of the capture to disable.
      */
     public void disableCapture(String name) {
+        ensureOpen();
         ts_query_disable_capture(ptr, name);
     }
 
@@ -246,6 +275,7 @@ public class TSQuery {
      * @param index The index of the pattern to disable.
      */
     public void disablePattern(int index) {
+        ensureOpen();
         ts_query_disable_pattern(ptr, index);
     }
 }

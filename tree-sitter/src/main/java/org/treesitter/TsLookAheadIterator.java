@@ -1,8 +1,18 @@
 package org.treesitter;
 
-public class TsLookAheadIterator {
+import java.lang.ref.Cleaner.Cleanable;
+
+public class TsLookAheadIterator implements AutoCloseable {
     private long ptr;
     private TSLanguage lang;
+    private final Cleanable cleanable;
+    private boolean closed = false;
+
+    private void ensureOpen() {
+        if (closed) {
+            throw new IllegalStateException("LookAheadIterator is closed");
+        }
+    }
     /**
      * Create a new lookahead iterator for the given language and parse state. <br>
      *
@@ -27,7 +37,13 @@ public class TsLookAheadIterator {
             throw new TSException("State is invalid.");
         }
         this.lang = language;
-        CleanerRunner.register(this, new TsLookAheadIteratorCleanAction(ptr));
+        this.cleanable = CleanerRunner.register(this, new TsLookAheadIteratorCleanAction(ptr));
+    }
+
+    @Override
+    public void close() {
+        closed = true;
+        cleanable.clean();
     }
 
     /**
@@ -38,6 +54,7 @@ public class TsLookAheadIterator {
      * @return <code>true</code> if the iterator was reset to the given state and <code>false</code> otherwise.
      */
     public boolean resetState(int state){
+        ensureOpen();
         return TSParser.ts_lookahead_iterator_reset_state(ptr, state);
     }
 
@@ -50,6 +67,7 @@ public class TsLookAheadIterator {
      * @return <code>true</code> if the language was set successfully and <code>false</code> otherwise.
      */
     public boolean reset(TSLanguage language, int state){
+        ensureOpen();
         return TSParser.ts_lookahead_iterator_reset(ptr, language.getPtr(), state);
     }
 
@@ -59,6 +77,7 @@ public class TsLookAheadIterator {
      * @return The language of the lookahead iterator
      */
     public TSLanguage getLanguage(){
+        ensureOpen();
         return new AnonymousLanguage(TSParser.ts_lookahead_iterator_language(ptr));
     }
 
@@ -68,6 +87,7 @@ public class TsLookAheadIterator {
      * @return <code>true</code> if there is a new symbol and <code>false</code> otherwise.
      */
     public boolean next(){
+        ensureOpen();
         return TSParser.ts_lookahead_iterator_next(ptr);
     }
 
@@ -77,6 +97,7 @@ public class TsLookAheadIterator {
      * @return Current symbol
      */
     public int currentSymbol(){
+        ensureOpen();
         return TSParser.ts_lookahead_iterator_current_symbol(ptr);
     }
 
@@ -86,6 +107,7 @@ public class TsLookAheadIterator {
      * @return Current symbol name
      */
     public String currentSymbolName(){
+        ensureOpen();
         return TSParser.ts_lookahead_iterator_current_symbol_name(ptr);
     }
 

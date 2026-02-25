@@ -1,6 +1,7 @@
 package org.treesitter;
 
 import java.lang.ref.Cleaner.Cleanable;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
 import java.util.Objects;
@@ -109,7 +110,7 @@ public class TSQueryCursor implements AutoCloseable {
         this.node = node;
         this.query = query;
         this.sourceBytes = sourceText == null ? null :
-                sourceText.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                sourceText.toString().getBytes(StandardCharsets.UTF_8);
         ts_query_cursor_exec(ptr, query.getPtr(), node);
     }
 

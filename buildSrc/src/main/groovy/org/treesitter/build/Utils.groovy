@@ -152,9 +152,8 @@ abstract class Utils {
             conn.setConnectTimeout(30000)
             conn.setReadTimeout(30000)
             dest.withOutputStream { output ->
-                conn.inputStream.with {input ->
+                conn.inputStream.withCloseable { input ->
                     output << input
-                    input.close()
                 }
             }
         }

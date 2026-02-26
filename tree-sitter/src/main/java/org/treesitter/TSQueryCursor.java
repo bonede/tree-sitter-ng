@@ -278,7 +278,7 @@ public class TSQueryCursor implements AutoCloseable {
         ensureOpen();
         assertExecuted();
         while (ts_query_cursor_next_match(ptr, match)) {
-            match.getMetadata().clear();
+            match.clearMetadata();
             addTsTreeRef(match);
             if (satisfiesPredicates(match)) {
                 return true;
@@ -312,7 +312,7 @@ public class TSQueryCursor implements AutoCloseable {
         ensureOpen();
         assertExecuted();
         while (ts_query_cursor_next_capture(ptr, match)) {
-            match.getMetadata().clear();
+            match.clearMetadata();
             addTsTreeRef(match);
             if (satisfiesPredicates(match)) {
                 return true;

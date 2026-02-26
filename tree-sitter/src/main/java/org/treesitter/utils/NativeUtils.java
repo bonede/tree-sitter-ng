@@ -6,8 +6,11 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.HashSet;
+import java.util.Set;
 
 public abstract class NativeUtils {
+    private static final Set<String> loadedLibs = new HashSet<>();
     private static String getFullLibName(String libName){
         String osName = System.getProperty("os.name").toLowerCase();
         String archName = System.getProperty("os.arch").toLowerCase();
@@ -109,7 +112,11 @@ public abstract class NativeUtils {
      * @param libName Canonical name of the library. e.g. 'lib/foo', 'bar'
      */
     public synchronized static void loadLib(String libName) {
+        if (loadedLibs.contains(libName)) {
+            return;
+        }
         Path path = libFile(libName);
         System.load(path.toAbsolutePath().toString());
+        loadedLibs.add(libName);
     }
 }

@@ -68,6 +68,16 @@ public abstract class NativeUtils {
      */
     public synchronized static Path libFile(String libName) {
         String fullLibName = getFullLibName(libName);
+
+        // Check for user-defined library path
+        String userDefinedPath = System.getProperty("tree-sitter-lib");
+        if (userDefinedPath != null) {
+            Path customPath = Path.of(userDefinedPath).resolve(fullLibName);
+            if (Files.exists(customPath)) {
+                return customPath;
+            }
+        }
+
         String prefix = fullLibName.replace("/", "_").replace("\\", "_");
         String suffix = fullLibName.contains(".") ?
                 fullLibName.substring(fullLibName.lastIndexOf(".")) : ".tmp";

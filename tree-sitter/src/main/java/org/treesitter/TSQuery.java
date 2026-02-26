@@ -266,9 +266,9 @@ public class TSQuery implements AutoCloseable {
                     } else if (TSQueryPredicate.TSQueryPredicateAnyOf.NAMES.contains(name)) {
                         patternPredicates.add(handleAnyOf(name, steps, stepIndex, nargs));
                     } else if (TSQueryPredicate.TSQueryPredicateSet.NAMES.contains(name)) {
-                        patternPredicates.add(handleSetOrIs(name, steps, stepIndex, nargs));
+                        patternPredicates.add(handleSet(name, steps, stepIndex, nargs));
                     } else if (TSQueryPredicate.TSQueryPredicateIs.NAMES.contains(name)) {
-                        patternPredicates.add(handleSetOrIs(name, steps, stepIndex, nargs));
+                        patternPredicates.add(handleIs(name, steps, stepIndex, nargs));
                     } else {
                         patternPredicates.add(new TSQueryPredicate.TSQueryPredicateGeneric(name));
                     }
@@ -339,7 +339,7 @@ public class TSQuery implements AutoCloseable {
         return new TSQueryPredicate.TSQueryPredicateAnyOf(name, captureId, values);
     }
 
-    private TSQueryPredicate handleSetOrIs(String name, TSQueryPredicateStep[] steps, int start, int nargs) {
+    private TSQueryPredicate handleSet(String name, TSQueryPredicateStep[] steps, int start, int nargs) {
         if (nargs != 3) {
             throw new TSQueryException(String.format("Predicate #%s expects 2 arguments, got %d", name, nargs - 1));
         }
@@ -355,11 +355,26 @@ public class TSQuery implements AutoCloseable {
         }
         String value = getStringValueForId(arg2.getValueId());
 
-        if (name.equals("set!")) {
-            return new TSQueryPredicate.TSQueryPredicateSet(name, key, value);
-        } else {
-            return new TSQueryPredicate.TSQueryPredicateIs(name, key, value);
+        return new TSQueryPredicate.TSQueryPredicateSet(name, key, value);
+    }
+
+    private TSQueryPredicate handleIs(String name, TSQueryPredicateStep[] steps, int start, int nargs) {
+        if (nargs != 3) {
+            throw new TSQueryException(String.format("Predicate #%s expects 2 arguments, got %d", name, nargs - 1));
         }
+        TSQueryPredicateStep arg1 = steps[start + 1];
+        if (arg1.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeString) {
+            throw new TSQueryException(String.format("First argument to #%s must be a string literal (key)", name));
+        }
+        String key = getStringValueForId(arg1.getValueId());
+
+        TSQueryPredicateStep arg2 = steps[start + 2];
+        if (arg2.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeString) {
+            throw new TSQueryException(String.format("Second argument to #%s must be a string literal (value)", name));
+        }
+        String value = getStringValueForId(arg2.getValueId());
+
+        return new TSQueryPredicate.TSQueryPredicateIs(name, key, value);
     }
 
     /**

@@ -20,7 +20,7 @@ class TSQueryCursorTest {
         json = new TreeSitterJson();
         parser.setLanguage(json);
         tree = parser.parseString(null, JSON_SRC);
-        query = new TSQuery(json, "((document) @root (#eq? @root \"foo\"))");
+        query = new TSQuery(json, "((document) @root)");
 
         cursor = new TSQueryCursor();
         rootNode = tree.getRootNode();

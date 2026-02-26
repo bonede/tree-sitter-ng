@@ -1,9 +1,11 @@
 package org.treesitter;
 
 import java.lang.ref.Cleaner.Cleanable;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.function.BiFunction;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
 
 import static org.treesitter.TSParser.*;
 import static org.treesitter.TSParser.ts_query_cursor_next_match;
@@ -24,6 +26,7 @@ public class TSQueryCursor implements AutoCloseable {
 
     private TSNode node;
     private TSQuery query;
+    private byte[] sourceBytes;
 
     private static class TSQueryCursorCleanAction implements Runnable {
         private final long ptr;
@@ -87,10 +90,27 @@ public class TSQueryCursor implements AutoCloseable {
      * @param node The node to run the query on.
      */
     public void exec(TSQuery query, TSNode node){
+        exec(query, node, null);
+    }
+
+    /**
+     * Start running a given query on a given node with source text for predicate filtering.
+     * <p>
+     * Note: The {@code sourceText} is encoded as <b>UTF-8</b> to align with Tree-sitter's
+     * default byte offsets. If the tree was parsed with a different encoding (e.g. UTF-16),
+     * predicate results may be incorrect.
+     *
+     * @param query The query to run.
+     * @param node The node to run the query on.
+     * @param sourceText The source text used to resolve predicates like {@code #eq?}.
+     */
+    public void exec(TSQuery query, TSNode node, CharSequence sourceText){
         ensureOpen();
         executed = true;
         this.node = node;
         this.query = query;
+        this.sourceBytes = sourceText == null ? null :
+                sourceText.toString().getBytes(StandardCharsets.UTF_8);
         ts_query_cursor_exec(ptr, query.getPtr(), node);
     }
 
@@ -103,10 +123,29 @@ public class TSQueryCursor implements AutoCloseable {
      * @param progress The progress callback.
      */
     public void execWithOptions(TSQuery query, TSNode node, TSQueryProgress progress){
+        execWithOptions(query, node, null, progress);
+    }
+
+    /**
+     * Start running a given query on a given node, with some options and source text.
+     * <p>
+     * Note: The {@code sourceText} is encoded as <b>UTF-8</b> to align with Tree-sitter's
+     * default byte offsets. If the tree was parsed with a different encoding (e.g. UTF-16),
+     * predicate results may be incorrect.
+     *
+     * @see #exec(TSQuery, TSNode, CharSequence)
+     * @param query The query to run.
+     * @param node The node to run the query on.
+     * @param sourceText The source text for predicates.
+     * @param progress The progress callback.
+     */
+    public void execWithOptions(TSQuery query, TSNode node, CharSequence sourceText, TSQueryProgress progress){
         ensureOpen();
         executed = true;
         this.node = node;
         this.query = query;
+        this.sourceBytes = sourceText == null ? null :
+                sourceText.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
         ts_query_cursor_exec_with_options(ptr, query.getPtr(), node, progress, progressPayloadPtr);
     }
 
@@ -238,9 +277,13 @@ public class TSQueryCursor implements AutoCloseable {
     public boolean nextMatch(TSQueryMatch match){
         ensureOpen();
         assertExecuted();
-        boolean ret = ts_query_cursor_next_match(ptr, match);
-        addTsTreeRef(match);
-        return ret;
+        while (ts_query_cursor_next_match(ptr, match)) {
+            addTsTreeRef(match);
+            if (satisfiesPredicates(match)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -267,9 +310,13 @@ public class TSQueryCursor implements AutoCloseable {
     public boolean nextCapture(TSQueryMatch match){
         ensureOpen();
         assertExecuted();
-        boolean ret = ts_query_cursor_next_capture(ptr, match);
-        addTsTreeRef(match);
-        return ret;
+        while (ts_query_cursor_next_capture(ptr, match)) {
+            addTsTreeRef(match);
+            if (satisfiesPredicates(match)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void addTsTreeRef(TSQueryMatch match){
@@ -280,6 +327,16 @@ public class TSQueryCursor implements AutoCloseable {
                 }
             }
         }
+    }
+
+    private boolean satisfiesPredicates(TSQueryMatch match) {
+        if (query == null) return true;
+        List<TSQueryPredicate> patternPredicates = query.getPredicatesForPattern(match.getPatternIndex());
+        if (patternPredicates == null || patternPredicates.isEmpty()) {
+            return true;
+        }
+
+        return patternPredicates.stream().allMatch(predicate -> predicate.test(match, sourceBytes));
     }
 
     private void assertExecuted(){

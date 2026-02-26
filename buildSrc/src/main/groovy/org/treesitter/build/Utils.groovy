@@ -147,6 +147,10 @@ abstract class Utils {
 
     static void downloadFile(URL url, File dest){
         url.openConnection().with { conn ->
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0")
+            conn.setRequestProperty("Accept", "application/zip")
+            conn.setConnectTimeout(30000)
+            conn.setReadTimeout(30000)
             dest.withOutputStream { output ->
                 conn.inputStream.with {input ->
                     output << input
@@ -155,9 +159,12 @@ abstract class Utils {
             }
         }
     }
-    
+
     static String fetchUrl(URL url){
         return url.openConnection().with { conn ->
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0")
+            conn.setConnectTimeout(30000)
+            conn.setReadTimeout(30000)
             conn.inputStream.withCloseable { input ->
                 return input.text
             }

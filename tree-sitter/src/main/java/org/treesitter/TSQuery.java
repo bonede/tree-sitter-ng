@@ -412,17 +412,11 @@ public class TSQuery implements AutoCloseable {
      */
     public String getStringValueForId(int id) {
         ensureOpen();
-        int patternCount = getPatternCount();
-        for(int i = 0; i < patternCount; i++){
-            TSQueryPredicateStep[] predicates = getPredicateForPattern(i);
-            for(int j = 0; j < predicates.length; j++){
-                TSQueryPredicateStep predicate = predicates[j];
-                if(id == predicate.getValueId() && predicate.getType() == TSQueryPredicateStepType.TSQueryPredicateStepTypeString){
-                    return ts_query_string_value_for_id(ptr, predicate.getValueId());
-                }
-            }
+        int stringCount = getStringCount();
+        if (id < 0 || id >= stringCount) {
+            throw new TSException("Invalid string id: " + id);
         }
-        throw new TSException("Invalid string id: " + id);
+        return ts_query_string_value_for_id(ptr, id);
     }
 
     /**

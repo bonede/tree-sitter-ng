@@ -69,4 +69,19 @@ class TSQueryMetadataTest {
         }
         assertEquals(0, count, "No matches should be returned because role is 'foo', not 'bar'");
     }
+
+    @Test
+    void testMetadataWithNextCapture() {
+        // ((number) @n (#set! role "foo") (#is? role "foo"))
+        TSQuery query = new TSQuery(json, "((number) @n (#set! role \"foo\") (#is? role \"foo\"))");
+        cursor.exec(query, rootNode);
+        TSQueryMatch match = new TSQueryMatch();
+
+        int count = 0;
+        while (cursor.nextCapture(match)) {
+            count++;
+            assertEquals("foo", match.getMetadata().get("role"), "Metadata should be preserved in nextCapture");
+        }
+        assertEquals(2, count, "Both captures should satisfy #is? role 'foo'");
+    }
 }

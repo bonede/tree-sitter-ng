@@ -308,21 +308,6 @@ public class TSQueryCursor implements AutoCloseable {
      * @throws TSException if the query has not been executed yet.
      *
      */
-    /**
-     * Advance to the next capture of the currently running query.<br>
-     *
-     * If there is a capture, write its match to <code>match</code> and its index within
-     * the match's capture list to <code>captureIndex</code>. Otherwise, return <code>false</code>. <br>
-     *
-     * NOTE: More Java-ish method is {@link TSQueryCursor#getCaptures()}.
-     *
-     * @param match The match to write to.
-     *
-     * @return Whether there was a capture.
-     *
-     * @throws TSException if the query has not been executed yet.
-     *
-     */
     public boolean nextCapture(TSQueryMatch match){
         ensureOpen();
         assertExecuted();

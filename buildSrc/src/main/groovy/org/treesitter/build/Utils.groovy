@@ -145,10 +145,10 @@ abstract class Utils {
         ]
     }
 
-    static void downloadFile(URL url, File dest){
+    static void downloadFile(URL url, File dest, String accept = "application/zip"){
         url.openConnection().with { conn ->
             conn.setRequestProperty("User-Agent", "Mozilla/5.0")
-            conn.setRequestProperty("Accept", "application/zip")
+            conn.setRequestProperty("Accept", accept)
             conn.setConnectTimeout(30000)
             conn.setReadTimeout(30000)
             dest.withOutputStream { output ->
@@ -171,8 +171,8 @@ abstract class Utils {
         }
     }
 
-    static void downloadFile(String url, File dest){
-        downloadFile(new URL(url), dest)
+    static void downloadFile(String url, File dest, String accept = "application/zip"){
+        downloadFile(new URL(url), dest, accept)
     }
 
     static unzipFile(File zipFile, File outputDir) {

@@ -3,15 +3,9 @@ package org.treesitter.utils;
 import org.treesitter.TSParser;
 
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.zip.CRC32;
-import java.util.zip.Checksum;
 
 public abstract class NativeUtils {
     private static String getFullLibName(String libName){
@@ -52,63 +46,10 @@ public abstract class NativeUtils {
         return stringBuilder.toString();
     }
 
-    static private Path getLibStorePath(){
-        String userDefinedPath = System.getProperty("tree-sitter-lib");
-        if(userDefinedPath == null){
-            return Path.of(System.getProperty("user.home") ,".tree-sitter");
-        }
-        return Path.of(userDefinedPath);
-    }
-
-
-    private static long crc32(byte[] bytes) {
-        Checksum crc32 = new CRC32();
-        crc32.update(bytes, 0, bytes.length);
-        return crc32.getValue();
-    }
-
-    private static byte[] readFile(File file){
-        try(
-            InputStream inputStream = new FileInputStream(file);
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream()
-        ){
-            inputStream.transferTo(outputStream);
-            return outputStream.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static byte[] readInputStream(InputStream inputStream){
-        try(
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream()
-        ){
-            inputStream.transferTo(outputStream);
-            return outputStream.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static byte[] readLib(String libName){
-        String fullLibName = getFullLibName(libName);
-        InputStream inputStream = NativeUtils.class.getClassLoader().getResourceAsStream(fullLibName);
-        if(inputStream == null){
-            throw new RuntimeException(String.format("Can't open %s", fullLibName));
-        }
-        return readInputStream(inputStream);
-    }
-
-    public static File libFile(String libName){
-        String fullLibName = getFullLibName(libName);
-        Path filePath = getLibStorePath().resolve(fullLibName);
-        return filePath.toFile();
-    }
-
     /**
      * Load native lib from class path by name convention. <br>
      *
-     * This action is process safe.
+     * This action is process safe and thread safe.
      *
      * <p>Name convention: <code>arch-os-name.ext</code>
      * <p><code>arch</code>
@@ -118,59 +59,47 @@ public abstract class NativeUtils {
      * </ol>
      * @param libName Canonical name of the library. e.g. 'lib/foo', 'bar'
      */
-    public static void loadLib(String libName){
-        File file = libFile(libName);
-        File parentDir = file.getParentFile();
-        if (!parentDir.exists() && !parentDir.mkdirs()) {
-            throw new RuntimeException("Failed to create directory: " + parentDir);
-        }
-        boolean shouldOverwrite = false;
-        byte[] newFileBytes = null;
-        if(file.exists()){
-            byte[] oldFileBytes = readFile(file);
-            newFileBytes = readLib(libName);
-            if(crc32(oldFileBytes) != crc32(newFileBytes)){
-                shouldOverwrite = true;
+    /**
+     * Get the path of the native lib. If the lib is in the classpath, it will be
+     * extracted to a temporary directory.
+     *
+     * @param libName Canonical name of the library. e.g. 'lib/foo', 'bar'
+     * @return The path of the native lib.
+     */
+    public synchronized static Path libFile(String libName) {
+        String fullLibName = getFullLibName(libName);
+        String prefix = fullLibName.replace("/", "_").replace("\\", "_");
+        String suffix = fullLibName.contains(".") ?
+                fullLibName.substring(fullLibName.lastIndexOf(".")) : ".tmp";
+
+        try (InputStream inputStream = NativeUtils.class.getClassLoader().getResourceAsStream(fullLibName)) {
+            if (inputStream == null) {
+                throw new RuntimeException(String.format("Can't open %s", fullLibName));
             }
-        }else{
-           shouldOverwrite = true;
+            Path tempFile = Files.createTempFile("tree-sitter-ng-" + prefix, suffix);
+            tempFile.toFile().deleteOnExit();
+            Files.copy(inputStream, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            return tempFile;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to extract native library: " + fullLibName, e);
         }
-        if(!shouldOverwrite){
-            System.load(file.getAbsolutePath());
-            return;
-        }
-        if(newFileBytes == null){
-            newFileBytes = readLib(libName);
-        }
-        File tempLibFile = null;
-        try {
-            tempLibFile = File.createTempFile(
-                    "lib_" + System.currentTimeMillis() + "_",
-                    ".tmp",
-                    parentDir
-            );
-            Files.write(tempLibFile.toPath(), newFileBytes);
-            try {
-                Files.move(
-                    tempLibFile.toPath(),
-                    file.toPath(),
-                    StandardCopyOption.REPLACE_EXISTING,
-                    StandardCopyOption.ATOMIC_MOVE
-                );
-            } catch (AtomicMoveNotSupportedException e) {
-                Files.move(
-                    tempLibFile.toPath(),
-                    file.toPath(),
-                    StandardCopyOption.REPLACE_EXISTING
-                );
-            }
-        }catch (IOException e){
-            throw new RuntimeException("Failed to write library file: " + file, e);
-        }finally {
-            if (tempLibFile != null && tempLibFile.exists()) {
-                tempLibFile.delete();
-            }
-        }
-        System.load(file.getAbsolutePath());
+    }
+
+    /**
+     * Load native lib from class path by name convention. <br>
+     *
+     * This action is process safe and thread safe.
+     *
+     * <p>Name convention: <code>arch-os-name.ext</code>
+     * <p><code>arch</code>
+     * <ol>
+     *     <li>x64: <code>x86_64</code></li>
+     *     <li>arm64: <code>aarch64</code></li>
+     * </ol>
+     * @param libName Canonical name of the library. e.g. 'lib/foo', 'bar'
+     */
+    public synchronized static void loadLib(String libName) {
+        Path path = libFile(libName);
+        System.load(path.toAbsolutePath().toString());
     }
 }

@@ -242,6 +242,49 @@ public abstract class TSQueryPredicate {
     }
 
     /**
+     * Handles {@code #set!}
+     */
+    public static final class TSQueryPredicateSet extends TSQueryPredicate {
+        private final String key;
+        private final String value;
+
+        public static final Set<String> NAMES = Set.of("set!");
+
+        public TSQueryPredicateSet(String name, String key, String value) {
+            super(name);
+            this.key = key;
+            this.value = value;
+        }
+
+        @Override
+        public boolean test(TSQueryMatch match, Function<TSNode, String> textProvider) {
+            match.getMetadata().put(key, value);
+            return true;
+        }
+    }
+
+    /**
+     * Handles {@code #is?}
+     */
+    public static final class TSQueryPredicateIs extends TSQueryPredicate {
+        private final String key;
+        private final String value;
+
+        public static final Set<String> NAMES = Set.of("is?");
+
+        public TSQueryPredicateIs(String name, String key, String value) {
+            super(name);
+            this.key = key;
+            this.value = value;
+        }
+
+        @Override
+        public boolean test(TSQueryMatch match, Function<TSNode, String> textProvider) {
+            return Objects.equals(match.getMetadata().get(key), value);
+        }
+    }
+
+    /**
      * Handles unknown predicates or directives.
      */
     public static final class TSQueryPredicateGeneric extends TSQueryPredicate {

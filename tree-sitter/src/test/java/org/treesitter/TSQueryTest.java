@@ -3,6 +3,8 @@ package org.treesitter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class TSQueryTest {
@@ -87,6 +89,14 @@ class TSQueryTest {
     @Test
     void getStringValueForId() {
         assertEquals("foo", query.getStringValueForId(1));
+    }
+
+    @Test
+    void getPredicatesForPattern() {
+        List<TSQueryPredicate> predicates = query.getPredicatesForPattern(0);
+        assertNotNull(predicates);
+        assertFalse(predicates.isEmpty());
+        assertEquals("eq?", predicates.get(0).getName());
     }
 
     @Test

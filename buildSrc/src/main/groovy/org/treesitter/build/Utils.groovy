@@ -145,27 +145,33 @@ abstract class Utils {
         ]
     }
 
-    static void downloadFile(URL url, File dest){
+    static void downloadFile(URL url, File dest, String accept = "application/zip"){
         url.openConnection().with { conn ->
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0")
+            conn.setRequestProperty("Accept", accept)
+            conn.setConnectTimeout(30000)
+            conn.setReadTimeout(30000)
             dest.withOutputStream { output ->
-                conn.inputStream.with {input ->
+                conn.inputStream.withCloseable { input ->
                     output << input
-                    input.close()
                 }
             }
         }
     }
-    
+
     static String fetchUrl(URL url){
         return url.openConnection().with { conn ->
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0")
+            conn.setConnectTimeout(30000)
+            conn.setReadTimeout(30000)
             conn.inputStream.withCloseable { input ->
                 return input.text
             }
         }
     }
 
-    static void downloadFile(String url, File dest){
-        downloadFile(new URL(url), dest)
+    static void downloadFile(String url, File dest, String accept = "application/zip"){
+        downloadFile(new URL(url), dest, accept)
     }
 
     static unzipFile(File zipFile, File outputDir) {

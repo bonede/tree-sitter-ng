@@ -265,6 +265,10 @@ public class TSQuery implements AutoCloseable {
                         patternPredicates.add(handleMatch(name, steps, stepIndex, nargs));
                     } else if (TSQueryPredicate.TSQueryPredicateAnyOf.NAMES.contains(name)) {
                         patternPredicates.add(handleAnyOf(name, steps, stepIndex, nargs));
+                    } else if (TSQueryPredicate.TSQueryPredicateSet.NAMES.contains(name)) {
+                        patternPredicates.add(handleSet(name, steps, stepIndex, nargs));
+                    } else if (TSQueryPredicate.TSQueryPredicateIs.NAMES.contains(name)) {
+                        patternPredicates.add(handleIs(name, steps, stepIndex, nargs));
                     } else {
                         patternPredicates.add(new TSQueryPredicate.TSQueryPredicateGeneric(name));
                     }
@@ -335,6 +339,44 @@ public class TSQuery implements AutoCloseable {
         return new TSQueryPredicate.TSQueryPredicateAnyOf(name, captureId, values);
     }
 
+    private TSQueryPredicate handleSet(String name, TSQueryPredicateStep[] steps, int start, int nargs) {
+        if (nargs != 3) {
+            throw new TSQueryException(String.format("Predicate #%s expects 2 arguments, got %d", name, nargs - 1));
+        }
+        TSQueryPredicateStep arg1 = steps[start + 1];
+        if (arg1.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeString) {
+            throw new TSQueryException(String.format("First argument to #%s must be a string literal (key)", name));
+        }
+        String key = getStringValueForId(arg1.getValueId());
+
+        TSQueryPredicateStep arg2 = steps[start + 2];
+        if (arg2.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeString) {
+            throw new TSQueryException(String.format("Second argument to #%s must be a string literal (value)", name));
+        }
+        String value = getStringValueForId(arg2.getValueId());
+
+        return new TSQueryPredicate.TSQueryPredicateSet(name, key, value);
+    }
+
+    private TSQueryPredicate handleIs(String name, TSQueryPredicateStep[] steps, int start, int nargs) {
+        if (nargs != 3) {
+            throw new TSQueryException(String.format("Predicate #%s expects 2 arguments, got %d", name, nargs - 1));
+        }
+        TSQueryPredicateStep arg1 = steps[start + 1];
+        if (arg1.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeString) {
+            throw new TSQueryException(String.format("First argument to #%s must be a string literal (key)", name));
+        }
+        String key = getStringValueForId(arg1.getValueId());
+
+        TSQueryPredicateStep arg2 = steps[start + 2];
+        if (arg2.getType() != TSQueryPredicateStepType.TSQueryPredicateStepTypeString) {
+            throw new TSQueryException(String.format("Second argument to #%s must be a string literal (value)", name));
+        }
+        String value = getStringValueForId(arg2.getValueId());
+
+        return new TSQueryPredicate.TSQueryPredicateIs(name, key, value);
+    }
+
     /**
      * Get the quantifier of the query's captures. Each capture is * associated
      * with a numeric id based on the order that it appeared in the query's source.
@@ -370,17 +412,11 @@ public class TSQuery implements AutoCloseable {
      */
     public String getStringValueForId(int id) {
         ensureOpen();
-        int patternCount = getPatternCount();
-        for(int i = 0; i < patternCount; i++){
-            TSQueryPredicateStep[] predicates = getPredicateForPattern(i);
-            for(int j = 0; j < predicates.length; j++){
-                TSQueryPredicateStep predicate = predicates[j];
-                if(id == predicate.getValueId() && predicate.getType() == TSQueryPredicateStepType.TSQueryPredicateStepTypeString){
-                    return ts_query_string_value_for_id(ptr, predicate.getValueId());
-                }
-            }
+        int stringCount = getStringCount();
+        if (id < 0 || id >= stringCount) {
+            throw new TSException("Invalid string id: " + id);
         }
-        throw new TSException("Invalid string id: " + id);
+        return ts_query_string_value_for_id(ptr, id);
     }
 
     /**

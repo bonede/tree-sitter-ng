@@ -1,11 +1,13 @@
-
 package org.treesitter;
 
 import org.junit.jupiter.api.Test;
+import org.treesitter.tests.CorpusTest;
+
+import java.io.IOException;
 
 class TreeSitterEmbeddedTemplateTest {
     @Test
-    void init() {
-        new TreeSitterEmbeddedTemplate();
+    void corpusTest() throws IOException {
+        CorpusTest.runAllTestsInDefaultFolder(new TreeSitterEmbeddedTemplate(), "embedded-template");
     }
 }

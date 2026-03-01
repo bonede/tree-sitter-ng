@@ -14,13 +14,18 @@ public abstract class SExpressionUtils {
             if (c == '"') {
                 inString = !inString;
                 result.append(c);
-            }else if (Character.isWhitespace(c) && !inString) {
-                if (result.length() > 0 && result.charAt(result.length() - 1) != ' ') {
+            } else if (Character.isWhitespace(c) && !inString) {
+                if (result.length() > 0 && result.charAt(result.length() - 1) != ' '
+                        && result.charAt(result.length() - 1) != '(') {
                     result.append(' ');
                 }
-            }else if (c == '\n' || c == '\r') {
-                continue;
-            }else {
+            } else if (c == ')' && !inString) {
+                int len = result.length();
+                if (len > 0 && result.charAt(len - 1) == ' ') {
+                    result.setLength(len - 1);
+                }
+                result.append(c);
+            } else {
                 result.append(c);
             }
         }

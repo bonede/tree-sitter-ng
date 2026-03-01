@@ -1,5 +1,5 @@
 tasks.named('downloadSource') {
-    url = "https://github.com/tree-sitter/tree-sitter-typescript/archive/refs/tags/v${version}.zip"
+    url = "https://github.com/tree-sitter/tree-sitter-typescript/archive/refs/tags/v${libVersion}.zip"
 }
 tasks.named("buildNative") {
     def newSrcDir = srcDir.dir("typescript/src")

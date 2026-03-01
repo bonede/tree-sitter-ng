@@ -1,14 +1,14 @@
 package org.treesitter.json;
 
 import org.junit.jupiter.api.Test;
+import org.treesitter.tests.CorpusTest;
 import org.treesitter.TreeSitterJson;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.io.IOException;
 
 class TreeSitterJsonTest {
     @Test
-    public void init(){
-        TreeSitterJson json = new TreeSitterJson();
-        assertEquals(2, json.fieldCount());
+    void corpusTest() throws IOException {
+        CorpusTest.runAllTestsInDefaultFolder(new TreeSitterJson(), "json");
     }
 }

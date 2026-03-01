@@ -1,11 +1,13 @@
-
 package org.treesitter;
 
 import org.junit.jupiter.api.Test;
+import org.treesitter.tests.CorpusTest;
+
+import java.io.IOException;
 
 class TreeSitterCSharpTest {
     @Test
-    void init() {
-        new TreeSitterCSharp();
+    void corpusTest() throws IOException {
+        CorpusTest.runAllTestsInDefaultFolder(new TreeSitterCSharp(), "c-sharp");
     }
 }

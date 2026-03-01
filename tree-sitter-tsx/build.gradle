@@ -1,5 +1,5 @@
 tasks.named('downloadSource') {
-    url = "https://github.com/tree-sitter/tree-sitter-typescript/archive/refs/tags/v${version}.zip"
+    url = "https://github.com/tree-sitter/tree-sitter-typescript/archive/refs/tags/v${libVersion}.zip"
 }
 tasks.named("buildNative") {
     def newSrcDir = downloadDir.dir("tree-sitter-typescript-$libVersion/tsx/src")
@@ -7,8 +7,4 @@ tasks.named("buildNative") {
         include("**/*.c")
     }
     additionalIncludeDirs = [newSrcDir]
-}
-test{
-    useJUnitPlatform()
-    dependsOn downloadSource
 }

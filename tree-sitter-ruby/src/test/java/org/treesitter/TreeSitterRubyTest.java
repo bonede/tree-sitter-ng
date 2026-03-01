@@ -1,11 +1,13 @@
-
 package org.treesitter;
 
 import org.junit.jupiter.api.Test;
+import org.treesitter.tests.CorpusTest;
+
+import java.io.IOException;
 
 class TreeSitterRubyTest {
     @Test
-    void init() {
-        new TreeSitterRuby();
+    void corpusTest() throws IOException {
+        CorpusTest.runAllTestsInDefaultFolder(new TreeSitterRuby(), "ruby");
     }
 }

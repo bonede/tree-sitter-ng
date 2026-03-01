@@ -44,3 +44,4 @@ bin/
 **/*.pdb
 /secring.gpg
 /playground
+**/.claude

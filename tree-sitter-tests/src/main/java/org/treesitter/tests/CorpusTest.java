@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,224 +16,162 @@ import static org.treesitter.tests.SExpressionUtils.stripSExpressionWhitespace;
 
 public class CorpusTest {
     private List<TestExample> examples;
-    private String suffix = "";
-    private static final Pattern HEADER_DELIM_PTN = Pattern.compile("^=+.*$");
-    private static final Pattern DIVIDER_DELIM_PTN = Pattern.compile("^-{3,}.*$");
+    private final String filename;
+
+    private static final Pattern HEADER_REGEX = Pattern.compile(
+        "^(={3,})([^=\\n]*)\\n([\\s\\S]*?)\\n(={3,})([^=\\n]*)$",
+        Pattern.MULTILINE
+    );
+    private static final Pattern DIVIDER_REGEX = Pattern.compile(
+        "^(-{3,})([^-\\n]*)$",
+        Pattern.MULTILINE
+    );
     private static final Pattern LANG_PTN = Pattern.compile(":language\\(([^)]+)\\)");
     private static final Pattern PLATFORM_PTN = Pattern.compile(":platform\\(([^)]+)\\)");
-    private BufferedReader reader;
-    private String line = null;
-    private TestExample example = null;
-    private static final int STATE_CREATE = 0;
-    private static final int STATE_NAME = 1;
-    private static final int STATE_ATTRIBUTE = 2;
-    private static final int STATE_INPUT = 3;
-    private static final int STATE_OUTPUT = 4;
-    private static final int STATE_STOP = 5;
-    private int state = STATE_CREATE;
-    private StringJoiner stringBuffer = new StringJoiner("\n");
-    private int row = 1;
-    private final String filename;
 
     public CorpusTest(InputStream inputStream, String filename) throws IOException {
         this.filename = filename;
         parseTest(inputStream);
     }
 
-    public List<TestExample> getExamples(){
+    public List<TestExample> getExamples() {
         return this.examples;
     }
 
-
     public CorpusTest(File file) throws IOException {
         this.filename = file.getName();
-        try (InputStream inputStream = new FileInputStream(file)){
+        try (InputStream inputStream = new FileInputStream(file)) {
             parseTest(inputStream);
         }
     }
 
-    private void stateCreate(){
-        if(isHeaderDelim()){
-            this.example = new TestExample();
-            this.state = STATE_NAME;
-        }else {
-            if (!isEmptyLine()) {
-                expect("spaces or header delimiter");
-            }
-        }
-    }
-
-    private void appendBuffer(){
-        stringBuffer.add(this.line);
-    }
-
-    private void stateName(){
-        if(isEmptyLine()){
-            return;
-        }
-        if(isDeviderDelim() || isHeaderDelim()){
-            expect("test name");
-            return;
-        }
-        this.example.setName(this.line);
-        this.state = STATE_ATTRIBUTE;
-    }
-
-    private void stateAttribute(){
-        if(isHeaderDelim()){
-            this.state = STATE_INPUT;
-            return;
-        }
-        parseAttributes();
-    }
-
-    private String flushBuffer(){
-        String str = stringBuffer.toString();
-        stringBuffer = new StringJoiner("\n");
-        return str;
-    }
-
-    private void stateInput(){
-        if(isHeaderDelim()){
-            expect("divider delimiter");
-            return;
-        }
-        if(isDeviderDelim()){
-            this.example.setInput(flushBuffer());
-            this.state = STATE_OUTPUT;
-            return;
-        }
-        appendBuffer();
-    }
-
-    private void stateOutput(){
-        if(isEOF()){
-            this.example.setOutput(flushBuffer());
-            this.examples.add(this.example);
-            this.state = STATE_STOP;
-            return;
-        }
-        if(isDeviderDelim()){
-            expect("header delimiter");
-            return;
-        }
-        if(isHeaderDelim()){
-            this.example.setOutput(flushBuffer());
-            this.examples.add(this.example);
-            this.example = new TestExample();
-            this.state = STATE_NAME;
-            return;
-        }
-        appendBuffer();
-    }
-
     private void parseTest(InputStream inputStream) throws IOException {
-        this.reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+        String content = readAll(inputStream);
         this.examples = new ArrayList<>();
-        while(this.state != STATE_STOP){
-            readLine();
-            switch (state){
-                case STATE_CREATE: stateCreate(); break;
-                case STATE_NAME: stateName(); break;
-                case STATE_ATTRIBUTE: stateAttribute(); break;
-                case STATE_INPUT: stateInput(); break;
-                case STATE_OUTPUT: stateOutput(); break;
-                default:
-                    throw new CorpusParseException("Unexpected line: " + this.line);
+
+        String firstSuffix = null;
+        Matcher firstHeaderMatcher = HEADER_REGEX.matcher(content);
+        if (firstHeaderMatcher.find()) {
+            firstSuffix = firstHeaderMatcher.group(2);
+        }
+        if (firstSuffix == null) {
+            return;
+        }
+
+        List<int[]> headerPositions = new ArrayList<>();
+        List<String> testNames = new ArrayList<>();
+        List<TestAttributes> testAttributesList = new ArrayList<>();
+
+        Matcher headerMatcher = HEADER_REGEX.matcher(content);
+        while (headerMatcher.find()) {
+            String suffix1 = headerMatcher.group(2);
+            String suffix2 = headerMatcher.group(5);
+            if (!firstSuffix.equals(suffix1) || !firstSuffix.equals(suffix2)) {
+                continue;
             }
-            row++;
-        }
-    }
-
-    private void parseAttributes(){
-        if(this.example.getAttributes() == null){
-            this.example.setAttributes(new TestAttributes());
-        }
-        TestAttributes attributes = this.example.getAttributes();
-        String matches;
-        if(line.equals(":skip")){
-            attributes.setSkip(true);
-        }else if(line.equals(":error")){
-            attributes.setError(true);
-        }else if(line.equals(":fail-fast")){
-            attributes.setError(true);
-        }else if((matches = isPlatformAttribute()) != null){
-            attributes.addPlatform(matches);
-        }else if((matches = isLangAttribute()) != null){
-            attributes.addLanguage(matches);
-        }else{
-            expect("attribute of :skip, :error, :fail-fast, :language(LANG), :platform(PLATFORM)");
-        }
-    }
-
-    private String isLangAttribute(){
-        Matcher matcher = LANG_PTN.matcher(this.line);
-        if(matcher.matches()){
-            return matcher.group(1);
-        }else{
-            return null;
-        }
-    }
-
-    private String isPlatformAttribute(){
-        Matcher matcher = PLATFORM_PTN.matcher(this.line);
-        if(matcher.matches()){
-            return matcher.group(1);
-        }else{
-            return null;
-        }
-    }
-
-    private void expect(String name){
-        throw new CorpusParseException("Excepting " + name + " got: " + this.line + " (" + this.filename + ":" + this.row+ ")");
-    }
-
-    private void readLine() throws IOException {
-        this.line = reader.readLine();
-    }
-
-    private boolean isEmptyLine(){
-        return this.line.isEmpty();
-    }
-
-    private boolean isHeaderDelim(){
-        if(this.suffix.isEmpty()){
-            if(!HEADER_DELIM_PTN.matcher(this.line).matches()){
-                return false;
+            headerPositions.add(new int[]{headerMatcher.start(), headerMatcher.end()});
+            String nameAndAttrs = headerMatcher.group(3).trim();
+            String[] lines = nameAndAttrs.split("\\n");
+            String name = lines.length > 0 ? lines[0].trim() : "";
+            TestAttributes attrs = new TestAttributes();
+            for (int i = 1; i < lines.length; i++) {
+                String attrLine = lines[i].trim();
+                if (attrLine.isEmpty()) continue;
+                parseAttributeLine(attrLine, attrs);
             }
-            this.suffix = headerSuffix(this.line);
-            return true;
-        }else{
-            boolean matches = HEADER_DELIM_PTN.matcher(this.line).matches();
-            String suffix = headerSuffix(this.line);
-            return matches && this.suffix.equals(suffix);
+            testNames.add(name);
+            testAttributesList.add(attrs);
+        }
+
+        for (int i = 0; i < headerPositions.size(); i++) {
+            int bodyStart = headerPositions.get(i)[1];
+            int bodyEnd = (i + 1 < headerPositions.size())
+                ? headerPositions.get(i + 1)[0]
+                : content.length();
+
+            TestAttributes attrs = testAttributesList.get(i);
+            if (attrs.isSkip()) {
+                continue;
+            }
+
+            String body = content.substring(bodyStart, bodyEnd);
+
+            // Find the longest divider line with matching suffix (same as tree-sitter CLI)
+            Matcher dividerMatcher = DIVIDER_REGEX.matcher(body);
+            int bestDividerStart = -1;
+            int bestDividerEnd = -1;
+            int bestLen = 0;
+            while (dividerMatcher.find()) {
+                String divSuffix = dividerMatcher.group(2);
+                if (!firstSuffix.equals(divSuffix)) continue;
+                int len = dividerMatcher.end() - dividerMatcher.start();
+                if (len > bestLen) {
+                    bestLen = len;
+                    bestDividerStart = dividerMatcher.start();
+                    bestDividerEnd = dividerMatcher.end();
+                }
+            }
+
+            if (bestDividerStart < 0) {
+                continue;
+            }
+
+            String input = body.substring(0, bestDividerStart);
+            String output = body.substring(bestDividerEnd);
+
+            input = stripTrailingNewline(input);
+            input = stripLeadingNewline(input);
+            output = output.trim();
+
+            TestExample example = new TestExample();
+            example.setName(testNames.get(i));
+            example.setAttributes(attrs);
+            example.setInput(input);
+            example.setOutput(output);
+            examples.add(example);
         }
     }
 
-    private boolean isDeviderDelim(){
-        if(this.suffix.isEmpty()){
-            return DIVIDER_DELIM_PTN.matcher(this.line).matches();
-        }else{
-            boolean matches = DIVIDER_DELIM_PTN.matcher(this.line).matches();
-            String suffix = dividerSuffix(this.line);
-            return matches && this.suffix.equals(suffix);
+    private void parseAttributeLine(String line, TestAttributes attrs) {
+        Matcher langMatcher = LANG_PTN.matcher(line);
+        Matcher platformMatcher = PLATFORM_PTN.matcher(line);
+        if (line.equals(":skip")) {
+            attrs.setSkip(true);
+        } else if (line.equals(":error")) {
+            attrs.setError(true);
+        } else if (line.equals(":fail-fast")) {
+            attrs.setError(true);
+        } else if (platformMatcher.matches()) {
+            attrs.addPlatform(platformMatcher.group(1));
+        } else if (langMatcher.matches()) {
+            attrs.addLanguage(langMatcher.group(1));
         }
-
     }
 
-    private boolean isEOF(){
-        return this.line == null;
+    private static String readAll(InputStream inputStream) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+        StringBuilder sb = new StringBuilder();
+        char[] buf = new char[8192];
+        int n;
+        while ((n = reader.read(buf)) != -1) {
+            sb.append(buf, 0, n);
+        }
+        return sb.toString();
     }
 
-    private String headerSuffix(String headerDelim){
-        return headerDelim.replace("=", "");
+    private static String stripTrailingNewline(String s) {
+        if (s.endsWith("\r\n")) return s.substring(0, s.length() - 2);
+        if (s.endsWith("\n")) return s.substring(0, s.length() - 1);
+        return s;
     }
 
-    private String dividerSuffix(String dividerDelim){
-        return dividerDelim.replace("-", "");
+    private static String stripLeadingNewline(String s) {
+        if (s.startsWith("\r\n")) return s.substring(2);
+        if (s.startsWith("\n")) return s.substring(1);
+        return s;
     }
 
-    public void runTest(TSLanguage language, String langName){
+    public void runTest(TSLanguage language, String langName) {
         TSParser parser = new TSParser();
         parser.setLanguage(language);
         examples.stream()
@@ -244,25 +181,32 @@ public class CorpusTest {
                 TSTree tree = parser.parseString(null, example.getInput());
                 TSNode node = tree.getRootNode();
                 String expect = stripFieldNames(stripSExpressionWhitespace(example.getOutput()));
-                String actual = stripFieldNames(node.toString());
-                if(!expect.equals(actual)){
+                String actual = stripFieldNames(stripSExpressionWhitespace(node.toString()));
+                if (!expect.equals(actual)) {
                     throw new TreeSitterTestException(example.getName() + " test error: " + "\n" + expect + "\nNot equal to:\n" + actual + "\nWith input:\n" + example.getInput());
                 }
             });
     }
 
     public static void runAllTestsInFolder(String folder, TSLanguage language, String langName) throws IOException {
-        File folderPath = new File(folder);
-        if(!folderPath.exists() || !folderPath.isDirectory()){
-            throw new TreeSitterTestException(folder + " does not exist or not a folder.");
+        runAllTestsInFolderRecursive(new File(folder), language, langName);
+    }
+
+    private static void runAllTestsInFolderRecursive(File folderPath, TSLanguage language, String langName) throws IOException {
+        if (!folderPath.exists() || !folderPath.isDirectory()) {
+            throw new TreeSitterTestException(folderPath.getPath() + " does not exist or not a folder.");
         }
         File[] files = folderPath.listFiles();
-        if(files == null){
+        if (files == null) {
             return;
         }
-        for(File file : files){
-            CorpusTest corpusTest = new CorpusTest(file);
-            corpusTest.runTest(language, langName);
+        for (File file : files) {
+            if (file.isDirectory()) {
+                runAllTestsInFolderRecursive(file, language, langName);
+            } else if (file.getName().endsWith(".txt")) {
+                CorpusTest corpusTest = new CorpusTest(file);
+                corpusTest.runTest(language, langName);
+            }
         }
     }
 
@@ -270,7 +214,7 @@ public class CorpusTest {
         try (FileInputStream input = new FileInputStream("gradle.properties")) {
             Properties properties = new Properties();
             properties.load(input);
-            String libVersion = (String) properties.get("version");
+            String libVersion = (String) properties.get("libVersion");
             String corpusFolder = "build/tree-sitter-" + langName + "/tree-sitter-" + langName + "-" + libVersion + "/test/corpus";
             CorpusTest.runAllTestsInFolder(corpusFolder, language, langName);
         }
@@ -280,7 +224,7 @@ public class CorpusTest {
         try (FileInputStream input = new FileInputStream("gradle.properties")) {
             Properties properties = new Properties();
             properties.load(input);
-            String libVersion = (String) properties.get("version");
+            String libVersion = (String) properties.get("libVersion");
             String corpusFolder = "build/tree-sitter-" + secondaryLang + "/tree-sitter-" + langName + "-" + libVersion + "/test/corpus";
             CorpusTest.runAllTestsInFolder(corpusFolder, language, secondaryLang);
         }

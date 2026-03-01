@@ -22,6 +22,10 @@ allprojects {
 
 
 subprojects {
+    if (project.hasProperty('libVersion')) {
+        version = project.libVersion
+    }
+
     apply plugin: 'java'
     apply plugin: 'signing'
     apply plugin: 'maven-publish'
@@ -101,6 +105,12 @@ subprojects {
 
     tasks.register('downloadSource', DownloadSourceTask)
 
+    if (project.name != 'tree-sitter' && project.name != 'tree-sitter-demo' && project.name != 'tree-sitter-tests') {
+        tasks.named('test') {
+            dependsOn tasks.named('downloadSource')
+        }
+    }
+
     tasks.register('buildNative', BuildNativeTask) {
         zigExe = rootProject.downloadZig.zigExe
         dependsOn downloadSource, rootProject.downloadZig
@@ -134,23 +144,109 @@ tasks.register("gen", GenTask) {
     description = "Generate sub project for tree sitter parser"
 }
 
-tasks.register("publishPortal") {
-    // Use this task after :publish to make package visible in Portal
-    // Reference https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#ensuring-deployment-visibility-in-the-central-publisher-portal
+tasks.register("dropStagingRepo") {
+    group = "publishing"
+    description = "Drop closed staging repositories to unblock new releases"
     doLast {
-        def url = "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/io.github.bonede"
+        def baseUrl = "https://ossrh-staging-api.central.sonatype.com"
         def token = Base64.encoder.encodeToString("$ossrhUsername:$ossrhPassword".getBytes())
         def client = HttpClient.newHttpClient()
+
+        // Search for closed repositories
+        def searchUrl = "$baseUrl/manual/search/repositories?profile_id=io.github.bonede&state=closed&ip=any"
+        def searchReq = HttpRequest.newBuilder()
+                .uri(URI.create(searchUrl))
+                .header("Authorization", "Bearer $token")
+                .GET()
+                .build()
+        def searchResp = client.send(searchReq, HttpResponse.BodyHandlers.ofString())
+        if (searchResp.statusCode() != 200) {
+            throw new GradleException("Search failed with status ${searchResp.statusCode()}: ${searchResp.body()}")
+        }
+        println "Found repositories:\n${searchResp.body()}"
+
+        // Parse repository keys and drop each one
+        def json = new groovy.json.JsonSlurper().parseText(searchResp.body())
+        def repos = json.repositories ?: []
+        if (repos.isEmpty()) {
+            println "No closed staging repositories found."
+            return
+        }
+        repos.each { repo ->
+            def key = repo.key
+            println "Dropping repository: $key (state: ${repo.state})"
+            def dropReq = HttpRequest.newBuilder()
+                    .uri(URI.create("$baseUrl/manual/drop/repository/$key"))
+                    .header("Authorization", "Bearer $token")
+                    .DELETE()
+                    .build()
+            def dropResp = client.send(dropReq, HttpResponse.BodyHandlers.ofString())
+            if (dropResp.statusCode() != 200 && dropResp.statusCode() != 204) {
+                System.err.println("Drop failed for $key with status ${dropResp.statusCode()}: ${dropResp.body()}")
+            } else {
+                println "Dropped $key successfully."
+            }
+        }
+    }
+}
+
+tasks.register("postPublish") {
+    group = "publishing"
+    description = "Upload staging deployment to Central Portal. Drops closed repos if needed."
+    doLast {
+        def baseUrl = "https://ossrh-staging-api.central.sonatype.com"
+        def namespace = "io.github.bonede"
+        def token = Base64.encoder.encodeToString("$ossrhUsername:$ossrhPassword".getBytes())
+        def client = HttpClient.newHttpClient()
+
+        def uploadUrl = "$baseUrl/manual/upload/defaultRepository/$namespace"
         def req = HttpRequest.newBuilder()
-                .uri(URI.create(url))
+                .uri(URI.create(uploadUrl))
                 .header("Authorization", "Bearer $token")
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build()
         def resp = client.send(req, HttpResponse.BodyHandlers.ofString())
-        def code = resp.statusCode();
-        if(resp.statusCode() != 200){
-            def msg = "HTTP request failed with status $code"
+
+        if (resp.statusCode() == 400 && resp.body()?.contains("must be dropped")) {
+            println "Detected stale closed repository, dropping it..."
+
+            // Search and drop closed repos
+            def searchUrl = "$baseUrl/manual/search/repositories?profile_id=$namespace&state=closed&ip=any"
+            def searchReq = HttpRequest.newBuilder()
+                    .uri(URI.create(searchUrl))
+                    .header("Authorization", "Bearer $token")
+                    .GET()
+                    .build()
+            def searchResp = client.send(searchReq, HttpResponse.BodyHandlers.ofString())
+            if (searchResp.statusCode() == 200) {
+                def json = new groovy.json.JsonSlurper().parseText(searchResp.body())
+                (json.repositories ?: []).each { repo ->
+                    println "Dropping ${repo.key}..."
+                    def dropReq = HttpRequest.newBuilder()
+                            .uri(URI.create("$baseUrl/manual/drop/repository/${repo.key}"))
+                            .header("Authorization", "Bearer $token")
+                            .DELETE()
+                            .build()
+                    client.send(dropReq, HttpResponse.BodyHandlers.ofString())
+                }
+            }
+
+            println "Stale repositories dropped. Please re-run publish and then postPublish:"
+            println "  ./gradlew :tree-sitter-<package>:publish"
+            println "  ./gradlew postPublish"
+            return
+        }
+
+        if (resp.statusCode() == 400 && resp.body()?.contains("No repository found")) {
+            println "No staging repository found. Please publish first:"
+            println "  ./gradlew :tree-sitter-<package>:publish"
+            return
+        }
+
+        if (resp.statusCode() != 200) {
+            def msg = "HTTP request failed with status ${resp.statusCode()}"
             System.err.println(msg)
+            System.err.println(resp.body())
             throw new GradleException(msg)
         }
         println "Published to Portal with response body:\n${resp.body()}"

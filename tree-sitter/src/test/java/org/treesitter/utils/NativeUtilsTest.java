@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,6 +57,39 @@ class NativeUtilsTest {
                 NativeUtils.loadLib("lib/tree-sitter");
             });
             thread.start();
+        }
+    }
+
+    @Test
+    void fullLibNameUsesAndroidTarget() throws Exception {
+        String oldOsName = System.getProperty("os.name");
+        String oldOsArch = System.getProperty("os.arch");
+        String oldVmName = System.getProperty("java.vm.name");
+        String oldRuntimeName = System.getProperty("java.runtime.name");
+        try {
+            System.setProperty("os.name", "Linux");
+            System.setProperty("os.arch", "aarch64");
+            System.setProperty("java.vm.name", "Dalvik");
+            System.setProperty("java.runtime.name", "Android Runtime");
+
+            Method getFullLibName = NativeUtils.class.getDeclaredMethod("getFullLibName", String.class);
+            getFullLibName.setAccessible(true);
+            String fullName = (String) getFullLibName.invoke(null, "lib/tree-sitter");
+
+            assertEquals("lib/aarch64-linux-android-tree-sitter.so", fullName);
+        } finally {
+            restoreProperty("os.name", oldOsName);
+            restoreProperty("os.arch", oldOsArch);
+            restoreProperty("java.vm.name", oldVmName);
+            restoreProperty("java.runtime.name", oldRuntimeName);
+        }
+    }
+
+    private static void restoreProperty(String key, String value) {
+        if (value == null) {
+            System.clearProperty(key);
+        } else {
+            System.setProperty(key, value);
         }
     }
 }

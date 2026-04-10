@@ -64,6 +64,7 @@ class Main {
 - aarch64-macos
 - x86_64-linux
 - aarch64-linux
+- aarch64-linux-android
 
 # Developers: How to Add a Parser
 

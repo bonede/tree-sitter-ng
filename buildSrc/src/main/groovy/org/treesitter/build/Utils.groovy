@@ -90,7 +90,7 @@ abstract class Utils {
         Directory jniInclude = jniIncludeDir(project)
         if(target.contains("windows")){
             return jniInclude.dir("win32")
-        }else if(target.contains("linux")){
+        }else if(target.contains("linux") || target.contains("android")){
             return jniInclude.dir("linux")
         }else if(target.contains("macos")){
             return jniInclude.dir("darwin")
@@ -102,7 +102,7 @@ abstract class Utils {
     static String libExt(String target){
         if(target.contains("windows")){
             return "dll"
-        }else if(target.contains("linux")){
+        }else if(target.contains("linux") || target.contains("android")){
             return "so"
         }else if(target.contains("macos")){
             return "dylib"

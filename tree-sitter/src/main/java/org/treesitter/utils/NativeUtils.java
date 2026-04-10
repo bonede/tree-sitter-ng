@@ -14,10 +14,17 @@ public abstract class NativeUtils {
     private static String getFullLibName(String libName){
         String osName = System.getProperty("os.name").toLowerCase();
         String archName = System.getProperty("os.arch").toLowerCase();
+        String vmName = System.getProperty("java.vm.name", "").toLowerCase();
+        String runtimeName = System.getProperty("java.runtime.name", "").toLowerCase();
         String ext;
         String os;
         String arch;
-        if(osName.contains("windows")){
+
+        boolean isAndroid = vmName.contains("dalvik") || runtimeName.contains("android");
+        if (isAndroid) {
+            ext = "so";
+            os = "linux-android";
+        } else if(osName.contains("windows")){
             ext = "dll";
             os = "windows";
         }else if(osName.contains("linux")){

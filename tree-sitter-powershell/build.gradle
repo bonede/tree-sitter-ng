@@ -1,0 +1,6 @@
+tasks.named('downloadSource') {
+    url = "https://github.com/airbus-cert/tree-sitter-powershell/archive/refs/tags/v${libVersion}.zip"
+}
+tasks.named('buildNative') {
+    additionalIncludeDirs = [srcDir.dir("src")]
+}

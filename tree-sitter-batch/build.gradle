@@ -1,0 +1,3 @@
+tasks.named('downloadSource') {
+    url = "https://github.com/wharflab/tree-sitter-batch/archive/refs/tags/v${libVersion}.zip"
+}

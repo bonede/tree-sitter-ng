@@ -1,0 +1,8 @@
+jdk:
+  - openjdk17
+
+before_install:
+  - chmod +x gradlew
+
+install:
+  - ./gradlew -x test -x downloadSource -x buildNative publishToMavenLocal

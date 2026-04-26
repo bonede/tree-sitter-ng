@@ -13,6 +13,7 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.TaskAction
 import org.treesitter.build.Utils
+import java.util.Locale
 
 class BuildNativeTask extends DefaultTask{
 
@@ -160,18 +161,19 @@ class BuildNativeTask extends DefaultTask{
             def jniMdIncludeDir = getJniMdInclude(target)
             def jniOutFile = Utils.jniOutFile(project, target, libName)
 
-            def cmd = [
-                    zigExe, "c++",
+            def cmd = []
+            cmd.addAll(this.compilerArgsForTarget(target))
+            cmd.addAll([
                     "-g0",
                     "-fno-sanitize=undefined",
+                    "-fPIC",
                     "-shared",
-                    "-target", target,
                     "-I", srcDir,
                     "-I", srcDir.dir("lib/include"),
                     "-I", jniIncludeDir,
                     "-I", jniMdIncludeDir,
                     "-o", jniOutFile
-            ]
+            ])
             additionalIncludeDirs.forEach { f ->
                 cmd.add("-I")
                 cmd.add(f)
@@ -185,6 +187,44 @@ class BuildNativeTask extends DefaultTask{
             }
         }
         this.removeWindowsDebugFiles()
+    }
+
+    List<Object> compilerArgsForTarget(String target) {
+        if (!target.contains("android")) {
+            return [zigExe, "c++", "-target", target]
+        }
+
+        def ndkDir = findAndroidNdkDir()
+        def hostTag = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("mac")
+                ? "darwin-x86_64"
+                : "linux-x86_64"
+        def apiLevel = project.findProperty("androidApiLevel") ?: "21"
+        def compiler = new File(
+                ndkDir,
+                "toolchains/llvm/prebuilt/${hostTag}/bin/aarch64-linux-android${apiLevel}-clang"
+        )
+        if (!compiler.exists()) {
+            throw new GradleException("Android compiler not found: ${compiler}. Set ANDROID_NDK_HOME or ANDROID_NDK_ROOT.")
+        }
+        return [compiler]
+    }
+
+    File findAndroidNdkDir() {
+        def envNdk = System.getenv("ANDROID_NDK_HOME") ?: System.getenv("ANDROID_NDK_ROOT")
+        if (envNdk) {
+            return new File(envNdk)
+        }
+
+        def sdkDir = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
+        if (sdkDir) {
+            def ndkRoot = new File(sdkDir, "ndk")
+            def ndks = ndkRoot.listFiles()?.findAll { it.isDirectory() }?.sort { a, b -> b.name <=> a.name }
+            if (ndks) {
+                return ndks.first()
+            }
+        }
+
+        throw new GradleException("Android NDK not found. Set ANDROID_NDK_HOME, ANDROID_NDK_ROOT, ANDROID_HOME, or ANDROID_SDK_ROOT.")
     }
 
     private void removeWindowsDebugFiles(){

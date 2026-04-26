@@ -45,7 +45,9 @@ jobs:
         distribution: 'corretto'
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4.2.1
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
     - name: Install Android NDK
-      run: sdkmanager "ndk;${ANDROID_NDK_VERSION}"
+      run: "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "ndk;${ANDROID_NDK_VERSION}"
     - name: Build Android native library
       run: ./gradlew :tree-sitter:buildNative -PtreeSitterTargets=aarch64-linux-android --stacktrace

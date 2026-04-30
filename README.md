@@ -66,6 +66,9 @@ class Main {
 - aarch64-linux
 - aarch64-linux-android
 
+# Android native builds
+Android native builds use the Android NDK compiler. If `ANDROID_NDK_HOME`, `ANDROID_NDK_ROOT`, `ANDROID_HOME`, or `ANDROID_SDK_ROOT` points to an installed NDK, the build uses it. Otherwise, Gradle downloads the NDK version configured by `androidNdkVersion` in `gradle.properties` into the root `build/android-ndk` directory.
+
 # Developers: How to Add a Parser
 
 To add a new language parser to this project, we provide a code generation task that handles most of the boilerplate. This is also how you can add an "unofficial" or community parser.

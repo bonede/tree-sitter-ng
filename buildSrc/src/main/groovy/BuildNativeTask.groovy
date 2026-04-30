@@ -195,13 +195,17 @@ class BuildNativeTask extends DefaultTask{
         }
 
         def ndkDir = findAndroidNdkDir()
-        def hostTag = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("mac")
-                ? "darwin-x86_64"
-                : "linux-x86_64"
+        def osName = System.getProperty("os.name").toLowerCase(Locale.ROOT)
+        def hostTag = osName.contains("win")
+                ? "windows-x86_64"
+                : osName.contains("mac")
+                    ? "darwin-x86_64"
+                    : "linux-x86_64"
         def apiLevel = project.findProperty("androidApiLevel") ?: "21"
+        def compilerName = "aarch64-linux-android${apiLevel}-clang${osName.contains("win") ? ".cmd" : ""}"
         def compiler = new File(
                 ndkDir,
-                "toolchains/llvm/prebuilt/${hostTag}/bin/aarch64-linux-android${apiLevel}-clang"
+                "toolchains/llvm/prebuilt/${hostTag}/bin/${compilerName}"
         )
         if (!compiler.exists()) {
             throw new GradleException("Android compiler not found: ${compiler}. Set ANDROID_NDK_HOME or ANDROID_NDK_ROOT.")
@@ -224,7 +228,13 @@ class BuildNativeTask extends DefaultTask{
             }
         }
 
-        throw new GradleException("Android NDK not found. Set ANDROID_NDK_HOME, ANDROID_NDK_ROOT, ANDROID_HOME, or ANDROID_SDK_ROOT.")
+        def downloadAndroidNdkTask = project.rootProject.tasks.named("downloadAndroidNdk").get()
+        def downloadedNdk = downloadAndroidNdkTask.androidNdkHome.asFile
+        if (downloadedNdk.exists()) {
+            return downloadedNdk
+        }
+
+        throw new GradleException("Android NDK not found. Set ANDROID_NDK_HOME, ANDROID_NDK_ROOT, ANDROID_HOME, or ANDROID_SDK_ROOT, or run the downloadAndroidNdk task.")
     }
 
     private void removeWindowsDebugFiles(){

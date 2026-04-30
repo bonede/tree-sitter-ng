@@ -114,6 +114,9 @@ subprojects {
     tasks.register('buildNative', BuildNativeTask) {
         zigExe = rootProject.downloadZig.zigExe
         dependsOn downloadSource, rootProject.downloadZig
+        if (((String) rootProject.properties.get("treeSitterTargets")).contains("android")) {
+            dependsOn rootProject.downloadAndroidNdk
+        }
     }
 
     tasks.withType(Javadoc) {
@@ -138,6 +141,8 @@ tasks.register('downloadZig', DownloadZigTask){
     miniSignExe = downloadMiniSign.miniSignExe
     dependsOn downloadMiniSign
 }
+
+tasks.register('downloadAndroidNdk', DownloadAndroidNdkTask)
 
 tasks.register("gen", GenTask) {
     group = "build setup"

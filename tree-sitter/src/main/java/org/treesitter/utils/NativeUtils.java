@@ -122,6 +122,15 @@ public abstract class NativeUtils {
         if (loadedLibs.contains(libName)) {
             return;
         }
+        String vmName = System.getProperty("java.vm.name", "").toLowerCase();
+        String runtimeName = System.getProperty("java.runtime.name", "").toLowerCase();
+        boolean isAndroid = vmName.contains("dalvik") || runtimeName.contains("android");
+        if (isAndroid) {
+            String[] parts = libName.split("/");
+            System.loadLibrary(parts[parts.length - 1]);
+            loadedLibs.add(libName);
+            return;
+        }
         Path path = libFile(libName);
         System.load(path.toAbsolutePath().toString());
         loadedLibs.add(libName);

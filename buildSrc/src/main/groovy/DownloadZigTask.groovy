@@ -165,7 +165,7 @@ class DownloadZigTask extends DefaultTask{
         def mirrorUrls = mirrorUrls()
         downloadZigFromMirrors(mirrorUrls, zigZipFile.asFile, zigSignatureFile.asFile)
         miniSignExe.asFile.setExecutable(true, true)
-        def zipVerified = project.exec {
+        def zipVerified = project.providers.exec {
             ignoreExitValue = true
             workingDir zigDir.asFile
             commandLine miniSignExe,
@@ -173,7 +173,7 @@ class DownloadZigTask extends DefaultTask{
                            zigZipFile,
                            "-P",
                            zigPubKey
-        }
+        }.result.get().exitValue == 0
         if(!zipVerified) {
             throw new GradleException("$zigZipFile signature does not match!")
         }

@@ -181,10 +181,10 @@ class BuildNativeTask extends DefaultTask{
             cmd.addAll(jniCFiles)
             cmd.addAll(parserCFiles)
             cmd.addAll(additionalCFiles)
-            project.exec{
+            project.providers.exec {
                 workingDir jniCDir
                 commandLine(cmd)
-            }
+            }.result.get()
         }
         this.removeWindowsDebugFiles()
     }
@@ -220,6 +220,12 @@ class BuildNativeTask extends DefaultTask{
         }
 
         def sdkDir = System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
+        if (!sdkDir) {
+            def defaultSdk = new File(System.getProperty("user.home"), "Library/Android/sdk")
+            if (defaultSdk.exists()) {
+                sdkDir = defaultSdk.absolutePath
+            }
+        }
         if (sdkDir) {
             def ndkRoot = new File(sdkDir, "ndk")
             def ndks = ndkRoot.listFiles()?.findAll { it.isDirectory() }?.sort { a, b -> b.name <=> a.name }
@@ -237,7 +243,7 @@ class BuildNativeTask extends DefaultTask{
         throw new GradleException("Android NDK not found. Set ANDROID_NDK_HOME, ANDROID_NDK_ROOT, ANDROID_HOME, or ANDROID_SDK_ROOT, or run the downloadAndroidNdk task.")
     }
 
-    private void removeWindowsDebugFiles(){
+    void removeWindowsDebugFiles(){
         def files = jniOutDir.asFileTree.matching {
             include("**/*.pdb")
             include("**/*.lib")

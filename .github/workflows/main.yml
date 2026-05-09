@@ -8,12 +8,20 @@ on:
     paths-ignore:
     - "**/README.md"
 jobs:
-  test:
-    name: Test on ${{ matrix.os }}
+  native:
+    name: Build native on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-2022, macos-15-intel, macos-14]
+        include:
+        - os: ubuntu-22.04
+          targets: x86_64-linux-gnu,aarch64-linux-gnu
+        - os: windows-2022
+          targets: x86_64-windows
+        - os: macos-15-intel
+          targets: x86_64-macos
+        - os: macos-14
+          targets: aarch64-macos
     env:
       ORG_GRADLE_PROJECT_ossrhUsername: na
       ORG_GRADLE_PROJECT_ossrhPassword: na
@@ -26,8 +34,12 @@ jobs:
         distribution: 'corretto'
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4.2.1
-    - name: Test with Gradle
-      run: ./gradlew test --stacktrace
+    - name: Build native libraries with Gradle
+      run: >
+        ./gradlew
+        buildNative
+        -PtreeSitterTargets=${{ matrix.targets }}
+        --stacktrace
 
   android-native:
     name: Build Android native library
@@ -51,4 +63,4 @@ jobs:
       run: |
         "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "ndk;${ANDROID_NDK_VERSION}"
     - name: Build Android native library
-      run: ./gradlew :tree-sitter:buildNative -PtreeSitterTargets=aarch64-linux-android --stacktrace
+      run: ./gradlew buildNative -PtreeSitterTargets=aarch64-linux-android --stacktrace

@@ -38,7 +38,7 @@ JavaVM* java_vm = NULL;
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     java_vm = vm;
-    return JNI_VERSION_10;
+    return JNI_VERSION_1_6;
 }
 
 jfieldID ts_jni_get_field_id(JNIEnv *env, jclass clz, const char *field_name, const char*field_type){

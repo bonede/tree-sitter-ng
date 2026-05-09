@@ -103,19 +103,21 @@ subprojects {
         useJUnitPlatform()
     }
 
-    tasks.register('downloadSource', DownloadSourceTask)
+    if (project.hasProperty('libVersion')) {
+        tasks.register('downloadSource', DownloadSourceTask)
 
-    if (project.name != 'tree-sitter' && project.name != 'tree-sitter-demo' && project.name != 'tree-sitter-tests') {
-        tasks.named('test') {
-            dependsOn tasks.named('downloadSource')
+        tasks.register('buildNative', BuildNativeTask) {
+            zigExe = rootProject.downloadZig.zigExe
+            dependsOn downloadSource, rootProject.downloadZig
+            if (((String) rootProject.properties.get("treeSitterTargets")).contains("android")) {
+                dependsOn rootProject.downloadAndroidNdk
+            }
         }
-    }
 
-    tasks.register('buildNative', BuildNativeTask) {
-        zigExe = rootProject.downloadZig.zigExe
-        dependsOn downloadSource, rootProject.downloadZig
-        if (((String) rootProject.properties.get("treeSitterTargets")).contains("android")) {
-            dependsOn rootProject.downloadAndroidNdk
+        if (project.name != 'tree-sitter') {
+            tasks.named('test') {
+                dependsOn tasks.named('downloadSource')
+            }
         }
     }
 

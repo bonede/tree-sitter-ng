@@ -94,7 +94,8 @@ public class TSNode {
      * @return True if the node is a null node.
      */
     public boolean isNull(){
-        return TSParser.ts_node_is_null(this);
+        // same as ts_node_is_null, without a native call: every other accessor checks it first
+        return idPtr == 0;
     }
 
     /**

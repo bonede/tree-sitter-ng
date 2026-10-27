@@ -209,6 +209,65 @@ class TSParserTest {
         assertEquals(s, emoji);
     }
 
+    // parseString must parse the UTF-8 encoding of the string as is, or the byte offsets of the nodes do not
+    // match src.getBytes(UTF_8) and the node text (see nodeText) is wrong
+
+    @Test
+    void byteOrderMarkIsKept() {
+        // a file read with a BOM, e.g., written by Windows Notepad or Visual Studio
+        assertParsedAsUtf8Bytes("\uFEFF[1, 2]", "2");
+    }
+
+    @Test
+    void zeroWidthNoBreakSpaceIsKept() {
+        assertParsedAsUtf8Bytes("[\"a\uFEFFb\", 2]", "\"a\uFEFFb\"", "2");
+    }
+
+    @Test
+    void nonCharactersAreKept() {
+        assertParsedAsUtf8Bytes("[\"\uFFFE\uFFFF\", 2]", "\"\uFFFE\uFFFF\"", "2");
+    }
+
+    @Test
+    void controlCharactersAreKept() {
+        // a form feed, e.g., a page break in GNU C or Python sources
+        assertParsedAsUtf8Bytes("[1,\f2]", "2");
+        assertParsedAsUtf8Bytes("[\"a\u0001b\", 2]", "\"a\u0001b\"", "2");
+    }
+
+    private static void assertParsedAsUtf8Bytes(String src, String... texts) {
+        byte[] bytes = src.getBytes(StandardCharsets.UTF_8);
+        parser.reset();
+        TSTree tree = parser.parseString(null, src);
+        TSNode root = tree.getRootNode();
+        assertEquals(bytes.length, root.getEndByte());
+        // the same tree as when the UTF-8 bytes are parsed with a reader
+        parser.reset();
+        TSReader reader = (buf, offset, position) -> {
+            int length = Math.max(0, Math.min(buf.length, bytes.length - offset));
+            System.arraycopy(bytes, offset, buf, 0, length);
+            return length;
+        };
+        TSTree bytesTree = parser.parse(new byte[bytes.length], null, reader, TSInputEncoding.TSInputEncodingUTF8);
+        assertEquals(bytesTree.getRootNode().toString(), root.toString());
+        for (String text : texts) {
+            assertTrue(hasNodeWithText(root, bytes, text), "no node with text " + text + " in " + root);
+        }
+    }
+
+    private static boolean hasNodeWithText(TSNode node, byte[] bytes, String text) {
+        byte[] nodeBytes = Arrays.copyOfRange(bytes, node.getStartByte(), node.getEndByte());
+        if (new String(nodeBytes, StandardCharsets.UTF_8).equals(text)) {
+            return true;
+        }
+        for (int i = 0; i < node.getChildCount(); i++) {
+            if (hasNodeWithText(node.getChild(i), bytes, text)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Test
     void cursor() {
         TSParser parser = new TSParser();

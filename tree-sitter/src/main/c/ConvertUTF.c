@@ -231,14 +231,6 @@ ConversionResult ConvertUTF16toUTF8 (
 		break;
 	    }
 	}
-	// TPN: substitute all control characters except for NULL, TAB, LF or CR
-	if (ch && (ch != (UTF32)0x09)  && (ch != (UTF32)0x0a)  && (ch != (UTF32)0x0d)  && (ch < (UTF32)0x20) )  {
-		ch = (UTF32)0x3f;
-	}
-	// TPN: filter out byte order marks and invalid character 0xFFFF
-	if((ch == (UTF32)0xFEFF) || (ch == (UTF32)0xFFFE)|| (ch == (UTF32)0xFFFF)) {
-		continue;
-	}
 	/* Figure out how many bytes the result will require */
 	if (ch < (UTF32)0x80) {	    bytesToWrite = 1;
 	} else if (ch < (UTF32)0x800) {     bytesToWrite = 2;

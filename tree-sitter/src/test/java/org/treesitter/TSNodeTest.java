@@ -53,6 +53,30 @@ class TSNodeTest {
     @Test
     void isNull() {
         assertFalse(arrayNode.isNull());
+        assertFalse(numberNode.isNull());
+        TSNode lastChild = arrayNode.getChild(arrayNode.getChildCount() - 1);
+        assertFalse(lastChild.isNull());
+        assertTrue(rootNode.getParent().isNull());
+        assertTrue(lastChild.getNextSibling().isNull());
+        assertTrue(arrayNode.getChildByFieldName("missing").isNull());
+        assertTrue(numberNode.getNamedChild(0).isNull());
+    }
+
+    @Test
+    void isNullAgreesWithNativeCheck() {
+        TSNode[] nodes = {rootNode, arrayNode, numberNode, rootNode.getParent(), numberNode.getNextNamedSibling(),
+                numberNode.getNextNamedSibling().getNextNamedSibling(), arrayNode.getChild(100)};
+        for (TSNode node : nodes) {
+            assertEquals(TSParser.ts_node_is_null(node), node.isNull());
+        }
+    }
+
+    @Test
+    void accessorsOfNullNodeThrow() {
+        TSNode nullNode = rootNode.getParent();
+        assertThrows(TSException.class, nullNode::getType);
+        assertThrows(TSException.class, nullNode::getStartByte);
+        assertThrows(TSException.class, nullNode::getChildCount);
     }
 
     @Test
